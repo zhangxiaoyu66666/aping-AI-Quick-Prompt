@@ -1,7 +1,7 @@
 param(
     [string]$Configuration = "Release",
     [string]$Platform = "x64",
-    [string]$Version = "1.0.1",
+    [string]$Version = "1.0.2",
     [string]$OutputRoot = "artifacts\public-demo",
     [switch]$SkipNativeBuild
 )

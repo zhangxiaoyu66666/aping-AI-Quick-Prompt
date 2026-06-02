@@ -496,7 +496,7 @@
                             <TextBox x:Name="CompactCommonPromptSearchBox" Grid.Column="1" Header="搜索" PlaceholderText="标题、分类或内容" TextChanged="CommonPromptSearchBox_TextChanged" />
                             <TextBlock Grid.Column="2" Text="点击条目复制完整提示词；需要改内容时右键打开菜单。" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Bottom" />
                         </Grid>
-                        <ListView x:Name="CompactCommonPromptList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="CompactCommonPromptList_ItemClick" RightTapped="CompactCommonPromptList_RightTapped">
+                        <ListView x:Name="CompactCommonPromptList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="CompactCommonPromptList_ItemClick" RightTapped="CompactCommonPromptList_RightTapped" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Padding="10" RowSpacing="6">
@@ -529,7 +529,12 @@
                             </Grid.ColumnDefinitions>
                             <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="新建常用提示词" Click="SaveCommonPromptButton_Click" />
                             <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="插入到用户需求" Click="CompactInsertCommonPromptButton_Click" />
-                            <TextBlock x:Name="CompactCommonPromptStatusText" Grid.Column="2" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock x:Name="CompactCommonPromptStatusText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                <Button x:Name="CompactCommonPromptPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" Click="CompactCommonPromptPreviousPageButton_Click" />
+                                <TextBlock x:Name="CompactCommonPromptPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                <Button x:Name="CompactCommonPromptNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" Click="CompactCommonPromptNextPageButton_Click" />
+                            </StackPanel>
                             <Button Grid.Column="3" Style="{StaticResource FluentButtonStyle}" Content="导入 JSON" Click="ImportCommonPromptsJsonButton_Click" />
                             <Button Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Content="导出 JSON" Click="ExportCommonPromptsJsonButton_Click" />
                         </Grid>
@@ -877,7 +882,7 @@
                                 <RadioButton x:Name="ModeAiCodingRadio" GroupName="Mode" Tag="AI编程" Content="AI编程" Checked="ModeRadio_Checked" />
                                 <StackPanel x:Name="OptimizationTargetChoicePanel" Spacing="8">
                                     <TextBlock Text="已挂载优化目标" Style="{StaticResource MutedTextStyle}" />
-                                    <ListView x:Name="OptimizationTargetChoiceList" MaxHeight="180" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OptimizationTargetChoiceList_ItemClick">
+                                    <ListView x:Name="OptimizationTargetChoiceList" MaxHeight="180" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OptimizationTargetChoiceList_ItemClick" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                         <ListView.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid Padding="8,6" RowSpacing="2">
@@ -891,6 +896,11 @@
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                        <Button x:Name="OptimizationTargetChoicePreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="OptimizationTargetChoicePreviousPageButton_Click" />
+                                        <TextBlock x:Name="OptimizationTargetChoicePagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                        <Button x:Name="OptimizationTargetChoiceNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="OptimizationTargetChoiceNextPageButton_Click" />
+                                    </StackPanel>
                                 </StackPanel>
                                 <RadioButton x:Name="ModeCustomRadio" GroupName="Mode" Tag="自定义" Content="自定义平台" Checked="ModeRadio_Checked" />
                                 <TextBox x:Name="CustomModeBox" PlaceholderText="例如：豆包 / Midjourney / GPT-4o / 本地模型" TextChanged="CustomModeBox_TextChanged" />
@@ -906,7 +916,7 @@
                                 </Grid>
                                 <StackPanel x:Name="MountedSkillPanel" Visibility="Collapsed" Spacing="10">
                                     <TextBlock x:Name="MountedSkillStatusText" Text="当前 Skill：未挂载" Style="{StaticResource MutedTextStyle}" />
-                                    <ListView x:Name="MountedSkillQuickList" Style="{StaticResource TemplateListViewStyle}" ItemContainerStyle="{StaticResource TemplateListViewItemStyle}" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="MountedSkillQuickList_ItemClick" MaxHeight="360">
+                                    <ListView x:Name="MountedSkillQuickList" Style="{StaticResource TemplateListViewStyle}" ItemContainerStyle="{StaticResource TemplateListViewItemStyle}" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="MountedSkillQuickList_ItemClick" MaxHeight="360" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                         <ListView.ItemTemplate>
                                             <DataTemplate>
                                                 <StackPanel Spacing="2">
@@ -916,6 +926,11 @@
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                        <Button x:Name="MountedSkillPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="MountedSkillPreviousPageButton_Click" />
+                                        <TextBlock x:Name="MountedSkillPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                        <Button x:Name="MountedSkillNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="MountedSkillNextPageButton_Click" />
+                                    </StackPanel>
                                     <TextBlock x:Name="MountedSkillEmptyText" Text="当前没有可用 Skill。点击下方按钮添加后，才会按 Skill 规则执行。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                                     <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="添加 Skill" Click="MountSkillButton_Click" />
                                 </StackPanel>
@@ -947,7 +962,7 @@
                                         </ListView>
                                     </Border>
                                     <Border Grid.Column="1" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="10" Padding="4">
-                                        <ListView x:Name="QuickTemplateList" Style="{StaticResource TemplateListViewStyle}" ItemContainerStyle="{StaticResource TemplateListViewItemStyle}" SelectionMode="None" IsItemClickEnabled="True" ItemClick="QuickTemplateList_ItemClick" MaxHeight="420" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                        <ListView x:Name="QuickTemplateList" Style="{StaticResource TemplateListViewStyle}" ItemContainerStyle="{StaticResource TemplateListViewItemStyle}" SelectionMode="None" IsItemClickEnabled="True" ItemClick="QuickTemplateList_ItemClick" MaxHeight="420" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                             <ListView.ItemTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Spacing="2">
@@ -959,6 +974,11 @@
                                         </ListView>
                                     </Border>
                                 </Grid>
+                                <StackPanel x:Name="QuickTemplatePagerPanel" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button x:Name="QuickTemplatePreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="QuickTemplatePreviousPageButton_Click" />
+                                    <TextBlock x:Name="QuickTemplatePagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                    <Button x:Name="QuickTemplateNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="QuickTemplateNextPageButton_Click" />
+                                </StackPanel>
                                 <TextBlock x:Name="TemplateHintText" Text="点击模板会直接插入到用户需求。" Style="{StaticResource MutedTextStyle}" />
                                 <StackPanel x:Name="TemplateAssistButtonsPanel" Spacing="8">
                                     <Button Style="{StaticResource FluentButtonStyle}" Click="SnippetButton_Click" Tag="镜头语言">
@@ -991,7 +1011,7 @@
                                 <TextBox x:Name="HistorySearchBox" Header="搜索历史" PlaceholderText="搜索需求、提示词、优化目标" TextChanged="HistorySearchBox_TextChanged" />
                                 <TextBlock Grid.Column="1" Text="选中历史后可以继续编辑，同一段对话会锁定当时使用的优化目标。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" VerticalAlignment="Bottom" />
                             </Grid>
-                            <ListView x:Name="HistoryList" Grid.Row="2" SelectionMode="Single">
+                            <ListView x:Name="HistoryList" Grid.Row="2" SelectionMode="Single" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Padding="10" RowSpacing="6">
@@ -1026,6 +1046,11 @@
                                 <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="继续编辑" Click="ContinueHistoryButton_Click" />
                                 <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="删除历史" Click="DeleteHistoryButton_Click" />
                                 <Button Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="发送审计" Click="ShowSendAuditButton_Click" HorizontalAlignment="Left" />
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button x:Name="HistoryPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="HistoryPreviousPageButton_Click" />
+                                    <TextBlock x:Name="HistoryPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                    <Button x:Name="HistoryNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="HistoryNextPageButton_Click" />
+                                </StackPanel>
                             </Grid>
                         </Grid>
                     </Border>
@@ -1049,7 +1074,7 @@
                                 <ComboBox x:Name="TemplateCategoryFilterBox" Header="分类筛选" SelectionChanged="TemplateFilter_SelectionChanged" />
                                 <TextBlock Grid.Column="1" Text="点击“新建模板”或“保存当前为模板”，在弹窗里填写分类和模板内容。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" VerticalAlignment="Bottom" />
                             </Grid>
-                            <ListView x:Name="FavoritesBox" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="FavoritesBox_ItemClick" RightTapped="FavoritesBox_RightTapped">
+                            <ListView x:Name="FavoritesBox" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="FavoritesBox_ItemClick" RightTapped="FavoritesBox_RightTapped" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Padding="10" RowSpacing="6">
@@ -1075,6 +1100,11 @@
                                 </ListView.ItemTemplate>
                             </ListView>
                             <StackPanel Grid.Row="3" Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button x:Name="FavoritesPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="FavoritesPreviousPageButton_Click" />
+                                    <TextBlock x:Name="FavoritesPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                    <Button x:Name="FavoritesNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="FavoritesNextPageButton_Click" />
+                                </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Button Style="{StaticResource FluentButtonStyle}" Content="插入模板" Click="LoadFavoriteButton_Click" />
                                     <Button Style="{StaticResource FluentButtonStyle}" Content="删除模板" Click="DeleteFavoriteButton_Click" />
@@ -1108,7 +1138,7 @@
                                 <ComboBox x:Name="SkillCategoryFilterBox" Header="分类筛选" SelectionChanged="SkillCategoryFilterBox_SelectionChanged" />
                                 <TextBlock Grid.Column="1" Text="管理已挂载的 Skill 和 Skill 包。右侧栏的 Skill 选项卡只负责快速插入使用。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" VerticalAlignment="Bottom" />
                             </Grid>
-                            <ListView x:Name="SkillList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="SkillList_ItemClick" RightTapped="SkillList_RightTapped">
+                            <ListView x:Name="SkillList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="SkillList_ItemClick" RightTapped="SkillList_RightTapped" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Padding="10" RowSpacing="6">
@@ -1134,6 +1164,11 @@
                                 </ListView.ItemTemplate>
                             </ListView>
                             <StackPanel Grid.Row="3" Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button x:Name="SkillPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="SkillPreviousPageButton_Click" />
+                                    <TextBlock x:Name="SkillPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                    <Button x:Name="SkillNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="SkillNextPageButton_Click" />
+                                </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Button Style="{StaticResource FluentButtonStyle}" Content="插入 Skill" Click="InsertSkillButton_Click" />
                                     <Button Style="{StaticResource FluentButtonStyle}" Content="编辑 Skill" Click="EditSkillButton_Click" />
@@ -1159,7 +1194,7 @@
                             </Grid.RowDefinitions>
                             <TextBlock Text="优化目标" Style="{StaticResource PageTitleStyle}" />
                             <TextBlock Grid.Row="1" Text="管理可分享的优化目标包。导入后会成为右侧优化目标区域和小窗口下拉里的可选项。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
-                            <ListView x:Name="OptimizationTargetManagementList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OptimizationTargetManagementList_ItemClick">
+                            <ListView x:Name="OptimizationTargetManagementList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OptimizationTargetManagementList_ItemClick" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Padding="10" RowSpacing="6">
@@ -1185,6 +1220,11 @@
                                 </ListView.ItemTemplate>
                             </ListView>
                             <StackPanel Grid.Row="3" Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button x:Name="OptimizationTargetPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="OptimizationTargetPreviousPageButton_Click" />
+                                    <TextBlock x:Name="OptimizationTargetPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                    <Button x:Name="OptimizationTargetNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="OptimizationTargetNextPageButton_Click" />
+                                </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="导入目标" Click="ImportOptimizationTargetButton_Click" />
                                     <Button Style="{StaticResource FluentButtonStyle}" Content="导出目标" Click="ExportOptimizationTargetButton_Click" />
@@ -1219,7 +1259,7 @@
                                     <TextBlock Text="点击“新建常用提示词”打开小窗口。列表只显示摘要，点击条目会快速复制完整提示词。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
-                            <ListView x:Name="CommonPromptList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="CommonPromptList_ItemClick" RightTapped="CommonPromptList_RightTapped">
+                            <ListView x:Name="CommonPromptList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="CommonPromptList_ItemClick" RightTapped="CommonPromptList_RightTapped" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Padding="10" RowSpacing="6">
@@ -1250,10 +1290,21 @@
                                 </Grid.ColumnDefinitions>
                                 <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="新建常用提示词" Click="SaveCommonPromptButton_Click" />
                                 <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="插入到用户需求" Click="InsertCommonPromptButton_Click" />
-                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-                                    <Button Style="{StaticResource FluentButtonStyle}" Content="导入 JSON" Click="ImportCommonPromptsJsonButton_Click" />
-                                    <Button Style="{StaticResource FluentButtonStyle}" Content="导出 JSON" Click="ExportCommonPromptsJsonButton_Click" />
-                                </StackPanel>
+                                <Grid Grid.Column="2" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <Button x:Name="CommonPromptPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="CommonPromptPreviousPageButton_Click" />
+                                        <TextBlock x:Name="CommonPromptPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
+                                        <Button x:Name="CommonPromptNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="CommonPromptNextPageButton_Click" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                                        <Button Style="{StaticResource FluentButtonStyle}" Content="导入 JSON" Click="ImportCommonPromptsJsonButton_Click" />
+                                        <Button Style="{StaticResource FluentButtonStyle}" Content="导出 JSON" Click="ExportCommonPromptsJsonButton_Click" />
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
                         </Grid>
                     </Border>
@@ -1301,49 +1352,51 @@
                 </Grid>
 
                 <Grid x:Name="SettingsPage" Visibility="Collapsed">
-                    <Border Style="{StaticResource CardBorderStyle}">
-                        <StackPanel Spacing="14">
-                            <TextBlock Text="设置" Style="{StaticResource PageTitleStyle}" />
-                            <Grid ColumnSpacing="12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="280" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <ComboBox x:Name="LanguageBox" Header="界面语言" MinWidth="240" SelectionChanged="LanguageBox_SelectionChanged">
-                                    <ComboBoxItem Content="自动 / Auto" Tag="auto" />
-                                    <ComboBoxItem Content="中文" Tag="zh-CN" />
-                                    <ComboBoxItem Content="English" Tag="en-US" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" ZoomMode="Disabled">
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="设置" Style="{StaticResource PageTitleStyle}" />
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="280" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="LanguageBox" Header="界面语言" MinWidth="240" SelectionChanged="LanguageBox_SelectionChanged">
+                                        <ComboBoxItem Content="自动 / Auto" Tag="auto" />
+                                        <ComboBoxItem Content="中文" Tag="zh-CN" />
+                                        <ComboBoxItem Content="English" Tag="en-US" />
+                                    </ComboBox>
+                                    <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="挂载语言包" Click="MountLanguagePackButton_Click" VerticalAlignment="Bottom" />
+                                </Grid>
+                                <CheckBox x:Name="AnimationEnabledBox" Content="启用界面动画" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                                <TextBlock Text="关闭后页面切换、聊天气泡和提示词输出会直接显示最终内容。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
+                                <TextBlock Text="全局置顶小窗口快捷键" Style="{StaticResource SectionTitleStyle}" />
+                                <CheckBox x:Name="HotkeyEnabledBox" Content="启用全局快捷键呼出置顶小窗口" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <CheckBox x:Name="HotkeyCtrlBox" Content="Ctrl" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                                    <CheckBox x:Name="HotkeyShiftBox" Content="Shift" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                                    <CheckBox x:Name="HotkeyAltBox" Content="Alt" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                                    <CheckBox x:Name="HotkeyWinBox" Content="Win" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                                    <ComboBox x:Name="HotkeyKeyBox" Header="主键" Width="180" MaxDropDownHeight="360" SelectionChanged="SettingsComboBox_SelectionChanged" />
+                                </StackPanel>
+                                <TextBlock Text="从下拉菜单选择主键。支持 A-Z、0-9、Space、Tab、Enter、F1-F24。" Style="{StaticResource MutedTextStyle}" />
+                                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4" />
+                                <CheckBox x:Name="RedactBeforeModelSendBox" Content="发送给模型前本地脱敏敏感信息" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                                <CheckBox x:Name="OcrEnabledBox" Content="启用本地 OCR（火眼金睛 OCR）" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                                <ComboBox x:Name="OcrProviderBox" Header="OCR 后端" SelectedIndex="0" MinWidth="320" SelectionChanged="SettingsComboBox_SelectionChanged">
+                                    <ComboBoxItem Content="火眼金睛 OCR（默认，失败时使用 Windows Media OCR 兜底）" Tag="fire_eye_ocr" />
+                                    <ComboBoxItem Content="自动兜底（火眼金睛 -> Windows Media OCR）" Tag="auto_ocr" />
                                 </ComboBox>
-                                <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="挂载语言包" Click="MountLanguagePackButton_Click" VerticalAlignment="Bottom" />
-                            </Grid>
-                            <CheckBox x:Name="AnimationEnabledBox" Content="启用界面动画" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                            <TextBlock Text="关闭后页面切换、聊天气泡和提示词输出会直接显示最终内容。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
-                            <TextBlock Text="全局置顶小窗口快捷键" Style="{StaticResource SectionTitleStyle}" />
-                            <CheckBox x:Name="HotkeyEnabledBox" Content="启用全局快捷键呼出置顶小窗口" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <CheckBox x:Name="HotkeyCtrlBox" Content="Ctrl" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <CheckBox x:Name="HotkeyShiftBox" Content="Shift" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <CheckBox x:Name="HotkeyAltBox" Content="Alt" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <CheckBox x:Name="HotkeyWinBox" Content="Win" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <ComboBox x:Name="HotkeyKeyBox" Header="主键" Width="180" MaxDropDownHeight="360" SelectionChanged="SettingsComboBox_SelectionChanged" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="恢复默认设置" Click="RestoreDefaultSettingsButton_Click" />
+                                    <Button Style="{StaticResource FluentButtonStyle}" Content="清除历史" Click="ClearHistoryButton_Click" />
+                                    <Button Style="{StaticResource FluentButtonStyle}" Content="清除收藏" Click="ClearFavoritesButton_Click" />
+                                    <Button Style="{StaticResource FluentButtonStyle}" Content="收起到浮窗" Click="CollapseToCompactButton_Click" />
+                                </StackPanel>
                             </StackPanel>
-                            <TextBlock Text="从下拉菜单选择主键。支持 A-Z、0-9、Space、Tab、Enter、F1-F24。" Style="{StaticResource MutedTextStyle}" />
-                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4" />
-                            <CheckBox x:Name="RedactBeforeModelSendBox" Content="发送给模型前本地脱敏敏感信息" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                            <CheckBox x:Name="OcrEnabledBox" Content="启用本地 OCR（火眼金睛 OCR）" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                            <ComboBox x:Name="OcrProviderBox" Header="OCR 后端" SelectedIndex="0" MinWidth="320" SelectionChanged="SettingsComboBox_SelectionChanged">
-                                <ComboBoxItem Content="火眼金睛 OCR（默认，失败时使用 Windows Media OCR 兜底）" Tag="fire_eye_ocr" />
-                                <ComboBoxItem Content="自动兜底（火眼金睛 -> Windows Media OCR）" Tag="auto_ocr" />
-                            </ComboBox>
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="恢复默认设置" Click="RestoreDefaultSettingsButton_Click" />
-                                <Button Style="{StaticResource FluentButtonStyle}" Content="清除历史" Click="ClearHistoryButton_Click" />
-                                <Button Style="{StaticResource FluentButtonStyle}" Content="清除收藏" Click="ClearFavoritesButton_Click" />
-                                <Button Style="{StaticResource FluentButtonStyle}" Content="收起到浮窗" Click="CollapseToCompactButton_Click" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+                    </ScrollViewer>
                 </Grid>
 
                 <Grid x:Name="HelpPage" Visibility="Collapsed">

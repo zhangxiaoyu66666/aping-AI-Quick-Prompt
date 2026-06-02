@@ -49,6 +49,7 @@ public sealed partial class CompactPromptWindow : Window
     private const int TypewriterMinDurationMs = 700;
     private const int TypewriterMaxDurationMs = 5200;
     private const int TypewriterBoundaryLookahead = 8;
+    private const int ListPageSize = 10;
     private const string SkillTemplateSource = "Skill";
     private static readonly nint HwndTopmost = new(-1);
     private static readonly nint HwndNotTopmost = new(-2);
@@ -138,9 +139,21 @@ public sealed partial class CompactPromptWindow : Window
     private bool _outputsStacked;
     private bool _responsiveLayoutQueued;
     private bool _applyingResponsiveLayout;
+    private bool _templateSearchRefreshQueued;
+    private bool _historySearchRefreshQueued;
+    private bool _commonPromptSearchRefreshQueued;
     private bool _modelProbeDialogOpen;
     private bool _isGeneratingPrompt;
     private bool _isExiting;
+    private int _quickTemplatePageIndex;
+    private int _mountedSkillPageIndex;
+    private int _optimizationTargetChoicePageIndex;
+    private int _historyPageIndex;
+    private int _userTemplatePageIndex;
+    private int _skillManagementPageIndex;
+    private int _optimizationTargetManagementPageIndex;
+    private int _commonPromptPageIndex;
+    private int _compactCommonPromptPageIndex;
     private CancellationTokenSource? _outputTypewriterCts;
     private string? _pendingDiffBasePrompt;
     private string? _pendingUserReply;
@@ -3505,7 +3518,6 @@ Skill 文件：{skillPath}
         _settings.Privacy.ModelExternalRequestsEnabled = ModelExternalRequestsEnabledBox.IsChecked == true;
         _settings.Privacy.ModelImageExternalRequestsEnabled = ModelImageExternalRequestsEnabledBox.IsChecked == true;
         _settings.Privacy.RedactBeforeModelSend = RedactBeforeModelSendBox.IsChecked == true;
-
         if (!_hotkeyService.RegisterHotkey(_settings.Hotkey))
         {
             if (showStatus)
@@ -4106,6 +4118,8 @@ Skill 文件：{skillPath}
             _selectedCommonPromptCategory = "全部";
         }
 
+        _commonPromptPageIndex = 0;
+        _compactCommonPromptPageIndex = 0;
         RefreshCommonPromptsUi();
     }
 
@@ -4122,6 +4136,8 @@ Skill 文件：{skillPath}
             _selectedCommonPromptCategory = "全部";
         }
 
+        _commonPromptPageIndex = 0;
+        _compactCommonPromptPageIndex = 0;
         RefreshCommonPromptsUi();
     }
 
@@ -4134,6 +4150,32 @@ Skill 文件：{skillPath}
 
         _commonPromptSearchText = (sender as TextBox)?.Text.Trim() ?? string.Empty;
         SyncCommonPromptSearchBoxes(sender as TextBox);
+        _commonPromptPageIndex = 0;
+        _compactCommonPromptPageIndex = 0;
+        QueueCommonPromptSearchRefresh();
+    }
+
+    private void CommonPromptPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _commonPromptPageIndex, -1);
+        RefreshCommonPromptsUi();
+    }
+
+    private void CommonPromptNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _commonPromptPageIndex, 1);
+        RefreshCommonPromptsUi();
+    }
+
+    private void CompactCommonPromptPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _compactCommonPromptPageIndex, -1);
+        RefreshCommonPromptsUi();
+    }
+
+    private void CompactCommonPromptNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _compactCommonPromptPageIndex, 1);
         RefreshCommonPromptsUi();
     }
 
@@ -4343,6 +4385,7 @@ Skill 文件：{skillPath}
         source = NormalizeTemplateSource(source);
         _selectedTemplateSource = source;
         _selectedTemplateCategory = "全部";
+        _quickTemplatePageIndex = 0;
         SetTemplateTabState(skillSelected: false);
         if (string.Equals(source, "prompts.chat", StringComparison.OrdinalIgnoreCase))
         {
@@ -4447,7 +4490,9 @@ Skill 文件：{skillPath}
         {
             _selectedTemplateCategory = "全部";
         }
-        RefreshTemplateViews();
+
+        _quickTemplatePageIndex = 0;
+        QueueTemplateSearchRefresh();
     }
 
     private void TemplateSearchBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -4457,6 +4502,19 @@ Skill 文件：{skillPath}
             return;
         }
 
+        _quickTemplatePageIndex = 0;
+        RefreshTemplateViews();
+    }
+
+    private void QuickTemplatePreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _quickTemplatePageIndex, -1);
+        RefreshTemplateViews();
+    }
+
+    private void QuickTemplateNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _quickTemplatePageIndex, 1);
         RefreshTemplateViews();
     }
 
@@ -4481,8 +4539,20 @@ Skill 文件：{skillPath}
         MountedSkillQuickList.SelectedItem = template;
         SelectCompactSkill(template.Id);
 
-        RefreshMountedSkillStatus(MountedSkillQuickList.ItemsSource as IReadOnlyList<PromptTemplateCatalogItem> ?? GetMountedSkillTemplates());
+        RefreshMountedSkillStatus(GetMountedSkillTemplates(), template);
         SetStatus($"已挂载到当前优化目标：{template.Title}");
+    }
+
+    private void MountedSkillPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _mountedSkillPageIndex, -1);
+        RefreshMountedSkillQuickList(moveToSelected: false);
+    }
+
+    private void MountedSkillNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _mountedSkillPageIndex, 1);
+        RefreshMountedSkillQuickList(moveToSelected: false);
     }
 
     private void TemplateFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -4492,6 +4562,7 @@ Skill 文件：{skillPath}
             return;
         }
 
+        _userTemplatePageIndex = 0;
         RefreshUserTemplateList();
     }
 
@@ -4502,6 +4573,31 @@ Skill 文件：{skillPath}
             return;
         }
 
+        _skillManagementPageIndex = 0;
+        RefreshSkillManagementUi();
+    }
+
+    private void FavoritesPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _userTemplatePageIndex, -1);
+        RefreshUserTemplateList();
+    }
+
+    private void FavoritesNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _userTemplatePageIndex, 1);
+        RefreshUserTemplateList();
+    }
+
+    private void SkillPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _skillManagementPageIndex, -1);
+        RefreshSkillManagementUi();
+    }
+
+    private void SkillNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _skillManagementPageIndex, 1);
         RefreshSkillManagementUi();
     }
 
@@ -4669,6 +4765,30 @@ Skill 文件：{skillPath}
         {
             OptimizationTargetManagementList.SelectedItem = target;
         }
+    }
+
+    private void OptimizationTargetChoicePreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _optimizationTargetChoicePageIndex, -1);
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
+    }
+
+    private void OptimizationTargetChoiceNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _optimizationTargetChoicePageIndex, 1);
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
+    }
+
+    private void OptimizationTargetPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _optimizationTargetManagementPageIndex, -1);
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
+    }
+
+    private void OptimizationTargetNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _optimizationTargetManagementPageIndex, 1);
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
     }
 
     private void CompactModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -4862,17 +4982,109 @@ Skill 文件：{skillPath}
         }
     }
 
+    private static IReadOnlyList<T> GetPageItems<T>(IReadOnlyList<T> items, ref int pageIndex, out int totalPages)
+    {
+        totalPages = Math.Max(1, (items.Count + ListPageSize - 1) / ListPageSize);
+        pageIndex = Math.Clamp(pageIndex, 0, totalPages - 1);
+        return items
+            .Skip(pageIndex * ListPageSize)
+            .Take(ListPageSize)
+            .ToArray();
+    }
+
+    private static void MovePageToItem<T>(
+        IReadOnlyList<T> items,
+        string? selectedId,
+        ref int pageIndex,
+        Func<T, string?> getId)
+    {
+        if (string.IsNullOrWhiteSpace(selectedId))
+        {
+            return;
+        }
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (string.Equals(getId(items[i]), selectedId, StringComparison.OrdinalIgnoreCase))
+            {
+                pageIndex = i / ListPageSize;
+                return;
+            }
+        }
+    }
+
+    private static void UpdatePager(Button previousButton, TextBlock pagerText, Button nextButton, int pageIndex, int totalPages, int totalCount)
+    {
+        previousButton.IsEnabled = totalCount > 0 && pageIndex > 0;
+        nextButton.IsEnabled = totalCount > 0 && pageIndex + 1 < totalPages;
+        pagerText.Text = totalCount == 0
+            ? "0 条"
+            : $"{pageIndex + 1} / {totalPages} · {totalCount} 条";
+    }
+
+    private static void MovePage(ref int pageIndex, int delta)
+    {
+        pageIndex = Math.Max(0, pageIndex + delta);
+    }
+
+    private void QueueTemplateSearchRefresh()
+    {
+        if (_templateSearchRefreshQueued)
+        {
+            return;
+        }
+
+        _templateSearchRefreshQueued = true;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _templateSearchRefreshQueued = false;
+            if (_uiReady)
+            {
+                RefreshTemplateViews();
+            }
+        });
+    }
+
+    private void QueueHistorySearchRefresh()
+    {
+        if (_historySearchRefreshQueued)
+        {
+            return;
+        }
+
+        _historySearchRefreshQueued = true;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _historySearchRefreshQueued = false;
+            if (_uiReady)
+            {
+                RefreshHistoryUi();
+            }
+        });
+    }
+
+    private void QueueCommonPromptSearchRefresh()
+    {
+        if (_commonPromptSearchRefreshQueued)
+        {
+            return;
+        }
+
+        _commonPromptSearchRefreshQueued = true;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _commonPromptSearchRefreshQueued = false;
+            if (_uiReady)
+            {
+                RefreshCommonPromptsUi();
+            }
+        });
+    }
+
     private void RefreshFavoritesUi(string? selectedId = null)
     {
         RefreshTemplateViews();
-        RefreshUserTemplateList();
-        var templates = GetUserTemplateCatalog().ToArray();
-
-        var selectedTemplate = selectedId is null
-            ? templates.FirstOrDefault()
-            : templates.FirstOrDefault(template => string.Equals(template.Id, selectedId, StringComparison.OrdinalIgnoreCase));
-
-        FavoritesBox.SelectedItem = selectedTemplate;
+        RefreshUserTemplateList(selectedId);
     }
 
     private IReadOnlyList<PromptTemplateCatalogItem> GetTemplateCatalog()
@@ -4931,10 +5143,12 @@ Skill 文件：{skillPath}
                 || template.Category.Contains(search, StringComparison.OrdinalIgnoreCase)
                 || template.Text.Contains(search, StringComparison.OrdinalIgnoreCase))
             .ToArray();
+        var pageItems = GetPageItems(visibleTemplates, ref _quickTemplatePageIndex, out var totalPages);
 
         _syncingTemplateSelection = true;
         SetLocalizedListItemsKeepingSelection(TemplateCategoryList, categories, _selectedTemplateCategory);
-        QuickTemplateList.ItemsSource = visibleTemplates;
+        QuickTemplateList.ItemsSource = pageItems;
+        UpdatePager(QuickTemplatePreviousPageButton, QuickTemplatePagerText, QuickTemplateNextPageButton, _quickTemplatePageIndex, totalPages, visibleTemplates.Length);
         _syncingTemplateSelection = false;
         RefreshMountedSkillQuickList();
         RefreshCompactTemplatePicker();
@@ -5000,7 +5214,7 @@ Skill 文件：{skillPath}
             .FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
     }
 
-    private void RefreshMountedSkillQuickList()
+    private void RefreshMountedSkillQuickList(bool moveToSelected = true)
     {
         if (MountedSkillQuickList is null)
         {
@@ -5008,16 +5222,25 @@ Skill 文件：{skillPath}
         }
 
         var mountedSkills = GetMountedSkillTemplates();
-        MountedSkillQuickList.ItemsSource = mountedSkills;
+        if (moveToSelected)
+        {
+            MovePageToItem(mountedSkills, _selectedMountedSkillId, ref _mountedSkillPageIndex, template => template.Id);
+        }
+        var pageItems = GetPageItems(mountedSkills, ref _mountedSkillPageIndex, out var totalPages);
+        MountedSkillQuickList.ItemsSource = pageItems;
         PromptTemplateCatalogItem? selected = null;
         if (!string.IsNullOrWhiteSpace(_selectedMountedSkillId))
         {
             selected = mountedSkills
                 .FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
-            MountedSkillQuickList.SelectedItem = selected;
-            if (MountedSkillQuickList.SelectedItem is null)
+            if (selected is null)
             {
                 _selectedMountedSkillId = null;
+                MountedSkillQuickList.SelectedItem = null;
+            }
+            else
+            {
+                MountedSkillQuickList.SelectedItem = pageItems.FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
             }
         }
         else
@@ -5025,6 +5248,7 @@ Skill 文件：{skillPath}
             MountedSkillQuickList.SelectedItem = null;
         }
 
+        UpdatePager(MountedSkillPreviousPageButton, MountedSkillPagerText, MountedSkillNextPageButton, _mountedSkillPageIndex, totalPages, mountedSkills.Count);
         RefreshCompactSkillPicker(mountedSkills);
 
         if (MountedSkillEmptyText is not null)
@@ -5126,7 +5350,7 @@ Skill 文件：{skillPath}
         _syncingTemplateSelection = false;
     }
 
-    private void RefreshUserTemplateList()
+    private void RefreshUserTemplateList(string? selectedId = null)
     {
         var userTemplates = GetUserTemplateCatalog();
         var userCategories = userTemplates
@@ -5141,9 +5365,17 @@ Skill 文件：{skillPath}
         _syncingTemplateSelection = false;
 
         var userCategory = GetChoiceValue(TemplateCategoryFilterBox.SelectedItem);
-        FavoritesBox.ItemsSource = userTemplates
+        var visibleTemplates = userTemplates
             .Where(template => string.IsNullOrWhiteSpace(userCategory) || userCategory == "全部" || string.Equals(template.Category, userCategory, StringComparison.OrdinalIgnoreCase))
             .ToArray();
+        MovePageToItem(visibleTemplates, selectedId, ref _userTemplatePageIndex, template => template.Id);
+        var pageItems = GetPageItems(visibleTemplates, ref _userTemplatePageIndex, out var totalPages);
+
+        FavoritesBox.ItemsSource = pageItems;
+        FavoritesBox.SelectedItem = selectedId is null
+            ? pageItems.FirstOrDefault()
+            : pageItems.FirstOrDefault(template => string.Equals(template.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        UpdatePager(FavoritesPreviousPageButton, FavoritesPagerText, FavoritesNextPageButton, _userTemplatePageIndex, totalPages, visibleTemplates.Length);
     }
 
     private void RefreshSkillManagementUi(string? selectedId = null)
@@ -5166,10 +5398,14 @@ Skill 文件：{skillPath}
                 || selectedCategory == "全部"
                 || string.Equals(template.Category, selectedCategory, StringComparison.OrdinalIgnoreCase))
             .ToArray();
-        SkillList.ItemsSource = visibleTemplates;
+        MovePageToItem(visibleTemplates, selectedId, ref _skillManagementPageIndex, template => template.Id);
+        var pageItems = GetPageItems(visibleTemplates, ref _skillManagementPageIndex, out var totalPages);
+
+        SkillList.ItemsSource = pageItems;
         SkillList.SelectedItem = selectedId is null
-            ? visibleTemplates.FirstOrDefault()
-            : visibleTemplates.FirstOrDefault(template => string.Equals(template.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+            ? pageItems.FirstOrDefault()
+            : pageItems.FirstOrDefault(template => string.Equals(template.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        UpdatePager(SkillPreviousPageButton, SkillPagerText, SkillNextPageButton, _skillManagementPageIndex, totalPages, visibleTemplates.Length);
     }
 
     private void SetComboItemsKeepingSelection(ComboBox comboBox, IReadOnlyList<string> items)
@@ -5230,9 +5466,12 @@ Skill 文件：{skillPath}
     private void RefreshHistoryUi()
     {
         var query = HistorySearchBox?.Text.Trim() ?? string.Empty;
-        HistoryList.ItemsSource = string.IsNullOrWhiteSpace(query)
+        var items = string.IsNullOrWhiteSpace(query)
             ? _historyService.Load().Take(100).ToArray()
             : _historyService.Search(query, 100).ToArray();
+        var pageItems = GetPageItems(items, ref _historyPageIndex, out var totalPages);
+        HistoryList.ItemsSource = pageItems;
+        UpdatePager(HistoryPreviousPageButton, HistoryPagerText, HistoryNextPageButton, _historyPageIndex, totalPages, items.Length);
     }
 
     private void RefreshSearchIndex()
@@ -5273,6 +5512,19 @@ Skill 文件：{skillPath}
             return;
         }
 
+        _historyPageIndex = 0;
+        QueueHistorySearchRefresh();
+    }
+
+    private void HistoryPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _historyPageIndex, -1);
+        RefreshHistoryUi();
+    }
+
+    private void HistoryNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _historyPageIndex, 1);
         RefreshHistoryUi();
     }
 
@@ -5305,14 +5557,22 @@ Skill 文件：{skillPath}
                 || selectedCategory == "全部"
                 || string.Equals(item.Category, selectedCategory, StringComparison.OrdinalIgnoreCase))
             .ToArray();
-        CommonPromptList.ItemsSource = visibleItems;
+        MovePageToItem(visibleItems, selectedId, ref _commonPromptPageIndex, item => item.Id);
+        MovePageToItem(visibleItems, selectedId, ref _compactCommonPromptPageIndex, item => item.Id);
+        var commonPageItems = GetPageItems(visibleItems, ref _commonPromptPageIndex, out var commonTotalPages);
+        var compactPageItems = GetPageItems(visibleItems, ref _compactCommonPromptPageIndex, out var compactTotalPages);
+
+        CommonPromptList.ItemsSource = commonPageItems;
         CommonPromptList.SelectedItem = selectedId is null
             ? null
-            : visibleItems.FirstOrDefault(item => string.Equals(item.Id, selectedId, StringComparison.OrdinalIgnoreCase));
-        CompactCommonPromptList.ItemsSource = visibleItems;
+            : commonPageItems.FirstOrDefault(item => string.Equals(item.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        UpdatePager(CommonPromptPreviousPageButton, CommonPromptPagerText, CommonPromptNextPageButton, _commonPromptPageIndex, commonTotalPages, visibleItems.Length);
+
+        CompactCommonPromptList.ItemsSource = compactPageItems;
         CompactCommonPromptList.SelectedItem = selectedId is null
             ? null
-            : visibleItems.FirstOrDefault(item => string.Equals(item.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+            : compactPageItems.FirstOrDefault(item => string.Equals(item.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        UpdatePager(CompactCommonPromptPreviousPageButton, CompactCommonPromptPagerText, CompactCommonPromptNextPageButton, _compactCommonPromptPageIndex, compactTotalPages, visibleItems.Length);
         _syncingCommonPromptSelection = false;
     }
 
@@ -5397,32 +5657,41 @@ Skill 文件：{skillPath}
     {
         var targets = _optimizationTargetService.Load();
         var selectedId = selectedTargetId ?? GetOptimizationTargetId(_selectedMode);
+        RefreshOptimizationTargetLists(targets, selectedId, moveToSelected: true);
+        RefreshCompactOptimizationTargetItems(targets);
+        SyncCompactModeBox();
+    }
+
+    private void RefreshOptimizationTargetLists(IReadOnlyList<OptimizationTargetItem> targets, string? selectedId, bool moveToSelected)
+    {
         _syncingOptimizationTargetSelection = true;
         try
         {
-            OptimizationTargetChoiceList.Items.Clear();
-            OptimizationTargetManagementList.Items.Clear();
-            OptimizationTargetItem? selectedTarget = null;
-            foreach (var target in targets)
+            if (moveToSelected)
             {
-                OptimizationTargetChoiceList.Items.Add(target);
-                OptimizationTargetManagementList.Items.Add(target);
-                if (string.Equals(target.Id, selectedId, StringComparison.OrdinalIgnoreCase))
-                {
-                    selectedTarget = target;
-                }
+                MovePageToItem(targets, selectedId, ref _optimizationTargetChoicePageIndex, target => target.Id);
+                MovePageToItem(targets, selectedId, ref _optimizationTargetManagementPageIndex, target => target.Id);
             }
 
-            OptimizationTargetChoiceList.SelectedItem = selectedTarget;
-            OptimizationTargetManagementList.SelectedItem = selectedTarget;
+            var choicePageItems = GetPageItems(targets, ref _optimizationTargetChoicePageIndex, out var choiceTotalPages);
+            var managementPageItems = GetPageItems(targets, ref _optimizationTargetManagementPageIndex, out var managementTotalPages);
+            OptimizationTargetChoiceList.ItemsSource = choicePageItems;
+            OptimizationTargetManagementList.ItemsSource = managementPageItems;
+
+            OptimizationTargetChoiceList.SelectedItem = string.IsNullOrWhiteSpace(selectedId)
+                ? null
+                : choicePageItems.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+            OptimizationTargetManagementList.SelectedItem = string.IsNullOrWhiteSpace(selectedId)
+                ? null
+                : managementPageItems.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+
+            UpdatePager(OptimizationTargetChoicePreviousPageButton, OptimizationTargetChoicePagerText, OptimizationTargetChoiceNextPageButton, _optimizationTargetChoicePageIndex, choiceTotalPages, targets.Count);
+            UpdatePager(OptimizationTargetPreviousPageButton, OptimizationTargetPagerText, OptimizationTargetNextPageButton, _optimizationTargetManagementPageIndex, managementTotalPages, targets.Count);
         }
         finally
         {
             _syncingOptimizationTargetSelection = false;
         }
-
-        RefreshCompactOptimizationTargetItems(targets);
-        SyncCompactModeBox();
     }
 
     private void RefreshCompactOptimizationTargetItems(IReadOnlyList<OptimizationTargetItem> targets)
@@ -5472,21 +5741,7 @@ Skill 文件：{skillPath}
     private void SelectOptimizationTargetChoice(string mode)
     {
         var targetId = GetOptimizationTargetId(mode);
-        _syncingOptimizationTargetSelection = true;
-        try
-        {
-            var selectedTarget = string.IsNullOrWhiteSpace(targetId)
-                ? null
-                : OptimizationTargetChoiceList.Items
-                    .OfType<OptimizationTargetItem>()
-                    .FirstOrDefault(target => string.Equals(target.Id, targetId, StringComparison.OrdinalIgnoreCase));
-            OptimizationTargetChoiceList.SelectedItem = selectedTarget;
-            OptimizationTargetManagementList.SelectedItem = selectedTarget;
-        }
-        finally
-        {
-            _syncingOptimizationTargetSelection = false;
-        }
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), targetId, moveToSelected: true);
     }
 
     private void SyncCompactModeBox()

@@ -6,6 +6,8 @@ public sealed class OptimizationTargetService
 {
     public const string Schema = "aipin.optimization_target.v1";
     private readonly AppDatabaseService _database = new();
+    private readonly object _cacheGate = new();
+    private IReadOnlyList<OptimizationTargetItem>? _cachedItems;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -16,17 +18,29 @@ public sealed class OptimizationTargetService
 
     public IReadOnlyList<OptimizationTargetItem> Load()
     {
+        lock (_cacheGate)
+        {
+            if (_cachedItems is not null)
+            {
+                return _cachedItems;
+            }
+        }
+
         var databaseItems = _database.LoadRecords<OptimizationTargetItem>(AppDatabaseService.KindOptimizationTarget, 200);
         if (databaseItems.Count > 0)
         {
-            return databaseItems
+            var orderedItems = databaseItems
                 .Where(item => !string.IsNullOrWhiteSpace(item.Title)
                     && !string.IsNullOrWhiteSpace(item.LocalPromptTemplate))
                 .OrderByDescending(item => item.UpdatedAt)
                 .ToArray();
+            SetCachedItems(orderedItems);
+            return orderedItems;
         }
 
-        return Array.Empty<OptimizationTargetItem>();
+        var empty = Array.Empty<OptimizationTargetItem>();
+        SetCachedItems(empty);
+        return empty;
     }
 
     public IReadOnlyList<OptimizationTargetItem> ImportFromFile(string path)
@@ -62,6 +76,7 @@ public sealed class OptimizationTargetService
         }
 
         SaveRecords(items.Take(100).ToArray());
+        SetCachedItems(items.Take(100).ToArray());
         return changed;
     }
 
@@ -88,7 +103,12 @@ public sealed class OptimizationTargetService
             if (removed)
             {
                 SaveRecords(items);
+                SetCachedItems(items);
             }
+        }
+        else
+        {
+            InvalidateCache();
         }
 
         return removed;
@@ -228,6 +248,26 @@ public sealed class OptimizationTargetService
                 item.CreatedAt == default ? DateTimeOffset.UtcNow : item.CreatedAt,
                 item.UpdatedAt == default ? DateTimeOffset.UtcNow : item.UpdatedAt)),
             updateSearchIndex: true);
+    }
+
+    private void SetCachedItems(IReadOnlyList<OptimizationTargetItem> items)
+    {
+        lock (_cacheGate)
+        {
+            _cachedItems = items
+                .Where(item => !string.IsNullOrWhiteSpace(item.Title)
+                    && !string.IsNullOrWhiteSpace(item.LocalPromptTemplate))
+                .OrderByDescending(item => item.UpdatedAt)
+                .ToArray();
+        }
+    }
+
+    private void InvalidateCache()
+    {
+        lock (_cacheGate)
+        {
+            _cachedItems = null;
+        }
     }
 
 }

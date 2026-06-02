@@ -5,6 +5,8 @@ namespace PromptInputMethod.App.Services;
 public sealed class CommonPromptService
 {
     private readonly AppDatabaseService _database = new();
+    private readonly object _cacheGate = new();
+    private IReadOnlyList<CommonPromptItem>? _cachedItems;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -13,6 +15,14 @@ public sealed class CommonPromptService
 
     public IReadOnlyList<CommonPromptItem> Load()
     {
+        lock (_cacheGate)
+        {
+            if (_cachedItems is not null)
+            {
+                return _cachedItems;
+            }
+        }
+
         var databaseItems = _database.LoadRecords<CommonPromptItem>(AppDatabaseService.KindCommonPrompt, 500);
         if (databaseItems.Count > 0)
         {
@@ -20,13 +30,13 @@ public sealed class CommonPromptService
                 .Where(item => !string.IsNullOrWhiteSpace(item.Text))
                 .OrderByDescending(item => item.UpdatedAt)
                 .ToArray();
-            _database.ReplaceCommonPromptIndex(orderedItems);
+            SetCachedItems(orderedItems);
             return orderedItems;
         }
 
         var defaults = BuildDefaultItems();
         SaveRecords(defaults);
-        _database.ReplaceCommonPromptIndex(defaults);
+        SetCachedItems(defaults);
         return defaults;
     }
 
@@ -83,7 +93,7 @@ public sealed class CommonPromptService
             };
             items.Insert(0, existing);
             SaveRecords(items);
-            _database.ReplaceCommonPromptIndex(items);
+            SetCachedItems(items);
             return existing;
         }
 
@@ -91,7 +101,7 @@ public sealed class CommonPromptService
         items.Insert(0, item);
         var savedItems = items.Take(200).ToArray();
         SaveRecords(savedItems);
-        _database.ReplaceCommonPromptIndex(savedItems);
+        SetCachedItems(savedItems);
         return item;
     }
 
@@ -102,7 +112,7 @@ public sealed class CommonPromptService
         if (removed > 0)
         {
             SaveRecords(items);
-            _database.ReplaceCommonPromptIndex(items);
+            SetCachedItems(items);
         }
 
         return removed > 0;
@@ -146,8 +156,19 @@ public sealed class CommonPromptService
 
         var savedItems = items.Take(500).ToArray();
         SaveRecords(savedItems);
-        _database.ReplaceCommonPromptIndex(savedItems);
+        SetCachedItems(savedItems);
         return changed;
+    }
+
+    private void SetCachedItems(IReadOnlyList<CommonPromptItem> items)
+    {
+        lock (_cacheGate)
+        {
+            _cachedItems = items
+                .Where(item => !string.IsNullOrWhiteSpace(item.Text))
+                .OrderByDescending(item => item.UpdatedAt)
+                .ToArray();
+        }
     }
 
     public void ExportToFile(string path)

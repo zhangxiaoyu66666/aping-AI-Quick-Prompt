@@ -1,7 +1,7 @@
 param(
     [string]$Configuration = "Release",
     [string]$Platform = "x64",
-    [string]$Version = "1.0.0.0",
+    [string]$Version = "1.0.2.0",
     [string]$Publisher = "CN=XiaYu Studio",
     [string]$PackageName = "XiaYuStudio.AIQuickPrompt",
     [string]$OutputRoot = "artifacts\msix",

@@ -3,10 +3,22 @@ namespace PromptInputMethod.App.Services;
 public sealed class PromptHistoryService
 {
     private readonly AppDatabaseService _database = new();
+    private readonly object _cacheGate = new();
+    private IReadOnlyList<PromptHistoryItem>? _cachedRecentItems;
 
     public IReadOnlyList<PromptHistoryItem> Load()
     {
-        return _database.LoadHistory();
+        lock (_cacheGate)
+        {
+            if (_cachedRecentItems is not null)
+            {
+                return _cachedRecentItems;
+            }
+        }
+
+        var items = _database.LoadHistory();
+        SetRecentCache(items);
+        return items;
     }
 
     public IReadOnlyList<PromptHistoryItem> Search(string query, int limit = 100)
@@ -59,6 +71,7 @@ public sealed class PromptHistoryService
             NormalizeMessages(messages));
 
         _database.SaveHistory(item);
+        UpdateRecentCache(item);
         return item;
     }
 
@@ -93,12 +106,60 @@ public sealed class PromptHistoryService
     public bool Delete(string id)
     {
         var removed = _database.DeleteHistory(id);
+        if (removed)
+        {
+            InvalidateRecentCache();
+        }
+
         return removed;
     }
 
     public int Clear()
     {
-        return _database.ClearHistory();
+        var removed = _database.ClearHistory();
+        if (removed > 0)
+        {
+            SetRecentCache(Array.Empty<PromptHistoryItem>());
+        }
+
+        return removed;
+    }
+
+    private void SetRecentCache(IReadOnlyList<PromptHistoryItem> items)
+    {
+        lock (_cacheGate)
+        {
+            _cachedRecentItems = items
+                .OrderByDescending(item => item.CreatedAt)
+                .Take(200)
+                .ToArray();
+        }
+    }
+
+    private void UpdateRecentCache(PromptHistoryItem item)
+    {
+        lock (_cacheGate)
+        {
+            if (_cachedRecentItems is null)
+            {
+                return;
+            }
+
+            _cachedRecentItems = _cachedRecentItems
+                .Where(current => !string.Equals(current.Id, item.Id, StringComparison.OrdinalIgnoreCase))
+                .Prepend(item)
+                .OrderByDescending(current => current.CreatedAt)
+                .Take(200)
+                .ToArray();
+        }
+    }
+
+    private void InvalidateRecentCache()
+    {
+        lock (_cacheGate)
+        {
+            _cachedRecentItems = null;
+        }
     }
 
     private static string BuildTitle(string userRequest, string chinesePrompt)
