@@ -37,6 +37,7 @@ public sealed partial class CompactPromptWindow : Window
     private const double SidebarExpandWidth = 1260;
     private const int PageTransitionDurationMs = 120;
     private const int TabTransitionDurationMs = 100;
+    private const int ScreenCaptureSettleDelayMs = 420;
     private const double SidebarFullCollapseWidth = 720;
     private const double SidebarFullExpandWidth = 820;
     private const double RightPanelCollapseWidth = 760;
@@ -2426,7 +2427,7 @@ Skill 文件：{skillPath}
         try
         {
             HideWindow();
-            await Task.Delay(160);
+            await WaitForScreenCaptureSettleAsync();
 
             using var capture = _windowCaptureService.CaptureVirtualScreen();
             var selector = new RegionSelectionWindow(capture.Bitmap, capture.Bounds);
@@ -2494,7 +2495,7 @@ Skill 文件：{skillPath}
         try
         {
             HideWindow();
-            await Task.Delay(160);
+            await WaitForScreenCaptureSettleAsync();
 
             using var capture = _windowCaptureService.CaptureVirtualScreen();
             var selector = new RegionSelectionWindow(capture.Bitmap, capture.Bounds);
@@ -4725,6 +4726,12 @@ Skill 文件：{skillPath}
         ShowWindow(WindowNative.GetWindowHandle(this), SwHide);
     }
 
+    private static async Task WaitForScreenCaptureSettleAsync()
+    {
+        await Task.Yield();
+        await Task.Delay(ScreenCaptureSettleDelayMs);
+    }
+
     private void SetTopmost(bool topmost)
     {
         SetWindowPos(WindowNative.GetWindowHandle(this), topmost ? HwndTopmost : HwndNotTopmost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate);
@@ -6046,12 +6053,40 @@ Skill 文件：{skillPath}
         RefreshScene();
 
         var truncatedText = ocrContext.IsTruncated ? "，已截断预处理" : string.Empty;
-        var fallbackText = routeResult.UsedFallback ? "，已 fallback" : string.Empty;
+        var fallbackText = BuildOcrFallbackStatus(routeResult);
         SetContextText(ocrContext.Text, source, $"{successMessage}：{ocrContext.LineCount} 行，{routeResult.ProviderDisplayName} {routeResult.Duration.TotalMilliseconds:0}ms{fallbackText}，已归类为{ocrContext.FieldName}{truncatedText}", ocrContext.FieldName);
         if (appendToUserInput)
         {
             SetUserInput(AppendLine(GetUserInput(), ocrContext.Text));
         }
+    }
+
+    private static string BuildOcrFallbackStatus(OcrRouteResult routeResult)
+    {
+        if (!routeResult.UsedFallback)
+        {
+            return string.Empty;
+        }
+
+        var failedAttempt = routeResult.Attempts.FirstOrDefault(attempt => !attempt.Success);
+        if (failedAttempt is null)
+        {
+            return "，已启用兜底";
+        }
+
+        var reason = NormalizeCompactStatusText(failedAttempt.ErrorMessage ?? "未返回可用结果", 96);
+        return $"，{failedAttempt.ProviderDisplayName} 失败后兜底：{reason}";
+    }
+
+    private static string NormalizeCompactStatusText(string value, int maxLength)
+    {
+        var normalized = value.ReplaceLineEndings(" ").Trim();
+        if (normalized.Length <= maxLength)
+        {
+            return normalized;
+        }
+
+        return $"{normalized[..maxLength]}...";
     }
 
     private async Task<string> BuildRefinedUserRequestAsync(string currentPrompt)

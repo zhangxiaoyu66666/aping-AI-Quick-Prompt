@@ -145,9 +145,23 @@ internal sealed class FireEyeOcrProvider : IOcrProvider
             throw new InvalidOperationException($"Fire Eye OCR worker 未输出 JSON：{FormatWorkerOutput(stdout, stderr)}");
         }
 
-        var json = stdout[(markerIndex + JsonMarker.Length)..].Trim();
-        return JsonSerializer.Deserialize<FireEyeWorkerResponse>(json, JsonOptions)
-            ?? throw new InvalidOperationException("Fire Eye OCR worker JSON 响应为空。");
+        var payload = stdout[(markerIndex + JsonMarker.Length)..].TrimStart();
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            throw new InvalidOperationException($"Fire Eye OCR worker JSON 响应为空：{FormatWorkerOutput(stdout, stderr)}");
+        }
+
+        try
+        {
+            var bytes = Encoding.UTF8.GetBytes(payload);
+            var reader = new Utf8JsonReader(bytes);
+            return JsonSerializer.Deserialize<FireEyeWorkerResponse>(ref reader, JsonOptions)
+                ?? throw new InvalidOperationException("Fire Eye OCR worker JSON 响应为空。");
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"Fire Eye OCR worker JSON 解析失败：{ex.Message}；输出：{FormatWorkerOutput(stdout, stderr)}", ex);
+        }
     }
 
     private static PromptOcrResult ToPromptOcrResult(FireEyeNativeResult result)
