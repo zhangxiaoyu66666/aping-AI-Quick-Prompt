@@ -37,6 +37,8 @@ The 1.0 OCR model and vendored native dependency review is complete. Fire Eye OC
 
 Copied upstream source trees, local OCR model files, and old migration reference trees are intentionally ignored by Git. The public repository keeps generated app template data, bundled Skill packages with their own notices, the integrated native OCR code, and attribution documents. See [docs/template-source-imports.md](docs/template-source-imports.md) if you need to recreate local reference folders for maintenance.
 
+Future Windows polish, macOS adaptation, cross-platform core extraction, template/Skill data formats, and long-term platform plans are tracked in [PROMPT_INPUT_METHOD_ROADMAP.md](PROMPT_INPUT_METHOD_ROADMAP.md).
+
 ## License
 
 The original source code and documentation in this repository are released under the GNU General Public License, version 3 or any later version (`GPL-3.0-or-later`).
@@ -179,6 +181,7 @@ The repository includes:
 - GitHub issue templates and pull request template.
 - GitHub Actions Windows build workflow.
 - Template source import notes for local-only upstream references.
+- Product roadmap for Windows polish, macOS adaptation, and cross-platform planning.
 - 1.0 release readiness notes, OCR model license review, and lightweight release checks.
 
 For Codex for Open Source preparation, see [docs/codex-for-open-source.md](docs/codex-for-open-source.md).
@@ -211,7 +214,7 @@ Create a signed MSIX sideload package:
 powershell -ExecutionPolicy Bypass -File scripts\New-MsixPackage.ps1
 ```
 
-The completed 1.0 checklist lives in [docs/release-1.0-readiness.md](docs/release-1.0-readiness.md).
+The completed 1.0 release checklist lives in [docs/release-1.0-readiness.md](docs/release-1.0-readiness.md). The forward-looking product roadmap lives in [PROMPT_INPUT_METHOD_ROADMAP.md](PROMPT_INPUT_METHOD_ROADMAP.md).
 
 ## Contributing
 
