@@ -1,5 +1,7 @@
 # 啊拼 / AI Quick Prompt
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 啊拼 / AI Quick Prompt is a GPL-licensed Windows Fluent prompt workbench for turning rough intent, OCR text, clipboard context, image references, local templates, and mounted Skill workflows into clearer prompts.
 
 It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. The app is designed for Windows users who move between ChatGPT, Claude, Gemini, local OpenAI-compatible models, image models, video models, and coding agents.
