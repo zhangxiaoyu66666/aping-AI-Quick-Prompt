@@ -9,6 +9,7 @@ var checks = new ReleaseCheck[]
     new("Template data import/export", () => CheckTemplateData(repoRoot)),
     new("Skill matching inputs", () => CheckSkillMatchingInputs(repoRoot)),
     new("Provider validation", () => CheckProviderValidation(repoRoot)),
+    new("Bilingual prompt generation protocol", () => CheckBilingualPromptGeneration(repoRoot)),
     new("Accessibility and layout coverage", () => CheckAccessibilityAndLayoutCoverage(repoRoot)),
     new("Public demo packaging policy", () => CheckPublicDemoPackagingPolicy(repoRoot))
 };
@@ -116,6 +117,19 @@ static void CheckProviderValidation(string repoRoot)
     AssertContains(ocrReview, "Apache-2.0", "OCR model review must record the Apache-2.0 license conclusion.");
 }
 
+static void CheckBilingualPromptGeneration(string repoRoot)
+{
+    var appCode = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.App", "CompactPromptWindow.xaml.cs"));
+
+    AssertContains(appCode, "<AIPIN_ENGLISH_PROMPT>", "Model protocol must ask for the English prompt in the same completion.");
+    AssertContains(appCode, "同一轮必须同步生成 AIPIN_ENGLISH_PROMPT", "Protocol rules must require one-pass English prompt generation.");
+    AssertContains(appCode, "var protocolEnglishPrompt = protocolResult.EnglishPrompt;", "Generation flow should read the protocol English prompt directly.");
+    AssertContains(appCode, "模型未按协议返回英文提示词，已使用本地同步结构", "Missing protocol English should use local fallback instead of a second model translation.");
+    AssertContains(appCode, "BuildEnglishTranslationStructureRule", "One-pass English generation should still preserve target-specific structure rules.");
+    AssertNotContains(appCode, "BuildSynchronizedEnglishPromptForGenerationAsync(", "Generation flow must not call the model a second time for translation.");
+    AssertNotContains(appCode, "BuildEnglishTranslationPrompt(", "The old second-pass translation prompt must not be kept in the app code.");
+}
+
 static void CheckAccessibilityAndLayoutCoverage(string repoRoot)
 {
     var appXaml = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.App", "CompactPromptWindow.xaml"));
@@ -193,6 +207,11 @@ static void AssertFileExists(string path)
 static void AssertContains(string text, string expected, string message)
 {
     Assert(text.Contains(expected, StringComparison.Ordinal), message);
+}
+
+static void AssertNotContains(string text, string unexpected, string message)
+{
+    Assert(!text.Contains(unexpected, StringComparison.Ordinal), message);
 }
 
 static void AssertEqual<T>(T expected, T actual, string message)

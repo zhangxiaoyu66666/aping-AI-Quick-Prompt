@@ -682,7 +682,7 @@ public sealed partial class CompactPromptWindow : Window
         var selectedOptimizationTarget = GetSelectedOptimizationTarget();
         var finalPrompt = localPrompt;
         var fallbackQuestionSource = matchedSkill is null ? localPrompt : baseLocalPrompt;
-        PromptProtocolResult protocolResult = new(localPrompt, BuildLocalFollowUpQuestion(fallbackQuestionSource), BuildLocalMissingItems(fallbackQuestionSource), false, null);
+        PromptProtocolResult protocolResult = new(localPrompt, null, BuildLocalFollowUpQuestion(fallbackQuestionSource), BuildLocalMissingItems(fallbackQuestionSource), false, null);
         LlmRequestOptions? llmOptions = null;
         var canSyncEnglishWithModel = false;
         var deepThinkingEnabled = IsDeepThinkingEnabled();
@@ -732,7 +732,8 @@ public sealed partial class CompactPromptWindow : Window
                         }
 
                         var cleanedPrompt = StripPromptMarkdown(parsed.Prompt);
-                        return (Protocol: parsed with { Prompt = cleanedPrompt }, Prompt: cleanedPrompt);
+                        var cleanedEnglishPrompt = StripPromptMarkdown(parsed.EnglishPrompt ?? string.Empty);
+                        return (Protocol: parsed with { Prompt = cleanedPrompt, EnglishPrompt = cleanedEnglishPrompt }, Prompt: cleanedPrompt);
                     });
 
                     protocolResult = normalized.Protocol;
@@ -771,7 +772,8 @@ public sealed partial class CompactPromptWindow : Window
         var cleaned = await Task.Run(() =>
         {
             var cleanedPrompt = StripPromptMarkdown(finalPrompt);
-            return (Protocol: protocolResult with { Prompt = cleanedPrompt }, Prompt: cleanedPrompt);
+            var cleanedEnglishPrompt = StripPromptMarkdown(protocolResult.EnglishPrompt ?? string.Empty);
+            return (Protocol: protocolResult with { Prompt = cleanedPrompt, EnglishPrompt = cleanedEnglishPrompt }, Prompt: cleanedPrompt);
         });
         protocolResult = cleaned.Protocol;
         finalPrompt = cleaned.Prompt;
@@ -779,7 +781,19 @@ public sealed partial class CompactPromptWindow : Window
         AddProtocolAssistantMessage(protocolResult, animate: true);
         var outputToken = ResetOutputTypewriter();
         var chineseAnimation = SetChineseOutputWithTypewriterAsync(finalPrompt, outputToken);
-        var englishResultTask = BuildSynchronizedEnglishPromptForGenerationAsync(finalPrompt, llmOptions, canSyncEnglishWithModel, isTextToImageMode, isVideoMode, isAiCodingMode, isAcademicHumanizeMode, selectedOptimizationTarget, _settings);
+        var protocolEnglishPrompt = protocolResult.EnglishPrompt;
+        var englishResultTask = Task.Run(() =>
+        {
+            if (!string.IsNullOrWhiteSpace(protocolEnglishPrompt))
+            {
+                return new EnglishPromptResult(protocolEnglishPrompt, null);
+            }
+
+            var status = canSyncEnglishWithModel
+                ? "模型未按协议返回英文提示词，已使用本地同步结构"
+                : null;
+            return new EnglishPromptResult(BuildLocalEnglishMirror(finalPrompt), status);
+        });
         await UpdatePromptDiffAsync(diffBasePrompt, finalPrompt);
         var englishResult = await englishResultTask;
         var englishPrompt = await Task.Run(() => StripPromptMarkdown(englishResult.Text));
@@ -1162,7 +1176,7 @@ public sealed partial class CompactPromptWindow : Window
 
     private async void ExpandEnglishOutputButton_Click(object sender, RoutedEventArgs e)
     {
-        await ShowLargeOutputDialogAsync("英文翻译提示词", EnglishOutputBox.Text, SetEnglishOutput);
+        await ShowLargeOutputDialogAsync("英文提示词", EnglishOutputBox.Text, SetEnglishOutput);
     }
 
     private async Task ShowLargeOutputDialogAsync(string title, string text, Action<string> applyText)
@@ -6205,7 +6219,7 @@ Skill 文件：{skillPath}
 目标平台 / 优化模式：{effectiveMode}
 场景选择：{selectedScenes}
 主输出语言：{primaryLanguage}
-英文翻译提示词区域会单独同步输出英文；如果当前界面语言是英文，主输出语言仍保持中文。
+英文提示词区域会单独同步输出英文；如果当前界面语言是英文，主输出语言仍保持中文。
 上下文来源：{FallbackText(_contextSource, "手动输入")}
 额外上下文：{FallbackText(ContextBox.Text, "暂无")}
 输出方向：{sceneLine}
@@ -6404,6 +6418,7 @@ Skill 文件：{skillPath}
             : isTextToImageMode
             ? BuildTextToImageModelOptimizationPrompt(userRequest, localPrompt)
             : BuildModelOptimizationPrompt(userRequest, localPrompt);
+        var englishStructureRule = BuildEnglishTranslationStructureRule(isTextToImageMode, isVideoMode, IsAiCodingMode(), IsAcademicHumanizeMode(), selectedTarget);
         var thinkingProtocol = deepThinkingEnabled
             ? $"""
 <AIPIN_THINKING>
@@ -6413,9 +6428,9 @@ Skill 文件：{skillPath}
             : string.Empty;
         var thinkingRule = deepThinkingEnabled
             ? $"""
-7. 深度思考已开启。当前内置标签：{reasoningCapability.ProviderTag} / {reasoningCapability.ModelTag}。如果 Provider 返回原生 reasoning_content，客户端会优先显示它；同时你仍需填写 AIPIN_THINKING 作为可展示摘要或 fallback。
+8. 深度思考已开启。当前内置标签：{reasoningCapability.ProviderTag} / {reasoningCapability.ModelTag}。如果 Provider 返回原生 reasoning_content，客户端会优先显示它；同时你仍需填写 AIPIN_THINKING 作为可展示摘要或 fallback。
 """
-            : "7. 深度思考未开启，不要输出 AIPIN_THINKING 标签。";
+            : "8. 深度思考未开启，不要输出 AIPIN_THINKING 标签。";
 
         return $"""
 你是 啊拼 的对话式提示词优化器。你必须使用客户端协议输出，客户端只会读取协议标签内的内容。
@@ -6428,6 +6443,9 @@ Skill 文件：{skillPath}
 <AIPIN_PROMPT>
 {(matchedSkill is not null ? "按已挂载 Skill 直接生成的最终提示词或最终结果。必须可直接复制使用，不要再包装成 Skill 调用请求。" : "更新后的完整提示词。必须可直接复制给目标模型使用。")}
 </AIPIN_PROMPT>
+<AIPIN_ENGLISH_PROMPT>
+与 AIPIN_PROMPT 对应的完整英文提示词。必须在本轮一次性生成，不能写“见中文版本”、不能留空、不能只翻译标题。
+</AIPIN_ENGLISH_PROMPT>
 <AIPIN_MISSING>
 仍可能缺失的需求点，用简短条目列出；如果没有明显缺失，写“暂无明显缺失。”
 </AIPIN_MISSING>
@@ -6436,10 +6454,11 @@ Skill 文件：{skillPath}
 协议规则：
 1. 协议标签外不要输出任何正文、解释、Markdown 分隔线或代码块。
 2. 每一轮都必须基于“上一版提示词”和“用户本轮补充”更新 AIPIN_PROMPT；如果已选择或命中挂载 Skill，则把 Skill 当作当前生成规则直接执行，不要输出“请调用/激活 Skill”的中间提示词。
-3. 不要把追问写进 AIPIN_PROMPT 正文；追问只放 AIPIN_QUESTION。
-4. AIPIN_MISSING 必须指出可能还缺什么，例如技术栈、平台、画幅、风格、约束、输出格式、验收标准等。
-5. 如果用户本轮只是回答某个缺失项，比如“Java”，要把它合并进提示词，并继续追问下一个最重要缺失项。
-6. AIPIN_PROMPT 必须是纯文本最终提示词，不要使用 Markdown：不要用 # 标题、-/* 列表符号、**粗体**、`行内代码`、```代码围栏、Markdown 链接或 Markdown 分隔线。需要分段时使用中文括号标题如【任务】或普通换行。
+3. 同一轮必须同步生成 AIPIN_ENGLISH_PROMPT：它是 AIPIN_PROMPT 的英文可执行版本，而不是后续翻译任务。{englishStructureRule}
+4. 不要把追问写进 AIPIN_PROMPT 或 AIPIN_ENGLISH_PROMPT 正文；追问只放 AIPIN_QUESTION。
+5. AIPIN_MISSING 必须指出可能还缺什么，例如技术栈、平台、画幅、风格、约束、输出格式、验收标准等。
+6. 如果用户本轮只是回答某个缺失项，比如“Java”，要把它合并进提示词，并继续追问下一个最重要缺失项。
+7. AIPIN_PROMPT 和 AIPIN_ENGLISH_PROMPT 都必须是纯文本最终提示词，不要使用 Markdown：不要用 # 标题、-/* 列表符号、**粗体**、`行内代码`、```代码围栏、Markdown 链接或 Markdown 分隔线。需要分段时中文使用【任务】这类括号标题，英文使用 [Task] 这类方括号标题或普通换行。
 {thinkingRule}
 
 上一版提示词：
@@ -6459,6 +6478,7 @@ Skill 文件：{skillPath}
     private static PromptProtocolResult ParsePromptProtocol(string rawResponse, string fallbackPrompt)
     {
         var prompt = ExtractProtocolTag(rawResponse, "AIPIN_PROMPT");
+        var englishPrompt = ExtractProtocolTag(rawResponse, "AIPIN_ENGLISH_PROMPT");
         var question = ExtractProtocolTag(rawResponse, "AIPIN_QUESTION");
         var missing = ExtractProtocolTag(rawResponse, "AIPIN_MISSING");
         var doneText = ExtractProtocolTag(rawResponse, "AIPIN_DONE");
@@ -6472,7 +6492,7 @@ Skill 文件：{skillPath}
         }
 
         var done = bool.TryParse(doneText, out var parsedDone) && parsedDone;
-        return new PromptProtocolResult(prompt.Trim(), question?.Trim(), missing?.Trim(), done, thinking?.Trim());
+        return new PromptProtocolResult(prompt.Trim(), englishPrompt?.Trim(), question?.Trim(), missing?.Trim(), done, thinking?.Trim());
     }
 
     private static string? ExtractProtocolTag(string text, string tag)
@@ -6556,7 +6576,7 @@ Skill 文件：{skillPath}
         AddChatMessage(string.Join(Environment.NewLine, parts), isUser: false, animate: animate);
     }
 
-    private readonly record struct PromptProtocolResult(string Prompt, string? Question, string? Missing, bool Done, string? Thinking);
+    private readonly record struct PromptProtocolResult(string Prompt, string? EnglishPrompt, string? Question, string? Missing, bool Done, string? Thinking);
 
     private readonly record struct SkillMatch(PromptTemplateCatalogItem Template, int Score, string Description);
 
@@ -7111,38 +7131,9 @@ Local structure draft:
 """;
     }
 
-    private async Task<string> BuildSynchronizedEnglishPromptAsync(string finalPrompt, LlmRequestOptions? llmOptions, bool canUseModel, bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget)
+    private static string BuildEnglishTranslationStructureRule(bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget)
     {
-        var result = await BuildSynchronizedEnglishPromptForGenerationAsync(finalPrompt, llmOptions, canUseModel, isTextToImageMode, isVideoMode, isAgenticMode, isAcademicHumanizeMode, selectedTarget, _settings);
-        if (!string.IsNullOrWhiteSpace(result.Status))
-        {
-            SetStatus(result.Status);
-        }
-
-        return result.Text;
-    }
-
-    private async Task<EnglishPromptResult> BuildSynchronizedEnglishPromptForGenerationAsync(string finalPrompt, LlmRequestOptions? llmOptions, bool canUseModel, bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget, AppSettings settings)
-    {
-        if (canUseModel && llmOptions?.IsConfigured == true && settings.Privacy.ModelExternalRequestsEnabled)
-        {
-            try
-            {
-                var englishPrompt = await _llmClient.CompleteAsync(BuildEnglishTranslationPrompt(finalPrompt, isTextToImageMode, isVideoMode, isAgenticMode, isAcademicHumanizeMode, selectedTarget), llmOptions).ConfigureAwait(false);
-                return new EnglishPromptResult(englishPrompt, null);
-            }
-            catch (Exception ex)
-            {
-                return new EnglishPromptResult(BuildLocalEnglishMirror(finalPrompt), $"英文同步翻译失败，已使用本地同步结构：{ex.Message}");
-            }
-        }
-
-        return new EnglishPromptResult(BuildLocalEnglishMirror(finalPrompt), null);
-    }
-
-    private static string BuildEnglishTranslationPrompt(string finalPrompt, bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget)
-    {
-        var structureRule = isVideoMode
+        return isVideoMode
             ? "Preserve the exact video prompt structure, section order, placeholders, timeline beats, dialogue lines, audio details, and negative constraints."
             : isTextToImageMode
             ? "Preserve the exact text-to-image section order, numbered headings, placeholders, and negative constraints."
@@ -7153,20 +7144,6 @@ Local structure draft:
             : isAcademicHumanizeMode
             ? "Preserve the academic rewriting prompt as an executable instruction. Keep the anti-AI-tone banned phrase list, no-listing rules, no-fabrication rules, and the final text-only output rule."
             : "Preserve the exact TCREI structure and order. Convert section labels to [Task], [Context], [References], [Evaluate], [Iterate].";
-
-        return $"""
-Translate the following finalized primary-language prompt into English.
-
-Hard rules:
-1. {structureRule}
-2. Translate the content faithfully. Do not add new facts, examples, brands, features, or requirements.
-3. Keep placeholders and "需要补充的信息" as "Information needed".
-4. Output only the English prompt. No explanations, no markdown fences, no bilingual duplication.
-5. Do not introduce Markdown formatting: no # headings, bullet markers, bold markers, inline-code backticks, Markdown links, separators, or fenced code blocks.
-
-Final primary-language prompt:
-{finalPrompt}
-""";
     }
 
     private string BuildLocalEnglishMirror(string finalPrompt)
