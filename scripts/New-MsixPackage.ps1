@@ -32,6 +32,9 @@ Push-Location $repoRoot
 try {
     if (-not $SkipNativeBuild) {
         cargo build -p fire-eye-ocr-worker --manifest-path native\Cargo.toml --release
+        if ($LASTEXITCODE -ne 0) {
+            throw "Native OCR worker build failed with exit code $LASTEXITCODE."
+        }
     }
 
     & $msbuild src\PromptInputMethod.App\PromptInputMethod.App.csproj /t:Restore,Build /p:Configuration=$Configuration /p:Platform=$Platform /m /v:minimal
@@ -47,6 +50,7 @@ try {
     }
 
     $packageRoot = Join-Path $repoRoot $OutputRoot
+    $versionLabel = $Version.TrimStart("v")
     $staging = Join-Path $packageRoot "staging-$architecture"
     if (Test-Path $staging) {
         Remove-Item -LiteralPath $staging -Recurse -Force
@@ -98,7 +102,7 @@ try {
 "@
     Set-Content -LiteralPath $manifestPath -Value $manifest -Encoding UTF8
 
-    $packagePath = Join-Path $packageRoot "AI-Quick-Prompt-1.0.0-$architecture.msix"
+    $packagePath = Join-Path $packageRoot "AI-Quick-Prompt-$versionLabel-$architecture.msix"
     if (Test-Path $packagePath) {
         Remove-Item -LiteralPath $packagePath -Force
     }
@@ -114,7 +118,7 @@ try {
         -Type CodeSigningCert `
         -Subject $Publisher `
         -CertStoreLocation "Cert:\CurrentUser\My" `
-        -FriendlyName "AI Quick Prompt 1.0 MSIX Sideloading Certificate" `
+        -FriendlyName "AI Quick Prompt $versionLabel MSIX Sideloading Certificate" `
         -KeyAlgorithm RSA `
         -KeyLength 2048 `
         -KeyExportPolicy Exportable `
@@ -123,8 +127,8 @@ try {
 
     $passwordText = [Guid]::NewGuid().ToString("N")
     $password = ConvertTo-SecureString $passwordText -AsPlainText -Force
-    $pfxPath = Join-Path $certDir "AI-Quick-Prompt-1.0.0-sideloading.pfx"
-    $cerPath = Join-Path $certDir "AI-Quick-Prompt-1.0.0-sideloading.cer"
+    $pfxPath = Join-Path $certDir "AI-Quick-Prompt-$versionLabel-sideloading.pfx"
+    $cerPath = Join-Path $certDir "AI-Quick-Prompt-$versionLabel-sideloading.cer"
     Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $password | Out-Null
     Export-Certificate -Cert $cert -FilePath $cerPath | Out-Null
 
