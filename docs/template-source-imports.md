@@ -6,6 +6,7 @@ The following paths are local-only and ignored by Git:
 
 - `ChatGPT-Shortcut-main/`
 - `SD-Anima-Prompt-Studio-main/`
+- `reference/xiaxia-pet/`
 - `assets/fire_eye/`
 
 They can exist on a maintainer machine for review, regeneration, OCR smoke tests, or attribution checks. A normal WinUI app build should not require those folders.
@@ -16,6 +17,7 @@ They can exist on a maintainer machine for review, regeneration, OCR smoke tests
 - Keep bundled Skill packages under `src/PromptInputMethod.App/Data/skills/` with their own `LICENSE`, `NOTICE.md`, and `README.md`.
 - Keep attribution in `THIRD_PARTY_NOTICES.md`, `docs/license-inventory.md`, and `docs/open-source-references.md`.
 - Do not commit copied upstream source trees, downloaded archives, local OCR model assets, credentials, user settings, prompt history, or OCR diagnostics.
+- Do not commit old migration reference trees; OCR code should live in `native/fire-eye-worker` and `native/ocr-rs-patched`.
 
 ## Local Reference Setup
 
@@ -25,6 +27,7 @@ For maintenance, download or clone upstream projects into the ignored local fold
 ChatGPT-Shortcut-main/
 SD-Anima-Prompt-Studio-main/
 assets/fire_eye/
+reference/xiaxia-pet/
 ```
 
 Before importing or regenerating any app data from those folders:

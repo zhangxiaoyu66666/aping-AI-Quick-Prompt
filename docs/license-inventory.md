@@ -2,7 +2,7 @@
 
 Date: 2026-05-30
 
-Scope: current `Prompt Input Method` workspace, including .NET projects, Rust native OCR worker, patched OCR library, generated template data, bundled Skill packages, local-only OCR models, and copied native third-party source.
+Scope: current `Prompt Input Method` workspace, including .NET projects, Rust native OCR worker, patched OCR library, generated template data, bundled Skill packages, local-only OCR models, and vendored native third-party source.
 
 This is an engineering inventory and not legal advice. Public release should include a legal review and final NOTICE/LICENSE bundle.
 
@@ -14,7 +14,7 @@ This is an engineering inventory and not legal advice. Public release should inc
 - Project notice: repository root `NOTICE.md`.
 - Third-party notices: repository root `THIRD_PARTY_NOTICES.md`.
 
-Third-party components, copied reference projects, prompt datasets, bundled Skill packages, framework/runtime packages, and model assets remain under their own licenses and must keep their required notices.
+Third-party components, prompt datasets, bundled Skill packages, framework/runtime packages, and model assets remain under their own licenses and must keep their required notices.
 
 ## Direct Dependencies
 
@@ -23,7 +23,7 @@ Third-party components, copied reference projects, prompt datasets, bundled Skil
 | AI Quick Prompt / 啊拼 original code and docs | This repository | GPL-3.0-or-later | Windows prompt workbench app and documentation | Contributions should be accepted under GPL-3.0-or-later. |
 | Microsoft.WindowsAppSDK `1.6.250205002` | NuGet | Microsoft license terms | WinUI 3 app runtime | Review redistribution requirements for self-contained unpackaged app. |
 | .NET 8 runtime/ref assemblies | Microsoft | MIT / Microsoft notices | App runtime | Distributed via build output when self-contained components are included. |
-| `fire-eye-ocr-worker` | Local Rust crate | GPL-3.0-or-later project code, plus Rust crate dependencies | Optional local OCR worker | Migrated/adapted from Xiaxia Pet reference code. |
+| `fire-eye-ocr-worker` | Local Rust crate | GPL-3.0-or-later project code, plus Rust crate dependencies | Optional local OCR worker | OCR functionality is integrated here; old migration reference trees are not tracked in the public repository. |
 | `ocr-rs` patched `2.2.2` | Local patch of `ocr-rs` | Apache-2.0 in package metadata | OCR engine wrapper | Keep upstream license and document local modifications. |
 | MNN | Vendored under `native/ocr-rs-patched/3rd_party/MNN` | See `LICENSE.txt` in MNN tree | Native inference backend | Large vendored dependency; must retain MNN license/notice. |
 | PaddleOCR model assets | Local-only ignored path `assets/fire_eye` | Requires source/license confirmation | OCR detection/recognition models and charset | Not tracked in the public source tree. Must confirm model license and attribution before publishing binaries that include these files. |
@@ -67,6 +67,6 @@ Third-party components, copied reference projects, prompt datasets, bundled Skil
 - Keep GPL `LICENSE`, `NOTICE.md`, and contribution license text synchronized.
 - Include third-party notices for Rust crates in the release artifact.
 - Confirm PaddleOCR model redistribution terms before publishing binaries that include `assets/fire_eye`.
-- Keep copied upstream template/reference trees out of Git; use local ignored reference folders only for regeneration and review.
+- Keep copied upstream template trees and old migration reference trees out of Git; use local ignored folders only for regeneration and review.
 - Document that OpenCL/Vulkan are optional GPU backends and may depend on user-installed drivers/runtime libraries.
 - Do not publish API keys, user settings, build logs containing secrets, or generated OCR scheduler diagnostics.

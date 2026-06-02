@@ -42,6 +42,7 @@ target/
 # Local upstream source trees kept for regeneration/reference only.
 ChatGPT-Shortcut-main/
 SD-Anima-Prompt-Studio-main/
+reference/xiaxia-pet/
 
 # Local OCR model assets; confirm redistribution terms before publishing.
 assets/fire_eye/

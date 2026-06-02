@@ -33,7 +33,7 @@ AI Quick Prompt is an early desktop app, not a polished public release. The curr
 
 Before publishing binaries, review third-party model assets and vendored native dependencies. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [docs/license-inventory.md](docs/license-inventory.md).
 
-Copied upstream source trees and local OCR model files are intentionally ignored by Git. The public repository keeps generated app template data, bundled Skill packages with their own notices, and attribution documents. See [docs/template-source-imports.md](docs/template-source-imports.md) if you need to recreate local reference folders for maintenance.
+Copied upstream source trees, local OCR model files, and old migration reference trees are intentionally ignored by Git. The public repository keeps generated app template data, bundled Skill packages with their own notices, the integrated native OCR code, and attribution documents. See [docs/template-source-imports.md](docs/template-source-imports.md) if you need to recreate local reference folders for maintenance.
 
 ## License
 
@@ -44,7 +44,7 @@ The original source code and documentation in this repository are released under
 - Third-party notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - Working dependency inventory: [docs/license-inventory.md](docs/license-inventory.md).
 
-Third-party components, copied reference projects, prompt datasets, bundled Skill packages, model assets, and framework/runtime dependencies remain under their own licenses. GPL licensing of this repository does not relicense those upstream materials.
+Third-party components, prompt datasets, bundled Skill packages, model assets, and framework/runtime dependencies remain under their own licenses. GPL licensing of this repository does not relicense those upstream materials.
 
 ## Screens And Workflow
 
@@ -158,10 +158,9 @@ src/PromptInputMethod.Core/  local prompt structuring and routing primitives
 native/                      optional Rust OCR worker and patched OCR dependency tree
 assets/                      app logo and OCR model assets
 docs/                        privacy, license inventory, open-source references
-reference/                   design and implementation references
 ```
 
-Local-only reference folders such as `ChatGPT-Shortcut-main/`, `SD-Anima-Prompt-Studio-main/`, and `assets/fire_eye/` are ignored. They are useful during maintenance, but they are not required for a normal app build.
+Local-only folders such as `ChatGPT-Shortcut-main/`, `SD-Anima-Prompt-Studio-main/`, `reference/xiaxia-pet/`, and `assets/fire_eye/` are ignored. They are useful during maintenance, but they are not required for a normal app build.
 
 ## Open-Source Files
 

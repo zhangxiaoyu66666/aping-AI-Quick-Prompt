@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-AI Quick Prompt / 啊拼 includes original project code plus references, templates, optional local OCR components, built-in Skill packages, and development material derived from or inspired by third-party open-source projects.
+AI Quick Prompt / 啊拼 includes original project code plus templates, optional local OCR components, built-in Skill packages, and development material derived from or inspired by third-party open-source projects.
 
 This file is a high-level notice. See [docs/license-inventory.md](docs/license-inventory.md) and [docs/open-source-references.md](docs/open-source-references.md) for the working inventory.
 
@@ -8,9 +8,9 @@ This file is a high-level notice. See [docs/license-inventory.md](docs/license-i
 
 The original AI Quick Prompt / 啊拼 source code and documentation are licensed under the GNU General Public License, version 3 or any later version (`GPL-3.0-or-later`). See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
 
-Third-party components, copied reference projects, prompt datasets, bundled Skill packages, framework/runtime packages, and OCR/model assets remain under their own licenses. Their inclusion or attribution here does not relicense them under GPL.
+Third-party components, prompt datasets, bundled Skill packages, framework/runtime packages, and OCR/model assets remain under their own licenses. Their inclusion or attribution here does not relicense them under GPL.
 
-The public source tree does not track copied upstream project trees or local OCR model files. Those folders may exist locally for maintenance, but release packaging must follow the license inventory and confirmed redistribution terms.
+The public source tree does not track copied upstream project trees, old migration reference trees, or local OCR model files. Those folders may exist locally for maintenance, but release packaging must follow the license inventory and confirmed redistribution terms.
 
 ## Referenced Open-Source Projects
 
@@ -55,6 +55,7 @@ The public source tree does not track copied upstream project trees or local OCR
 
 - Purpose: optional Fire Eye OCR worker and OCR inference path.
 - Inventory: see `native/Cargo.lock` and `docs/license-inventory.md`.
+- Note: OCR code is integrated under `native/fire-eye-worker` and `native/ocr-rs-patched`; the old `reference/xiaxia-pet` tree is not part of the public repository.
 
 ### MNN
 
