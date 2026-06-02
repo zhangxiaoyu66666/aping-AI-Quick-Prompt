@@ -1,0 +1,46 @@
+# Build output
+bin/
+obj/
+out/
+publish/
+TestResults/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.rsuser
+*.VC.db
+*.VC.VC.opendb
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# Logs and local diagnostics
+*.log
+*.binlog
+*.etl
+*.dmp
+
+# Local app data and secrets
+*.pfx
+*.snk
+*.key
+*.pem
+*.env
+appsettings.Development.json
+secrets.json
+
+# Native build output
+native/target/
+target/
+
+# Large copied upstream archives
+*-main.zip
+
+# Temporary files
+*.tmp
+*.temp
+Thumbs.db
+Desktop.ini

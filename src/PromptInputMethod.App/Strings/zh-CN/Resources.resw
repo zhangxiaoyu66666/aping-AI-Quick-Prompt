@@ -1,0 +1,2835 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="S_ad9464da161a8d5a" xml:space="preserve">
+    <value>，</value>
+    <comment>，</comment>
+  </data>
+  <data name="S_b9092ec0971efadb" xml:space="preserve">
+    <value>啊拼</value>
+    <comment>啊拼</comment>
+  </data>
+  <data name="S_bc6278b0644b8193" xml:space="preserve">
+    <value>啊拼 / AI Quick Prompt</value>
+    <comment>啊拼 / AI Quick Prompt</comment>
+  </data>
+  <data name="S_50b1b09a66a9d79b" xml:space="preserve">
+    <value>按当前内置 Provider / 模型标签启用原生深度思考；不支持时显示提示词式思考摘要。</value>
+    <comment>按当前内置 Provider / 模型标签启用原生深度思考；不支持时显示提示词式思考摘要。</comment>
+  </data>
+  <data name="S_7ac09f0e5a0f788e" xml:space="preserve">
+    <value>保存到我的模板</value>
+    <comment>保存到我的模板</comment>
+  </data>
+  <data name="S_051836569928a9f9" xml:space="preserve">
+    <value>编辑</value>
+    <comment>编辑</comment>
+  </data>
+  <data name="S_6ee63d9328441bef" xml:space="preserve">
+    <value>编辑 Skill</value>
+    <comment>编辑 Skill</comment>
+  </data>
+  <data name="S_7c7660541c46e098" xml:space="preserve">
+    <value>编辑常用提示词</value>
+    <comment>编辑常用提示词</comment>
+  </data>
+  <data name="S_83c842e62dcf9cca" xml:space="preserve">
+    <value>编辑模板</value>
+    <comment>编辑模板</comment>
+  </data>
+  <data name="S_2531ae6eac8c6cfc" xml:space="preserve">
+    <value>标题、分类或内容</value>
+    <comment>标题、分类或内容</comment>
+  </data>
+  <data name="S_074d038b79d19e31" xml:space="preserve">
+    <value>补充需求</value>
+    <comment>补充需求</comment>
+  </data>
+  <data name="S_1ebfaabc3d812de8" xml:space="preserve">
+    <value>插入 Skill</value>
+    <comment>插入 Skill</comment>
+  </data>
+  <data name="S_f455d43a66f17964" xml:space="preserve">
+    <value>常用提示词</value>
+    <comment>常用提示词</comment>
+  </data>
+  <data name="S_091f19a942087474" xml:space="preserve">
+    <value>打开目标格式文档</value>
+    <comment>打开目标格式文档</comment>
+  </data>
+  <data name="S_3194a7739013f030" xml:space="preserve">
+    <value>当前 Claude 模型未标记为支持 extended thinking，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 Claude 模型未标记为支持 extended thinking，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_1230afae4b4992f1" xml:space="preserve">
+    <value>当前 DeepSeek 模型没有命中原生思考标签，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 DeepSeek 模型没有命中 reasoner/v4-pro 思考标签，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_b85137bb34f24d8b" xml:space="preserve">
+    <value>当前 DeepSeek 模型没有命中原生思考标签，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 DeepSeek 模型没有命中原生思考标签，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_87e22a5bd4a87acf" xml:space="preserve">
+    <value>当前 Gemini 模型未标记为 2.5/3 系列，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 Gemini 模型未标记为 2.5/3 系列，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_3d85e5cff2680e3e" xml:space="preserve">
+    <value>当前 Kimi 模型未标记为 thinking，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 Kimi 模型未标记为 thinking，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_181e86e5dd93a7ff" xml:space="preserve">
+    <value>当前 OpenAI 模型未标记为 reasoning/o 系列，深度思考会使用可展示的提示词式思考摘要。</value>
+    <comment>当前 OpenAI 模型未标记为 reasoning/o 系列，深度思考会使用可展示的提示词式思考摘要。</comment>
+  </data>
+  <data name="S_7755cdfd6268a576" xml:space="preserve">
+    <value>当前 Skill：未挂载</value>
+    <comment>当前 Skill：未挂载</comment>
+  </data>
+  <data name="S_f8e27f3bfcfcc2fc" xml:space="preserve">
+    <value>当前没有可用 Skill。点击下方按钮添加后，才会按 Skill 规则执行。</value>
+    <comment>当前没有可用 Skill。点击下方按钮添加后，才会按 Skill 规则执行。</comment>
+  </data>
+  <data name="S_52f79fed15ec2723" xml:space="preserve">
+    <value>当前模型</value>
+    <comment>当前模型</comment>
+  </data>
+  <data name="S_7ae1a6e55bb9f2a8" xml:space="preserve">
+    <value>当前模型：本地结构化</value>
+    <comment>当前模型：本地结构化</comment>
+  </data>
+  <data name="S_6736999cf2d992c0" xml:space="preserve">
+    <value>当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</value>
+    <comment>当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</comment>
+  </data>
+  <data name="S_268aeac1ef870b69" xml:space="preserve">
+    <value>导出目标</value>
+    <comment>导出目标</comment>
+  </data>
+  <data name="S_f09d17dbec79b4f3" xml:space="preserve">
+    <value>导入 Skill 包</value>
+    <comment>导入 Skill 包</comment>
+  </data>
+  <data name="S_48240ff621bfa7c1" xml:space="preserve">
+    <value>导入目标</value>
+    <comment>导入目标</comment>
+  </data>
+  <data name="S_72518c1eaf98bfaf" xml:space="preserve">
+    <value>等待检测模型 endpoint...</value>
+    <comment>等待检测模型 endpoint...</comment>
+  </data>
+  <data name="S_b9e25a27689b7d1a" xml:space="preserve">
+    <value>点击“新建常用提示词”打开小窗口。列表只显示摘要，点击条目会快速复制完整提示词。</value>
+    <comment>点击“新建常用提示词”打开小窗口。列表只显示摘要，点击条目会快速复制完整提示词。</comment>
+  </data>
+  <data name="S_9a7791c75f1be0a1" xml:space="preserve">
+    <value>点击“新建模板”或“保存当前为模板”，在弹窗里填写分类和模板内容。</value>
+    <comment>点击“新建模板”或“保存当前为模板”，在弹窗里填写分类和模板内容。</comment>
+  </data>
+  <data name="S_c345c6b9844f7d98" xml:space="preserve">
+    <value>点击模板会直接插入到用户需求。</value>
+    <comment>点击模板会直接插入到用户需求。</comment>
+  </data>
+  <data name="S_6abed5ba555f8d58" xml:space="preserve">
+    <value>点击条目复制完整提示词；需要改内容时右键打开菜单。</value>
+    <comment>点击条目复制完整提示词；需要改内容时右键打开菜单。</comment>
+  </data>
+  <data name="S_c2e1588fbc4ea53a" xml:space="preserve">
+    <value>豆包 / 火山方舟</value>
+    <comment>豆包 / 火山方舟</comment>
+  </data>
+  <data name="S_dd7b8c6a9431378c" xml:space="preserve">
+    <value>豆包当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</value>
+    <comment>豆包当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</comment>
+  </data>
+  <data name="S_edecf0ae6e5144f9" xml:space="preserve">
+    <value>发送</value>
+    <comment>发送</comment>
+  </data>
+  <data name="S_550a4bd227484706" xml:space="preserve">
+    <value>发送 / 优化</value>
+    <comment>发送 / 优化</comment>
+  </data>
+  <data name="S_80f8fbcfa0117633" xml:space="preserve">
+    <value>放大</value>
+    <comment>放大</comment>
+  </data>
+  <data name="S_515559957fd3acbd" xml:space="preserve">
+    <value>分类</value>
+    <comment>分类</comment>
+  </data>
+  <data name="S_0763f1d654bad735" xml:space="preserve">
+    <value>分类筛选</value>
+    <comment>分类筛选</comment>
+  </data>
+  <data name="S_2b3c6be7620076fb" xml:space="preserve">
+    <value>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat 开源项目以及其他开源软件。</value>
+    <comment>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat 开源项目以及其他开源软件。</comment>
+  </data>
+  <data name="S_6976b7f1e2000c5c" xml:space="preserve">
+    <value>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat、Female Portrait Prompt Director Skill 开源项目以及其他开源软件。</value>
+    <comment>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat、Female Portrait Prompt Director Skill 开源项目以及其他开源软件。</comment>
+  </data>
+  <data name="S_3f59ec3cb2bada4a" xml:space="preserve">
+    <value>个优化目标</value>
+    <comment>个优化目标</comment>
+  </data>
+  <data name="S_b2939de6d739f4ed" xml:space="preserve">
+    <value>挂载 Skill</value>
+    <comment>挂载 Skill</comment>
+  </data>
+  <data name="S_6a244fb27f8048d1" xml:space="preserve">
+    <value>挂载语言包</value>
+    <comment>挂载语言包</comment>
+  </data>
+  <data name="S_52d25a9e30ba94f1" xml:space="preserve">
+    <value>关于</value>
+    <comment>关于</comment>
+  </data>
+  <data name="S_ca83d81bb984d8dd" xml:space="preserve">
+    <value>管理可分享的优化目标包。导入后会成为右侧优化目标区域和小窗口下拉里的可选项。</value>
+    <comment>管理可分享的优化目标包。导入后会成为右侧优化目标区域和小窗口下拉里的可选项。</comment>
+  </data>
+  <data name="S_3ba0f6e40ad8e86b" xml:space="preserve">
+    <value>管理已挂载的 Skill 和 Skill 包。右侧栏的 Skill 选项卡只负责快速插入使用。</value>
+    <comment>管理已挂载的 Skill 和 Skill 包。右侧栏的 Skill 选项卡只负责快速插入使用。</comment>
+  </data>
+  <data name="S_b9824510d911602e" xml:space="preserve">
+    <value>还没有挂载 Skill，请到左侧 Skill 管理添加。</value>
+    <comment>还没有挂载 Skill，请到左侧 Skill 管理添加。</comment>
+  </data>
+  <data name="S_8507ec699a18fb65" xml:space="preserve">
+    <value>好的，把你想优化的需求发给我；我会边聊天边整理成下面的当前提示词和优化后提示词。</value>
+    <comment>好的，把你想优化的需求发给我；我会边聊天边整理成下面的当前提示词和优化后提示词。</comment>
+  </data>
+  <data name="S_fd4b9e3b6c685bae" xml:space="preserve">
+    <value>继续编辑</value>
+    <comment>继续编辑</comment>
+  </data>
+  <data name="S_535c62a58db6e846" xml:space="preserve">
+    <value>继续补充你想修改的需求...</value>
+    <comment>继续补充你想修改的需求...</comment>
+  </data>
+  <data name="S_3f68f38f4f8db8a5" xml:space="preserve">
+    <value>开源角色提示词库</value>
+    <comment>开源角色提示词库</comment>
+  </data>
+  <data name="S_000f03156ea9642b" xml:space="preserve">
+    <value>可用模型</value>
+    <comment>可用模型</comment>
+  </data>
+  <data name="S_6181ed6f97342ce2" xml:space="preserve">
+    <value>来源：</value>
+    <comment>来源：</comment>
+  </data>
+  <data name="S_5467922dce50a319" xml:space="preserve">
+    <value>历史记录</value>
+    <comment>历史记录</comment>
+  </data>
+  <data name="S_cd1b2e505fab1211" xml:space="preserve">
+    <value>例如：豆包 / Midjourney / GPT-4o / 本地模型</value>
+    <comment>例如：豆包 / Midjourney / GPT-4o / 本地模型</comment>
+  </data>
+  <data name="S_fb1ae1456ff2cc81" xml:space="preserve">
+    <value>例如：流畅设计</value>
+    <comment>例如：流畅设计</comment>
+  </data>
+  <data name="S_3110582c11e47c80" xml:space="preserve">
+    <value>例如：UI 设计</value>
+    <comment>例如：UI 设计</comment>
+  </data>
+  <data name="S_f8c13da5e3c2d99e" xml:space="preserve">
+    <value>论文去AI味</value>
+    <comment>论文去AI味</comment>
+  </data>
+  <data name="S_b58e0ca64fdd96f7" xml:space="preserve">
+    <value>没有可补充的优化结果</value>
+    <comment>没有可补充的优化结果</comment>
+  </data>
+  <data name="S_28b6911982115eca" xml:space="preserve">
+    <value>没有命中内置原生思考标签，深度思考会使用提示词式思考摘要。</value>
+    <comment>没有命中内置原生思考标签，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_eda0ec1671a6f83d" xml:space="preserve">
+    <value>没有找到优化目标格式文档</value>
+    <comment>没有找到优化目标格式文档</comment>
+  </data>
+  <data name="S_62b95daecb7f81da" xml:space="preserve">
+    <value>模板</value>
+    <comment>模板</comment>
+  </data>
+  <data name="S_0bac2ed730f1eab8" xml:space="preserve">
+    <value>模板栏</value>
+    <comment>模板栏</comment>
+  </data>
+  <data name="S_c8bd14d068be28d3" xml:space="preserve">
+    <value>模型 endpoint 不可用</value>
+    <comment>模型 endpoint 不可用</comment>
+  </data>
+  <data name="S_57b1e248d27606e0" xml:space="preserve">
+    <value>模型标签：</value>
+    <comment>模型标签：</comment>
+  </data>
+  <data name="S_89c537d741b62f9d" xml:space="preserve">
+    <value>模型标签：未检测</value>
+    <comment>模型标签：未检测</comment>
+  </data>
+  <data name="S_59f60fb4cad59e28" xml:space="preserve">
+    <value>模型不可用，已输出 Skill 生成草稿</value>
+    <comment>模型不可用，已输出 Skill 生成草稿</comment>
+  </data>
+  <data name="S_d13465a70da1ca17" xml:space="preserve">
+    <value>模型调用失败，已使用本地结构化：</value>
+    <comment>模型调用失败，已使用本地结构化：</comment>
+  </data>
+  <data name="S_6003d3246f0fca2b" xml:space="preserve">
+    <value>模型管理</value>
+    <comment>模型管理</comment>
+  </data>
+  <data name="S_e8d548bff201fc67" xml:space="preserve">
+    <value>模型连接不可用</value>
+    <comment>模型连接不可用</comment>
+  </data>
+  <data name="S_a0147891bb6810cd" xml:space="preserve">
+    <value>内置模板不能编辑</value>
+    <comment>内置模板不能编辑</comment>
+  </data>
+  <data name="S_bc781c6ed85ec8cf" xml:space="preserve">
+    <value>女性人像 Skill</value>
+    <comment>女性人像 Skill</comment>
+  </data>
+  <data name="S_7122a29a7508bddd" xml:space="preserve">
+    <value>切换模型</value>
+    <comment>切换模型</comment>
+  </data>
+  <data name="S_dad2b811ecb38c95" xml:space="preserve">
+    <value>请输入常用提示词内容。</value>
+    <comment>请输入常用提示词内容。</comment>
+  </data>
+  <data name="S_f85c81382ecfea3c" xml:space="preserve">
+    <value>请先填写模板内容</value>
+    <comment>请先填写模板内容</comment>
+  </data>
+  <data name="S_b81fa591d5d43fe2" xml:space="preserve">
+    <value>请选择要导出的优化目标</value>
+    <comment>请选择要导出的优化目标</comment>
+  </data>
+  <data name="S_a49657c1433e408f" xml:space="preserve">
+    <value>请选择要删除的优化目标</value>
+    <comment>请选择要删除的优化目标</comment>
+  </data>
+  <data name="S_5c55a67935af8f45" xml:space="preserve">
+    <value>全部</value>
+    <comment>全部</comment>
+  </data>
+  <data name="S_2f9daa828907b93f" xml:space="preserve">
+    <value>删除</value>
+    <comment>删除</comment>
+  </data>
+  <data name="S_188a2a583766a896" xml:space="preserve">
+    <value>删除 Skill</value>
+    <comment>删除 Skill</comment>
+  </data>
+  <data name="S_b528ac824f74c1ad" xml:space="preserve">
+    <value>删除目标</value>
+    <comment>删除目标</comment>
+  </data>
+  <data name="S_9eca4abc548d24de" xml:space="preserve">
+    <value>删除优化目标失败</value>
+    <comment>删除优化目标失败</comment>
+  </data>
+  <data name="S_9fbb4750bb391133" xml:space="preserve">
+    <value>上传图片</value>
+    <comment>上传图片</comment>
+  </data>
+  <data name="S_df3d58c7d84b85f2" xml:space="preserve">
+    <value>设置</value>
+    <comment>设置</comment>
+  </data>
+  <data name="S_92e20528d30349e1" xml:space="preserve">
+    <value>深度思考</value>
+    <comment>深度思考</comment>
+  </data>
+  <data name="S_c82ddcfba898672d" xml:space="preserve">
+    <value>深度思考：提示词摘要</value>
+    <comment>深度思考：提示词摘要</comment>
+  </data>
+  <data name="S_d9c1e71696e9cdf1" xml:space="preserve">
+    <value>深度思考已开启：</value>
+    <comment>深度思考已开启：</comment>
+  </data>
+  <data name="S_60a53514eb9228a2" xml:space="preserve">
+    <value>收藏</value>
+    <comment>收藏</comment>
+  </data>
+  <data name="S_203c08e0d44ac375" xml:space="preserve">
+    <value>首页</value>
+    <comment>首页</comment>
+  </data>
+  <data name="S_a2311774fb7712ac" xml:space="preserve">
+    <value>输入需求</value>
+    <comment>输入需求</comment>
+  </data>
+  <data name="S_6712545cbc3b1b52" xml:space="preserve">
+    <value>输入一段常用提示词，保存后点击即可复制</value>
+    <comment>输入一段常用提示词，保存后点击即可复制</comment>
+  </data>
+  <data name="S_a62acb184f47f46e" xml:space="preserve">
+    <value>思考过程</value>
+    <comment>思考过程</comment>
+  </data>
+  <data name="S_ff438d1cf4ae065c" xml:space="preserve">
+    <value>搜索标题、分类或内容</value>
+    <comment>搜索标题、分类或内容</comment>
+  </data>
+  <data name="S_f244a2842f425c27" xml:space="preserve">
+    <value>搜索历史</value>
+    <comment>搜索历史</comment>
+  </data>
+  <data name="S_49062820f3425fb4" xml:space="preserve">
+    <value>搜索需求、提示词、优化目标</value>
+    <comment>搜索需求、提示词、优化目标</comment>
+  </data>
+  <data name="S_a1e18e1c749896d7" xml:space="preserve">
+    <value>所属：</value>
+    <comment>所属：</comment>
+  </data>
+  <data name="S_49daccf4650df162" xml:space="preserve">
+    <value>提供商预设</value>
+    <comment>提供商预设</comment>
+  </data>
+  <data name="S_cc1ab53aea16ba20" xml:space="preserve">
+    <value>提示词内容</value>
+    <comment>提示词内容</comment>
+  </data>
+  <data name="S_fb588e4333f76121" xml:space="preserve">
+    <value>提示词式思考摘要</value>
+    <comment>提示词式思考摘要</comment>
+  </data>
+  <data name="S_327f04d9b386bc98" xml:space="preserve">
+    <value>提示词优化</value>
+    <comment>提示词优化</comment>
+  </data>
+  <data name="S_40f58f1e320f0be0" xml:space="preserve">
+    <value>提示词摘要</value>
+    <comment>提示词摘要</comment>
+  </data>
+  <data name="S_e26be23598f830d1" xml:space="preserve">
+    <value>添加 Skill</value>
+    <comment>添加 Skill</comment>
+  </data>
+  <data name="S_9b36de316d52cd42" xml:space="preserve">
+    <value>填写 Base URL 和 API Key 后会自动检测可用性并刷新模型列表。</value>
+    <comment>填写 Base URL 和 API Key 后会自动检测可用性并刷新模型列表。</comment>
+  </data>
+  <data name="S_f51d08b90834f874" xml:space="preserve">
+    <value>填写 URL 和 API Key 后自动刷新</value>
+    <comment>填写 URL 和 API Key 后自动刷新</comment>
+  </data>
+  <data name="S_65e433b24dab689d" xml:space="preserve">
+    <value>我的模板</value>
+    <comment>我的模板</comment>
+  </data>
+  <data name="S_785b197128409a9c" xml:space="preserve">
+    <value>写真、服装、风格路由</value>
+    <comment>写真、服装、风格路由</comment>
+  </data>
+  <data name="S_64a9c850adea73f8" xml:space="preserve">
+    <value>新的会话已开始。把你想优化的需求发给我，我会边聊天边更新当前提示词和优化后提示词。</value>
+    <comment>新的会话已开始。把你想优化的需求发给我，我会边聊天边更新当前提示词和优化后提示词。</comment>
+  </data>
+  <data name="S_c57c30bc05f744ab" xml:space="preserve">
+    <value>新会话</value>
+    <comment>新会话</comment>
+  </data>
+  <data name="S_0e07b66758dc2850" xml:space="preserve">
+    <value>新建常用提示词</value>
+    <comment>新建常用提示词</comment>
+  </data>
+  <data name="S_55da24dbf2b7b680" xml:space="preserve">
+    <value>新建模板</value>
+    <comment>新建模板</comment>
+  </data>
+  <data name="S_8532de95d9278c02" xml:space="preserve">
+    <value>修改对比</value>
+    <comment>修改对比</comment>
+  </data>
+  <data name="S_0c4a871ec9385a7d" xml:space="preserve">
+    <value>需求 / 模板内容</value>
+    <comment>需求 / 模板内容</comment>
+  </data>
+  <data name="S_2fe49b2d4f66972f" xml:space="preserve">
+    <value>选择常用 Provider 自动填充 Base URL 和推荐模型</value>
+    <comment>选择常用 Provider 自动填充 Base URL 和推荐模型</comment>
+  </data>
+  <data name="S_56a2da9f11bebd79" xml:space="preserve">
+    <value>选择目标对应模板</value>
+    <comment>选择目标对应模板</comment>
+  </data>
+  <data name="S_79d7d5f666b31896" xml:space="preserve">
+    <value>选中历史后可以继续编辑，同一段对话会锁定当时使用的优化目标。</value>
+    <comment>选中历史后可以继续编辑，同一段对话会锁定当时使用的优化目标。</comment>
+  </data>
+  <data name="S_57147228a161f553" xml:space="preserve">
+    <value>已按挂载 Skill 生成提示词：</value>
+    <comment>已按挂载 Skill 生成提示词：</comment>
+  </data>
+  <data name="S_fc2c52324dfee398" xml:space="preserve">
+    <value>已调用模型优化</value>
+    <comment>已调用模型优化</comment>
+  </data>
+  <data name="S_b1c0718b604cbdef" xml:space="preserve">
+    <value>已发送附图</value>
+    <comment>已发送附图</comment>
+  </data>
+  <data name="S_f7cd69c5d35a1e56" xml:space="preserve">
+    <value>已更新模板</value>
+    <comment>已更新模板</comment>
+  </data>
+  <data name="S_51397bb6eb39cd62" xml:space="preserve">
+    <value>已挂载 Skill</value>
+    <comment>已挂载 Skill</comment>
+  </data>
+  <data name="S_7bff136ad88e8aca" xml:space="preserve">
+    <value>已挂载优化目标</value>
+    <comment>已挂载优化目标</comment>
+  </data>
+  <data name="S_5c942c1298c09487" xml:space="preserve">
+    <value>已关闭深度思考</value>
+    <comment>已关闭深度思考</comment>
+  </data>
+  <data name="S_2bdd988548a4b70b" xml:space="preserve">
+    <value>已连接，发现模型</value>
+    <comment>已连接，发现模型</comment>
+  </data>
+  <data name="S_f49df6eea4109080" xml:space="preserve">
+    <value>已切换模型</value>
+    <comment>已切换模型</comment>
+  </data>
+  <data name="S_1d0384f3d4217d18" xml:space="preserve">
+    <value>已切换优化目标</value>
+    <comment>已切换优化目标</comment>
+  </data>
+  <data name="S_3c690bc10467e8df" xml:space="preserve">
+    <value>已取消保存模板</value>
+    <comment>已取消保存模板</comment>
+  </data>
+  <data name="S_1324da49b3741d3a" xml:space="preserve">
+    <value>已取消编辑常用提示词</value>
+    <comment>已取消编辑常用提示词</comment>
+  </data>
+  <data name="S_d83733ac6425bb4d" xml:space="preserve">
+    <value>已取消编辑模板</value>
+    <comment>已取消编辑模板</comment>
+  </data>
+  <data name="S_7831feed591b414a" xml:space="preserve">
+    <value>已取消插入模板</value>
+    <comment>已取消插入模板</comment>
+  </data>
+  <data name="S_c807592538b30a78" xml:space="preserve">
+    <value>已取消挂载语言包</value>
+    <comment>已取消挂载语言包</comment>
+  </data>
+  <data name="S_ecb9dd0c6d4f4eff" xml:space="preserve">
+    <value>已取消新建常用提示词</value>
+    <comment>已取消新建常用提示词</comment>
+  </data>
+  <data name="S_c3e22c8d6b445350" xml:space="preserve">
+    <value>已删除优化目标</value>
+    <comment>已删除优化目标</comment>
+  </data>
+  <data name="S_b2f44dec038c6a0b" xml:space="preserve">
+    <value>已套用提供商预设</value>
+    <comment>已套用提供商预设</comment>
+  </data>
+  <data name="S_ba644c38bc391715" xml:space="preserve">
+    <value>已脱敏并调用模型优化</value>
+    <comment>已脱敏并调用模型优化</comment>
+  </data>
+  <data name="S_2c1e9b401f6403b8" xml:space="preserve">
+    <value>已选择模型</value>
+    <comment>已选择模型</comment>
+  </data>
+  <data name="S_8b7a2dbd4b4b065d" xml:space="preserve">
+    <value>已应用放大编辑内容</value>
+    <comment>已应用放大编辑内容</comment>
+  </data>
+  <data name="S_edb418615e6d4185" xml:space="preserve">
+    <value>应用并关闭</value>
+    <comment>应用并关闭</comment>
+  </data>
+  <data name="S_1c000675a4f0f99e" xml:space="preserve">
+    <value>英语提示词</value>
+    <comment>英语提示词</comment>
+  </data>
+  <data name="S_b17471f26ccf22aa" xml:space="preserve">
+    <value>优化目标</value>
+    <comment>优化目标</comment>
+  </data>
+  <data name="S_63a73670c1bafc48" xml:space="preserve">
+    <value>优化目标：</value>
+    <comment>优化目标：</comment>
+  </data>
+  <data name="S_be43154c8f861b79" xml:space="preserve">
+    <value>优化目标：通用 LLM</value>
+    <comment>优化目标：通用 LLM</comment>
+  </data>
+  <data name="S_0adc07de27d029f6" xml:space="preserve">
+    <value>语言包已挂载</value>
+    <comment>语言包已挂载</comment>
+  </data>
+  <data name="S_80744f40a3c92591" xml:space="preserve">
+    <value>暂无对应模板</value>
+    <comment>暂无对应模板</comment>
+  </data>
+  <data name="S_5b4c967f8a0bd633" xml:space="preserve">
+    <value>正在补充需求...</value>
+    <comment>正在补充需求...</comment>
+  </data>
+  <data name="S_73db99bb1d550b2b" xml:space="preserve">
+    <value>正在检测模型 endpoint...</value>
+    <comment>正在检测模型 endpoint...</comment>
+  </data>
+  <data name="S_de32e20193ad1042" xml:space="preserve">
+    <value>知道了</value>
+    <comment>知道了</comment>
+  </data>
+  <data name="S_72726d8818f69306" xml:space="preserve">
+    <value>中文</value>
+    <comment>中文</comment>
+  </data>
+  <data name="S_8fcf8e5b1edaf218" xml:space="preserve">
+    <value>中文提示词</value>
+    <comment>中文提示词</comment>
+  </data>
+  <data name="S_62c41764599fe342" xml:space="preserve">
+    <value>中文优化 Prompt 会显示在这里</value>
+    <comment>中文优化 Prompt 会显示在这里</comment>
+  </data>
+  <data name="S_5f2406ece9f08190" xml:space="preserve">
+    <value>字数：</value>
+    <comment>字数：</comment>
+  </data>
+  <data name="S_471718eee8e1f42d" xml:space="preserve">
+    <value>字数：0</value>
+    <comment>字数：0</comment>
+  </data>
+  <data name="S_d112bb0d53fc0418" xml:space="preserve">
+    <value>自定义 / OpenAI-compatible</value>
+    <comment>自定义 / OpenAI-compatible</comment>
+  </data>
+  <data name="S_aa7715b4e2c7e314" xml:space="preserve">
+    <value>自定义平台</value>
+    <comment>自定义平台</comment>
+  </data>
+  <data name="S_82b18714326349ba" xml:space="preserve">
+    <value>左键复制，右键编辑或删除。</value>
+    <comment>左键复制，右键编辑或删除。</comment>
+  </data>
+  <data name="S_a632abb4c6a595bd" xml:space="preserve">
+    <value>AI Quick Prompt</value>
+    <comment>AI Quick Prompt</comment>
+  </data>
+  <data name="S_ed2576bea247c646" xml:space="preserve">
+    <value>Base URL 格式不正确</value>
+    <comment>Base URL 格式不正确</comment>
+  </data>
+  <data name="S_2ebd760313a90cef" xml:space="preserve">
+    <value>Claude / Anthropic</value>
+    <comment>Claude / Anthropic</comment>
+  </data>
+  <data name="S_b967208bcb1eefb3" xml:space="preserve">
+    <value>Claude 原生标签：thinking={type: enabled, budget_tokens: 4096}。</value>
+    <comment>Claude 原生标签：thinking={type: enabled, budget_tokens: 4096}。</comment>
+  </data>
+  <data name="S_d370cd69aa123465" xml:space="preserve">
+    <value>DeepSeek 原生标签：thinking=enabled、reasoning_effort=high、reasoning_content。</value>
+    <comment>DeepSeek 原生标签：thinking=enabled、reasoning_effort=high、reasoning_content。</comment>
+  </data>
+  <data name="S_fe8997e38a2d75a1" xml:space="preserve">
+    <value>英语提示词会显示在这里</value>
+    <comment>English prompt will appear here</comment>
+  </data>
+  <data name="S_a8182bcc091ea63b" xml:space="preserve">
+    <value>Gemini / Google</value>
+    <comment>Gemini / Google</comment>
+  </data>
+  <data name="S_c2ad2c45a143a276" xml:space="preserve">
+    <value>Gemini OpenAI-compatible 标签：reasoning_effort=high。</value>
+    <comment>Gemini OpenAI-compatible 标签：reasoning_effort=high。</comment>
+  </data>
+  <data name="S_08ad15dedae7ed39" xml:space="preserve">
+    <value>GLM / 智谱</value>
+    <comment>GLM / 智谱</comment>
+  </data>
+  <data name="S_964cf408cd1c1310" xml:space="preserve">
+    <value>GLM 当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</value>
+    <comment>GLM 当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</comment>
+  </data>
+  <data name="S_d8d053209d259251" xml:space="preserve">
+    <value>Kimi / Moonshot</value>
+    <comment>Kimi / Moonshot</comment>
+  </data>
+  <data name="S_86c6fad6c24b6080" xml:space="preserve">
+    <value>Kimi thinking 模型标签：reasoning_content。</value>
+    <comment>Kimi thinking 模型标签：reasoning_content。</comment>
+  </data>
+  <data name="S_7b85064a3e4a95b8" xml:space="preserve">
+    <value>MiniMax 当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</value>
+    <comment>MiniMax 当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</comment>
+  </data>
+  <data name="S_213291e06ce50fce" xml:space="preserve">
+    <value>OpenAI 原生标签：reasoning_effort=high。</value>
+    <comment>OpenAI 原生标签：reasoning_effort=high。</comment>
+  </data>
+  <data name="S_6df1bb18a59ab97d" xml:space="preserve">
+    <value>Skill</value>
+    <comment>Skill</comment>
+  </data>
+  <data name="S_1a4b0031b4cd2674" xml:space="preserve">
+    <value>Skill 管理</value>
+    <comment>Skill 管理</comment>
+  </data>
+  <data name="S_d46186a53a9e1802" xml:space="preserve">
+    <value>SKILL.md、CLAUDE.md、Rules</value>
+    <comment>SKILL.md、CLAUDE.md、Rules</comment>
+  </data>
+  <data name="S_7f42ccf366ba268b" xml:space="preserve">
+    <value>Skill体系</value>
+    <comment>Skill体系</comment>
+  </data>
+  <data name="S_89e2e03929a4ad24" xml:space="preserve">
+    <value>Words: </value>
+    <comment>Words: </comment>
+  </data>
+  <data name="S_c6e26fdfd04273bb" xml:space="preserve">
+    <value>Words: 0</value>
+    <comment>Words: 0</comment>
+  </data>
+  <data name="S_001d1dd791040f84" xml:space="preserve">
+    <value>已保存为模板</value>
+    <comment>已保存为模板</comment>
+  </data>
+  <data name="S_02d81dc5a48d0b18" xml:space="preserve">
+    <value>没有读取到剪贴板文本</value>
+    <comment>没有读取到剪贴板文本</comment>
+  </data>
+  <data name="S_02ec7cbece1e4fe0" xml:space="preserve">
+    <value>已清空模板选择</value>
+    <comment>已清空模板选择</comment>
+  </data>
+  <data name="S_036d2f9fc15b59ef" xml:space="preserve">
+    <value>发送审计</value>
+    <comment>发送审计</comment>
+  </data>
+  <data name="S_05c2d85f74633257" xml:space="preserve">
+    <value>剪贴板暂时被占用，请再点一次复制</value>
+    <comment>剪贴板暂时被占用，请再点一次复制</comment>
+  </data>
+  <data name="S_08d7a98d788a6892" xml:space="preserve">
+    <value>已取消导入</value>
+    <comment>已取消导入</comment>
+  </data>
+  <data name="S_0a9faa1b01e62ea2" xml:space="preserve">
+    <value>回放历史</value>
+    <comment>回放历史</comment>
+  </data>
+  <data name="S_0b6630db04a4e044" xml:space="preserve">
+    <value>剪贴板暂时被占用，无法插入</value>
+    <comment>剪贴板暂时被占用，无法插入</comment>
+  </data>
+  <data name="S_0b6b4e7ef8fe8dbd" xml:space="preserve">
+    <value>模型配置不完整，已使用本地结构化</value>
+    <comment>模型配置不完整，已使用本地结构化</comment>
+  </data>
+  <data name="S_0c45f935408069b3" xml:space="preserve">
+    <value>没有可插入的提示词</value>
+    <comment>没有可插入的提示词</comment>
+  </data>
+  <data name="S_0e175a29533c201a" xml:space="preserve">
+    <value>生成优化提示词</value>
+    <comment>生成优化提示词</comment>
+  </data>
+  <data name="S_0e1de167d7ba5d3a" xml:space="preserve">
+    <value>用户需求</value>
+    <comment>用户需求</comment>
+  </data>
+  <data name="S_1055c3fd38306d9e" xml:space="preserve">
+    <value>启用全局快捷键呼出置顶小窗口</value>
+    <comment>启用全局快捷键呼出置顶小窗口</comment>
+  </data>
+  <data name="S_10988897772761bb" xml:space="preserve">
+    <value>允许显式附图时向多模态模型外发图片</value>
+    <comment>允许显式附图时向多模态模型外发图片</comment>
+  </data>
+  <data name="S_117d5ef753e83592" xml:space="preserve">
+    <value>允许向模型 Provider 外发文本</value>
+    <comment>允许向模型 Provider 外发文本</comment>
+  </data>
+  <data name="S_11a3c1d8a5979db1" xml:space="preserve">
+    <value>粘贴图片、OCR 图片或选择图片后会作为模型附图</value>
+    <comment>粘贴图片、OCR 图片或选择图片后会作为模型附图</comment>
+  </data>
+  <data name="S_1277c652ceac69b6" xml:space="preserve">
+    <value>条常用提示词</value>
+    <comment>条常用提示词</comment>
+  </data>
+  <data name="S_13d8fd8bdd8559a7" xml:space="preserve">
+    <value>正在识别区域文字...</value>
+    <comment>正在识别区域文字...</comment>
+  </data>
+  <data name="S_13dc7eb5e7074bd7" xml:space="preserve">
+    <value>载入历史</value>
+    <comment>载入历史</comment>
+  </data>
+  <data name="S_1a9ed5523073a03a" xml:space="preserve">
+    <value>即梦优化</value>
+    <comment>即梦优化</comment>
+  </data>
+  <data name="S_1c4db3048aef10e7" xml:space="preserve">
+    <value>请选择要载入的历史记录</value>
+    <comment>请选择要载入的历史记录</comment>
+  </data>
+  <data name="S_1cc6c5e479f4bb14" xml:space="preserve">
+    <value>版本号：</value>
+    <comment>版本号：</comment>
+  </data>
+  <data name="S_1d118ab9917bdb77" xml:space="preserve">
+    <value>附件托盘</value>
+    <comment>附件托盘</comment>
+  </data>
+  <data name="S_1db94a9f60c75581" xml:space="preserve">
+    <value>已删除历史记录</value>
+    <comment>已删除历史记录</comment>
+  </data>
+  <data name="S_1e8ea78a609c0363" xml:space="preserve">
+    <value>当前模型：</value>
+    <comment>当前模型：</comment>
+  </data>
+  <data name="S_1ec9ec67b7f695e9" xml:space="preserve">
+    <value>优化结果</value>
+    <comment>优化结果</comment>
+  </data>
+  <data name="S_2056fd3c1d722a6d" xml:space="preserve">
+    <value>没有找到开源项目引用文档</value>
+    <comment>没有找到开源项目引用文档</comment>
+  </data>
+  <data name="S_210018e69a8ab214" xml:space="preserve">
+    <value>删除模板失败</value>
+    <comment>删除模板失败</comment>
+  </data>
+  <data name="S_22e9b6b3c2d809a3" xml:space="preserve">
+    <value>插入到用户需求</value>
+    <comment>插入到用户需求</comment>
+  </data>
+  <data name="S_27e68a11512e8f95" xml:space="preserve">
+    <value>OCR 后端</value>
+    <comment>OCR 后端</comment>
+  </data>
+  <data name="S_2864481076847eee" xml:space="preserve">
+    <value>JSON 中没有可导入的项目</value>
+    <comment>JSON 中没有可导入的项目</comment>
+  </data>
+  <data name="S_287df2a93c17764d" xml:space="preserve">
+    <value>搜索命令、模板、Skill 或页面</value>
+    <comment>搜索命令、模板、Skill 或页面</comment>
+  </data>
+  <data name="S_2a8463dcb983e3e0" xml:space="preserve">
+    <value>请选择要删除的常用提示词</value>
+    <comment>请选择要删除的常用提示词</comment>
+  </data>
+  <data name="S_2cd0f3be8738a86c" xml:space="preserve">
+    <value>取消</value>
+    <comment>取消</comment>
+  </data>
+  <data name="S_2ce3d9dafd380f16" xml:space="preserve">
+    <value>删除历史</value>
+    <comment>删除历史</comment>
+  </data>
+  <data name="S_2e3f00a1a38dc04a" xml:space="preserve">
+    <value>电影镜头、对白、分镜</value>
+    <comment>电影镜头、对白、分镜</comment>
+  </data>
+  <data name="S_2f6312e91086d566" xml:space="preserve">
+    <value>通用 LLM</value>
+    <comment>通用 LLM</comment>
+  </data>
+  <data name="S_32c8d373afe08328" xml:space="preserve">
+    <value>执行</value>
+    <comment>执行</comment>
+  </data>
+  <data name="S_34485225b5dab7b1" xml:space="preserve">
+    <value>文生图</value>
+    <comment>文生图</comment>
+  </data>
+  <data name="S_34a24df6b70a7449" xml:space="preserve">
+    <value>例如：角色定位</value>
+    <comment>例如：角色定位</comment>
+  </data>
+  <data name="S_34fefd39965d1384" xml:space="preserve">
+    <value>UI 设计</value>
+    <comment>UI 设计</comment>
+  </data>
+  <data name="S_36518c38e2425b6c" xml:space="preserve">
+    <value>Fire Eye OCR（本地 worker，可 fallback）</value>
+    <comment>Fire Eye OCR（本地 worker，可 fallback）</comment>
+  </data>
+  <data name="S_371664a2febfb78f" xml:space="preserve">
+    <value>英文翻译提示词</value>
+    <comment>英文翻译提示词</comment>
+  </data>
+  <data name="S_379417c40208117a" xml:space="preserve">
+    <value>正在选择图片...</value>
+    <comment>正在选择图片...</comment>
+  </data>
+  <data name="S_389368a528693aad" xml:space="preserve">
+    <value>已复制优化后的提示词</value>
+    <comment>已复制优化后的提示词</comment>
+  </data>
+  <data name="S_3b1473939a5b1018" xml:space="preserve">
+    <value>恢复默认设置</value>
+    <comment>恢复默认设置</comment>
+  </data>
+  <data name="S_3d13868593ae4eeb" xml:space="preserve">
+    <value>界面语言</value>
+    <comment>界面语言</comment>
+  </data>
+  <data name="S_3ed2c259da3251fa" xml:space="preserve">
+    <value>复制提示词</value>
+    <comment>复制提示词</comment>
+  </data>
+  <data name="S_3f29fcc0b109fd41" xml:space="preserve">
+    <value>请选择要插入的模板</value>
+    <comment>请选择要插入的模板</comment>
+  </data>
+  <data name="S_3fd47edce45b3603" xml:space="preserve">
+    <value>关闭</value>
+    <comment>关闭</comment>
+  </data>
+  <data name="S_4231eb39c898a0e1" xml:space="preserve">
+    <value>输出语言：中英双语</value>
+    <comment>输出语言：中英双语</comment>
+  </data>
+  <data name="S_4268493cd34f6f48" xml:space="preserve">
+    <value>插入</value>
+    <comment>插入</comment>
+  </data>
+  <data name="S_42d49bb22bfb0d35" xml:space="preserve">
+    <value>即梦 / Seedance</value>
+    <comment>即梦 / Seedance</comment>
+  </data>
+  <data name="S_44ce7ae909bbb28b" xml:space="preserve">
+    <value>搜索</value>
+    <comment>搜索</comment>
+  </data>
+  <data name="S_44dcab693e8dd28c" xml:space="preserve">
+    <value>没有可复制的结果</value>
+    <comment>没有可复制的结果</comment>
+  </data>
+  <data name="S_47a82b9a3747a5e4" xml:space="preserve">
+    <value>已插入常用提示词</value>
+    <comment>已插入常用提示词</comment>
+  </data>
+  <data name="S_49175bfe70bc0c30" xml:space="preserve">
+    <value>可直接粘贴图片，或通过图片按钮选择 / OCR</value>
+    <comment>可直接粘贴图片，或通过图片按钮选择 / OCR</comment>
+  </data>
+  <data name="S_4960b23def34e0a2" xml:space="preserve">
+    <value>已选择提示词组</value>
+    <comment>已选择提示词组</comment>
+  </data>
+  <data name="S_49fabfeeaa51a716" xml:space="preserve">
+    <value>通用、写作、提示词工程</value>
+    <comment>通用、写作、提示词工程</comment>
+  </data>
+  <data name="S_4a83f42905637608" xml:space="preserve">
+    <value>场景：未知</value>
+    <comment>场景：未知</comment>
+  </data>
+  <data name="S_4b495d8b87b864fa" xml:space="preserve">
+    <value>命令面板</value>
+    <comment>命令面板</comment>
+  </data>
+  <data name="S_4b50c9fa24dcafa3" xml:space="preserve">
+    <value>未配置模型</value>
+    <comment>未配置模型</comment>
+  </data>
+  <data name="S_4b7c2ee96ad8a532" xml:space="preserve">
+    <value>剪贴板暂时被占用，无法插入英文提示词</value>
+    <comment>剪贴板暂时被占用，无法插入英文提示词</comment>
+  </data>
+  <data name="S_4c37ff6f7f3f4119" xml:space="preserve">
+    <value>打开开源项目引用文档</value>
+    <comment>打开开源项目引用文档</comment>
+  </data>
+  <data name="S_4cbf4185c5db12aa" xml:space="preserve">
+    <value>已取消附图</value>
+    <comment>已取消附图</comment>
+  </data>
+  <data name="S_4ce4cafdd0561280" xml:space="preserve">
+    <value>菜单</value>
+    <comment>菜单</comment>
+  </data>
+  <data name="S_4e2af0009a6d8b45" xml:space="preserve">
+    <value>保存到 Windows Credential Manager</value>
+    <comment>保存到 Windows Credential Manager</comment>
+  </data>
+  <data name="S_54b89f901274588b" xml:space="preserve">
+    <value>未分类</value>
+    <comment>未分类</comment>
+  </data>
+  <data name="S_576d81bb0631b165" xml:space="preserve">
+    <value>导入</value>
+    <comment>导入</comment>
+  </data>
+  <data name="S_588db310767e8600" xml:space="preserve">
+    <value>已取消截图附图</value>
+    <comment>已取消截图附图</comment>
+  </data>
+  <data name="S_5aa66971f38aac3c" xml:space="preserve">
+    <value>已恢复默认设置</value>
+    <comment>已恢复默认设置</comment>
+  </data>
+  <data name="S_5b4eb27e95ce6fbc" xml:space="preserve">
+    <value>保存到分类</value>
+    <comment>保存到分类</comment>
+  </data>
+  <data name="S_5c02ea1a9eaaa3c4" xml:space="preserve">
+    <value>Codex、Claude Code、反重力</value>
+    <comment>Codex、Claude Code、反重力</comment>
+  </data>
+  <data name="S_5da5f9dace80c61a" xml:space="preserve">
+    <value>模型未启用，已使用本地结构化</value>
+    <comment>模型未启用，已使用本地结构化</comment>
+  </data>
+  <data name="S_5f76b2bf82dd2c5d" xml:space="preserve">
+    <value>版本</value>
+    <comment>版本</comment>
+  </data>
+  <data name="S_61ceadfa4f2e8f4c" xml:space="preserve">
+    <value>中文优化提示词</value>
+    <comment>中文优化提示词</comment>
+  </data>
+  <data name="S_622a879022e7a2ca" xml:space="preserve">
+    <value>短视频、产品、首尾帧</value>
+    <comment>短视频、产品、首尾帧</comment>
+  </data>
+  <data name="S_62a04776b909181a" xml:space="preserve">
+    <value>正在截取目标窗口...</value>
+    <comment>正在截取目标窗口...</comment>
+  </data>
+  <data name="S_6345ce7ba711ecc0" xml:space="preserve">
+    <value>场景选择</value>
+    <comment>场景选择</comment>
+  </data>
+  <data name="S_63a9d2591b6f0337" xml:space="preserve">
+    <value>保存当前为模板</value>
+    <comment>保存当前为模板</comment>
+  </data>
+  <data name="S_63d90d977348ab1f" xml:space="preserve">
+    <value>复制</value>
+    <comment>复制</comment>
+  </data>
+  <data name="S_63eab4b9f759f035" xml:space="preserve">
+    <value>已复制英文提示词</value>
+    <comment>已复制英文提示词</comment>
+  </data>
+  <data name="S_66da414eda717257" xml:space="preserve">
+    <value>文生图、角色、构图</value>
+    <comment>文生图、角色、构图</comment>
+  </data>
+  <data name="S_69e43a89c6c63420" xml:space="preserve">
+    <value>更强镜头语言</value>
+    <comment>更强镜头语言</comment>
+  </data>
+  <data name="S_6cfa31bd69af66f2" xml:space="preserve">
+    <value>插入模板</value>
+    <comment>插入模板</comment>
+  </data>
+  <data name="S_6dd60569865bda82" xml:space="preserve">
+    <value>Veo 3</value>
+    <comment>Veo 3</comment>
+  </data>
+  <data name="S_6e7c4b9a63a4454f" xml:space="preserve">
+    <value>设置已保存，模型关闭时使用本地结构化</value>
+    <comment>设置已保存，模型关闭时使用本地结构化</comment>
+  </data>
+  <data name="S_6fa03a84167e33f0" xml:space="preserve">
+    <value>目标平台 / 优化模式</value>
+    <comment>目标平台 / 优化模式</comment>
+  </data>
+  <data name="S_709a8bcbb1ff5d0c" xml:space="preserve">
+    <value>正在生成...</value>
+    <comment>正在生成...</comment>
+  </data>
+  <data name="S_76420433f22d1c80" xml:space="preserve">
+    <value>导出</value>
+    <comment>导出</comment>
+  </data>
+  <data name="S_76707649f4810dc3" xml:space="preserve">
+    <value>自动 / Auto</value>
+    <comment>自动 / Auto</comment>
+  </data>
+  <data name="S_78c4f747a3491eb3" xml:space="preserve">
+    <value>已取消区域 OCR</value>
+    <comment>已取消区域 OCR</comment>
+  </data>
+  <data name="S_7a8b312c449f7849" xml:space="preserve">
+    <value>复制发送文本</value>
+    <comment>复制发送文本</comment>
+  </data>
+  <data name="S_7b376795bbcabbb4" xml:space="preserve">
+    <value>已取消导出</value>
+    <comment>已取消导出</comment>
+  </data>
+  <data name="S_7ee8b2d0ae7ade97" xml:space="preserve">
+    <value>移除附件</value>
+    <comment>移除附件</comment>
+  </data>
+  <data name="S_7f72f06a88779b5a" xml:space="preserve">
+    <value>场景</value>
+    <comment>场景</comment>
+  </data>
+  <data name="S_7f969d5197056765" xml:space="preserve">
+    <value>内置模板不能删除</value>
+    <comment>内置模板不能删除</comment>
+  </data>
+  <data name="S_80a843590768622d" xml:space="preserve">
+    <value>全局置顶小窗口快捷键</value>
+    <comment>全局置顶小窗口快捷键</comment>
+  </data>
+  <data name="S_80e015bfff3865e5" xml:space="preserve">
+    <value>清空记录</value>
+    <comment>清空记录</comment>
+  </data>
+  <data name="S_82842b52455b7248" xml:space="preserve">
+    <value>修改后自动保存，标题栏会显示 Provider + 模型名称。</value>
+    <comment>修改后自动保存，标题栏会显示 Provider + 模型名称。</comment>
+  </data>
+  <data name="S_833890c2c831d5a0" xml:space="preserve">
+    <value>已附图</value>
+    <comment>已附图</comment>
+  </data>
+  <data name="S_877b044c578cc182" xml:space="preserve">
+    <value>优化后的结构化 Prompt 会显示在这里</value>
+    <comment>优化后的结构化 Prompt 会显示在这里</comment>
+  </data>
+  <data name="S_89174fe72eeec3ae" xml:space="preserve">
+    <value>视频生成</value>
+    <comment>视频生成</comment>
+  </data>
+  <data name="S_8caad7957f2eab26" xml:space="preserve">
+    <value>没有可插入的英文提示词</value>
+    <comment>没有可插入的英文提示词</comment>
+  </data>
+  <data name="S_8d51d07a49af296f" xml:space="preserve">
+    <value>展开工作台</value>
+    <comment>展开工作台</comment>
+  </data>
+  <data name="S_8e159360142e4f23" xml:space="preserve">
+    <value>OCR 截图</value>
+    <comment>OCR 截图</comment>
+  </data>
+  <data name="S_8e557f8e44118364" xml:space="preserve">
+    <value>导入剪贴板</value>
+    <comment>导入剪贴板</comment>
+  </data>
+  <data name="S_8f6e8682a3f0bdaf" xml:space="preserve">
+    <value>导入 JSON</value>
+    <comment>导入 JSON</comment>
+  </data>
+  <data name="S_95cbfca43f439cad" xml:space="preserve">
+    <value>没有可导出的结果</value>
+    <comment>没有可导出的结果</comment>
+  </data>
+  <data name="S_981f6858507d2408" xml:space="preserve">
+    <value>请选择要删除的历史记录</value>
+    <comment>请选择要删除的历史记录</comment>
+  </data>
+  <data name="S_9ccc1556f2241db4" xml:space="preserve">
+    <value>没有可复制的英文提示词</value>
+    <comment>没有可复制的英文提示词</comment>
+  </data>
+  <data name="S_9e65ef356d11f251" xml:space="preserve">
+    <value>语言包无效</value>
+    <comment>语言包无效</comment>
+  </data>
+  <data name="S_a2e695789c2eb8ad" xml:space="preserve">
+    <value>用户导入、自建分类</value>
+    <comment>用户导入、自建分类</comment>
+  </data>
+  <data name="S_a3030bf8f16dc63c" xml:space="preserve">
+    <value>保存</value>
+    <comment>保存</comment>
+  </data>
+  <data name="S_a3c9748924640c32" xml:space="preserve">
+    <value>清空选择</value>
+    <comment>清空选择</comment>
+  </data>
+  <data name="S_a712530b627bc0e8" xml:space="preserve">
+    <value>收起到浮窗</value>
+    <comment>收起到浮窗</comment>
+  </data>
+  <data name="S_a748f675930ffda5" xml:space="preserve">
+    <value>发送给模型前本地脱敏敏感信息</value>
+    <comment>发送给模型前本地脱敏敏感信息</comment>
+  </data>
+  <data name="S_a77d54a2f41fda70" xml:space="preserve">
+    <value>已取消图片 OCR</value>
+    <comment>已取消图片 OCR</comment>
+  </data>
+  <data name="S_aab30bee31824881" xml:space="preserve">
+    <value>请选择要插入的常用提示词</value>
+    <comment>请选择要插入的常用提示词</comment>
+  </data>
+  <data name="S_abe0ee7f7f36f30a" xml:space="preserve">
+    <value>启用 OpenAI-compatible 模型优化</value>
+    <comment>启用 OpenAI-compatible 模型优化</comment>
+  </data>
+  <data name="S_b0a31c77949d0d27" xml:space="preserve">
+    <value>没有记录到目标窗口，请用快捷键呼出后再试</value>
+    <comment>没有记录到目标窗口，请用快捷键呼出后再试</comment>
+  </data>
+  <data name="S_b0cc14376f99828d" xml:space="preserve">
+    <value>正在识别窗口文字...</value>
+    <comment>正在识别窗口文字...</comment>
+  </data>
+  <data name="S_b0f3f09df9c6241d" xml:space="preserve">
+    <value>正在选择截图区域...</value>
+    <comment>正在选择截图区域...</comment>
+  </data>
+  <data name="S_b1e04656e9637ce6" xml:space="preserve">
+    <value>清除历史</value>
+    <comment>清除历史</comment>
+  </data>
+  <data name="S_b2a2bca03f098949" xml:space="preserve">
+    <value>没有读取到文本</value>
+    <comment>没有读取到文本</comment>
+  </data>
+  <data name="S_b33b1345570e7b7a" xml:space="preserve">
+    <value>即梦</value>
+    <comment>即梦</comment>
+  </data>
+  <data name="S_b40a5e5eb320cae7" xml:space="preserve">
+    <value>已复制提示词；没有记录到目标窗口，需手动粘贴</value>
+    <comment>已复制提示词；没有记录到目标窗口，需手动粘贴</comment>
+  </data>
+  <data name="S_b4df063ddd8e8dad" xml:space="preserve">
+    <value>帮我设计一个适用于 Windows 桌面的 AI 角色陪伴应用首页，风格简洁现代，支持透明悬浮和剧情入口，不要太花哨。</value>
+    <comment>帮我设计一个适用于 Windows 桌面的 AI 角色陪伴应用首页，风格简洁现代，支持透明悬浮和剧情入口，不要太花哨。</comment>
+  </data>
+  <data name="S_b637deb846f34461" xml:space="preserve">
+    <value>场景选择：</value>
+    <comment>场景选择：</comment>
+  </data>
+  <data name="S_b663c682bf799361" xml:space="preserve">
+    <value>直发大模型</value>
+    <comment>直发大模型</comment>
+  </data>
+  <data name="S_b7432e6cd06c4ed5" xml:space="preserve">
+    <value>正在识别图片文字...</value>
+    <comment>正在识别图片文字...</comment>
+  </data>
+  <data name="S_b796becd5599e459" xml:space="preserve">
+    <value>点击列表项会立即复制提示词。</value>
+    <comment>点击列表项会立即复制提示词。</comment>
+  </data>
+  <data name="S_b90f1406eff11961" xml:space="preserve">
+    <value>快速提示词模板</value>
+    <comment>快速提示词模板</comment>
+  </data>
+  <data name="S_bc5a1e0fb1c312dc" xml:space="preserve">
+    <value>收起右侧栏</value>
+    <comment>收起右侧栏</comment>
+  </data>
+  <data name="S_bd03c0aad701a8ca" xml:space="preserve">
+    <value>设置已保存</value>
+    <comment>设置已保存</comment>
+  </data>
+  <data name="S_bd69947e71fe8010" xml:space="preserve">
+    <value>自定义场景</value>
+    <comment>自定义场景</comment>
+  </data>
+  <data name="S_beac02c0c42ba1c3" xml:space="preserve">
+    <value>搜索提示词组、分类或内容</value>
+    <comment>搜索提示词组、分类或内容</comment>
+  </data>
+  <data name="S_c00b3aef10662fe8" xml:space="preserve">
+    <value>优化后中文提示词</value>
+    <comment>优化后中文提示词</comment>
+  </data>
+  <data name="S_c07222a8d18d0239" xml:space="preserve">
+    <value>场景选择：文生文</value>
+    <comment>场景选择：文生文</comment>
+  </data>
+  <data name="S_c157f90719625b0f" xml:space="preserve">
+    <value>清除收藏</value>
+    <comment>清除收藏</comment>
+  </data>
+  <data name="S_c18d0cb00ab675db" xml:space="preserve">
+    <value>已取消模型外发，保留本地结构化结果</value>
+    <comment>已取消模型外发，保留本地结构化结果</comment>
+  </data>
+  <data name="S_c2251ba9fc40961c" xml:space="preserve">
+    <value>正在导入剪贴板...</value>
+    <comment>正在导入剪贴板...</comment>
+  </data>
+  <data name="S_c3405f8c7d9d392a" xml:space="preserve">
+    <value>标题</value>
+    <comment>标题</comment>
+  </data>
+  <data name="S_c4d1e699946393be" xml:space="preserve">
+    <value>正在准备区域 OCR...</value>
+    <comment>正在准备区域 OCR...</comment>
+  </data>
+  <data name="S_c82f1c74441d0bce" xml:space="preserve">
+    <value>已复制英文提示词；没有记录到目标窗口，需手动粘贴</value>
+    <comment>已复制英文提示词；没有记录到目标窗口，需手动粘贴</comment>
+  </data>
+  <data name="S_c92fb89be0c06d20" xml:space="preserve">
+    <value>请选择要删除的模板</value>
+    <comment>请选择要删除的模板</comment>
+  </data>
+  <data name="S_c95dc99afe57b285" xml:space="preserve">
+    <value>截图</value>
+    <comment>截图</comment>
+  </data>
+  <data name="S_c9d9aed8e273417f" xml:space="preserve">
+    <value>Veo 3 优化</value>
+    <comment>Veo 3 优化</comment>
+  </data>
+  <data name="S_ce6a10e0f1734992" xml:space="preserve">
+    <value>AI编程</value>
+    <comment>AI编程</comment>
+  </data>
+  <data name="S_ce742b2e2a1ef706" xml:space="preserve">
+    <value>插入所选模板</value>
+    <comment>插入所选模板</comment>
+  </data>
+  <data name="S_d0345cac95ffd5bc" xml:space="preserve">
+    <value>文生文</value>
+    <comment>文生文</comment>
+  </data>
+  <data name="S_d1582e499b365caa" xml:space="preserve">
+    <value>© 夏语工作室 版权所有</value>
+    <comment>© 夏语工作室 版权所有</comment>
+  </data>
+  <data name="S_d1800614244dd261" xml:space="preserve">
+    <value>已插入英文提示词到当前窗口</value>
+    <comment>已插入英文提示词到当前窗口</comment>
+  </data>
+  <data name="S_d1e459dee93c7958" xml:space="preserve">
+    <value>请选择要载入的模板</value>
+    <comment>请选择要载入的模板</comment>
+  </data>
+  <data name="S_d24c10d37db0feea" xml:space="preserve">
+    <value>图片</value>
+    <comment>图片</comment>
+  </data>
+  <data name="S_d4b694df7a918ea8" xml:space="preserve">
+    <value>帮我设计一个适用于 Windows 桌面的 AI 角色陪伴应用首页，风格简洁现代，支持透明悬浮和即时入口，不要太花哨。</value>
+    <comment>帮我设计一个适用于 Windows 桌面的 AI 角色陪伴应用首页，风格简洁现代，支持透明悬浮和即时入口，不要太花哨。</comment>
+  </data>
+  <data name="S_dc5cecae4d6a0fab" xml:space="preserve">
+    <value>已删除模板</value>
+    <comment>已删除模板</comment>
+  </data>
+  <data name="S_dc83adc8cd3511c3" xml:space="preserve">
+    <value>收藏当前</value>
+    <comment>收藏当前</comment>
+  </data>
+  <data name="S_e00ffa504df01439" xml:space="preserve">
+    <value>本地结构化</value>
+    <comment>本地结构化</comment>
+  </data>
+  <data name="S_e21369b9ab70e40b" xml:space="preserve">
+    <value>提示词版本</value>
+    <comment>提示词版本</comment>
+  </data>
+  <data name="S_e28a8fd6327332d4" xml:space="preserve">
+    <value>OCR 已在设置中关闭</value>
+    <comment>OCR 已在设置中关闭</comment>
+  </data>
+  <data name="S_e5acc91a898dc60b" xml:space="preserve">
+    <value>已载入历史记录</value>
+    <comment>已载入历史记录</comment>
+  </data>
+  <data name="S_e69d87b26a204ffa" xml:space="preserve">
+    <value>结构化时间与镜头序列</value>
+    <comment>结构化时间与镜头序列</comment>
+  </data>
+  <data name="S_e73f40873275d5e5" xml:space="preserve">
+    <value>载入版本</value>
+    <comment>载入版本</comment>
+  </data>
+  <data name="S_eba17616deb0beb3" xml:space="preserve">
+    <value>快捷键无效或已被其他程序占用，请换一个组合</value>
+    <comment>快捷键无效或已被其他程序占用，请换一个组合</comment>
+  </data>
+  <data name="S_ecfc9d2e0157e9da" xml:space="preserve">
+    <value>主键</value>
+    <comment>主键</comment>
+  </data>
+  <data name="S_ed1940723dbd358d" xml:space="preserve">
+    <value>已导出</value>
+    <comment>已导出</comment>
+  </data>
+  <data name="S_f02b47b278719107" xml:space="preserve">
+    <value>收起 / 展开菜单</value>
+    <comment>收起 / 展开菜单</comment>
+  </data>
+  <data name="S_f3ddb378fe0877e2" xml:space="preserve">
+    <value>OCR 图片</value>
+    <comment>OCR 图片</comment>
+  </data>
+  <data name="S_f5a3ec56b46fd6d4" xml:space="preserve">
+    <value>删除模板</value>
+    <comment>删除模板</comment>
+  </data>
+  <data name="S_f60d3ecf47be4687" xml:space="preserve">
+    <value>更适合视频模型</value>
+    <comment>更适合视频模型</comment>
+  </data>
+  <data name="S_f62f58be54a10962" xml:space="preserve">
+    <value>已导入</value>
+    <comment>已导入</comment>
+  </data>
+  <data name="S_f74ee0bad5cf3c8b" xml:space="preserve">
+    <value>自动 fallback</value>
+    <comment>自动 fallback</comment>
+  </data>
+  <data name="S_f92e537c131d1762" xml:space="preserve">
+    <value>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio 开源项目以及其他开源软件。</value>
+    <comment>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio 开源项目以及其他开源软件。</comment>
+  </data>
+  <data name="S_fa8f2aae88db6c80" xml:space="preserve">
+    <value>没有找到要删除的常用提示词</value>
+    <comment>没有找到要删除的常用提示词</comment>
+  </data>
+  <data name="S_fb48367b485caec5" xml:space="preserve">
+    <value>导出 JSON</value>
+    <comment>导出 JSON</comment>
+  </data>
+  <data name="S_fe3747c7ad93b46f" xml:space="preserve">
+    <value>增强镜头运动与构图描述</value>
+    <comment>增强镜头运动与构图描述</comment>
+  </data>
+  <data name="S_fe5caf8d73cfd8e5" xml:space="preserve">
+    <value>已插入到当前窗口</value>
+    <comment>已插入到当前窗口</comment>
+  </data>
+  <data name="S_ff6b9577eea5832f" xml:space="preserve">
+    <value>条提示词模板</value>
+    <comment>条提示词模板</comment>
+  </data>
+  <data name="S_0a07f659461970d8" xml:space="preserve">
+    <value>，</value>
+    <comment>，</comment>
+  </data>
+  <data name="S_bea1a730acb61058" xml:space="preserve">
+    <value>© 夏语工作室 版权所有</value>
+    <comment>© 夏语工作室 版权所有</comment>
+  </data>
+  <data name="S_14346210bdd36e3e" xml:space="preserve">
+    <value>按当前内置 Provider / 模型标签启用原生深度思考；不支持时显示提示词式思考摘要。</value>
+    <comment>按当前内置 Provider / 模型标签启用原生深度思考；不支持时显示提示词式思考摘要。</comment>
+  </data>
+  <data name="S_f89ea27036ac1d31" xml:space="preserve">
+    <value>版本</value>
+    <comment>版本</comment>
+  </data>
+  <data name="S_74f20322a42a4afa" xml:space="preserve">
+    <value>版本号：</value>
+    <comment>版本号：</comment>
+  </data>
+  <data name="S_acaf89ffe1b5f8fe" xml:space="preserve">
+    <value>帮我设计一个适用于 Windows 桌面的 AI 角色陪伴应用首页，风格简洁现代，支持透明悬浮和即时入口，不要太花哨。</value>
+    <comment>帮我设计一个适用于 Windows 桌面的 AI 角色陪伴应用首页，风格简洁现代，支持透明悬浮和即时入口，不要太花哨。</comment>
+  </data>
+  <data name="S_7a62f4a6e1affc58" xml:space="preserve">
+    <value>帮我设计一个适用于 Windows 桌面的 AI 角色陪伴应用首页，风格简洁现代，支持透明悬浮和剧情入口，不要太花哨。</value>
+    <comment>帮我设计一个适用于 Windows 桌面的 AI 角色陪伴应用首页，风格简洁现代，支持透明悬浮和剧情入口，不要太花哨。</comment>
+  </data>
+  <data name="S_1509f561f2416598" xml:space="preserve">
+    <value>保存</value>
+    <comment>保存</comment>
+  </data>
+  <data name="S_54978a4dbf0f2695" xml:space="preserve">
+    <value>保存当前为模板</value>
+    <comment>保存当前为模板</comment>
+  </data>
+  <data name="S_042ebe52c760896c" xml:space="preserve">
+    <value>保存到 Windows Credential Manager</value>
+    <comment>保存到 Windows Credential Manager</comment>
+  </data>
+  <data name="S_66c19a8151fe4a23" xml:space="preserve">
+    <value>保存到分类</value>
+    <comment>保存到分类</comment>
+  </data>
+  <data name="S_16a02e1e4874b6ef" xml:space="preserve">
+    <value>保存到我的模板</value>
+    <comment>保存到我的模板</comment>
+  </data>
+  <data name="S_001141c4a2a203e8" xml:space="preserve">
+    <value>本地结构化</value>
+    <comment>本地结构化</comment>
+  </data>
+  <data name="S_464c4ffd019e1e96" xml:space="preserve">
+    <value>编辑</value>
+    <comment>编辑</comment>
+  </data>
+  <data name="S_4297585674572363" xml:space="preserve">
+    <value>编辑 Skill</value>
+    <comment>编辑 Skill</comment>
+  </data>
+  <data name="S_9be77115b83290a5" xml:space="preserve">
+    <value>编辑常用提示词</value>
+    <comment>编辑常用提示词</comment>
+  </data>
+  <data name="S_b42b895a109c9c4d" xml:space="preserve">
+    <value>编辑模板</value>
+    <comment>编辑模板</comment>
+  </data>
+  <data name="S_7e8cd2056da73a7f" xml:space="preserve">
+    <value>标题</value>
+    <comment>标题</comment>
+  </data>
+  <data name="S_df003f491855d074" xml:space="preserve">
+    <value>标题、分类或内容</value>
+    <comment>标题、分类或内容</comment>
+  </data>
+  <data name="S_da0cb3614fb104d2" xml:space="preserve">
+    <value>补充需求</value>
+    <comment>补充需求</comment>
+  </data>
+  <data name="S_99af6606ff9d6cd5" xml:space="preserve">
+    <value>菜单</value>
+    <comment>菜单</comment>
+  </data>
+  <data name="S_8aa318eb7eaa233a" xml:space="preserve">
+    <value>插入</value>
+    <comment>插入</comment>
+  </data>
+  <data name="S_f32598d9039a40cb" xml:space="preserve">
+    <value>插入 Skill</value>
+    <comment>插入 Skill</comment>
+  </data>
+  <data name="S_deb2bf49c6f987ca" xml:space="preserve">
+    <value>插入到用户需求</value>
+    <comment>插入到用户需求</comment>
+  </data>
+  <data name="S_49bff80ed7ad15d0" xml:space="preserve">
+    <value>插入模板</value>
+    <comment>插入模板</comment>
+  </data>
+  <data name="S_ca28576b0df968ba" xml:space="preserve">
+    <value>插入所选模板</value>
+    <comment>插入所选模板</comment>
+  </data>
+  <data name="S_f41c88c7b64b43cb" xml:space="preserve">
+    <value>常用提示词</value>
+    <comment>常用提示词</comment>
+  </data>
+  <data name="S_477e5af2fd7e4472" xml:space="preserve">
+    <value>场景</value>
+    <comment>场景</comment>
+  </data>
+  <data name="S_86444d8f498f685f" xml:space="preserve">
+    <value>场景：未知</value>
+    <comment>场景：未知</comment>
+  </data>
+  <data name="S_dd5e8a4aef0d581b" xml:space="preserve">
+    <value>场景选择：</value>
+    <comment>场景选择：</comment>
+  </data>
+  <data name="S_6c0213b461056b57" xml:space="preserve">
+    <value>场景选择：文生文</value>
+    <comment>场景选择：文生文</comment>
+  </data>
+  <data name="S_a86e8a521ca12908" xml:space="preserve">
+    <value>打开开源项目引用文档</value>
+    <comment>打开开源项目引用文档</comment>
+  </data>
+  <data name="S_9b00a2f9067a71e9" xml:space="preserve">
+    <value>打开目标格式文档</value>
+    <comment>打开目标格式文档</comment>
+  </data>
+  <data name="S_968a14ffcbb34eac" xml:space="preserve">
+    <value>当前 Claude 模型未标记为支持 extended thinking，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 Claude 模型未标记为支持 extended thinking，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_162a5772f52bd48c" xml:space="preserve">
+    <value>当前 DeepSeek 模型没有命中原生思考标签，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 DeepSeek 模型没有命中 reasoner/v4-pro 思考标签，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_05beafd56532c911" xml:space="preserve">
+    <value>当前 Gemini 模型未标记为 2.5/3 系列，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 Gemini 模型未标记为 2.5/3 系列，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_ad22c875fe0e302e" xml:space="preserve">
+    <value>当前 Kimi 模型未标记为 thinking，深度思考会使用提示词式思考摘要。</value>
+    <comment>当前 Kimi 模型未标记为 thinking，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_3270b4cc37b62444" xml:space="preserve">
+    <value>当前 OpenAI 模型未标记为 reasoning/o 系列，深度思考会使用可展示的提示词式思考摘要。</value>
+    <comment>当前 OpenAI 模型未标记为 reasoning/o 系列，深度思考会使用可展示的提示词式思考摘要。</comment>
+  </data>
+  <data name="S_71105f052761d754" xml:space="preserve">
+    <value>当前 Skill：未挂载</value>
+    <comment>当前 Skill：未挂载</comment>
+  </data>
+  <data name="S_4ee5aa0cdf399480" xml:space="preserve">
+    <value>当前没有可用 Skill。点击下方按钮添加后，才会按 Skill 规则执行。</value>
+    <comment>当前没有可用 Skill。点击下方按钮添加后，才会按 Skill 规则执行。</comment>
+  </data>
+  <data name="S_e81dfdad237652a1" xml:space="preserve">
+    <value>当前模型</value>
+    <comment>当前模型</comment>
+  </data>
+  <data name="S_100aaaa6938c0319" xml:space="preserve">
+    <value>当前模型：</value>
+    <comment>当前模型：</comment>
+  </data>
+  <data name="S_aad36c92471439f5" xml:space="preserve">
+    <value>当前模型：本地结构化</value>
+    <comment>当前模型：本地结构化</comment>
+  </data>
+  <data name="S_2d1709aa18e276dc" xml:space="preserve">
+    <value>当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</value>
+    <comment>当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</comment>
+  </data>
+  <data name="S_3664895579f0a7e6" xml:space="preserve">
+    <value>导出</value>
+    <comment>导出</comment>
+  </data>
+  <data name="S_ff25653ee9e47f2a" xml:space="preserve">
+    <value>导出 JSON</value>
+    <comment>导出 JSON</comment>
+  </data>
+  <data name="S_feb4235b1fe7a152" xml:space="preserve">
+    <value>导出目标</value>
+    <comment>导出目标</comment>
+  </data>
+  <data name="S_2cff9baabf56ca00" xml:space="preserve">
+    <value>导入</value>
+    <comment>导入</comment>
+  </data>
+  <data name="S_12dd2e2eda810d06" xml:space="preserve">
+    <value>导入 JSON</value>
+    <comment>导入 JSON</comment>
+  </data>
+  <data name="S_4dcc81ad99ed4946" xml:space="preserve">
+    <value>导入 Skill 包</value>
+    <comment>导入 Skill 包</comment>
+  </data>
+  <data name="S_64569898b79d142a" xml:space="preserve">
+    <value>导入剪贴板</value>
+    <comment>导入剪贴板</comment>
+  </data>
+  <data name="S_6bcbd455725e5e2c" xml:space="preserve">
+    <value>导入目标</value>
+    <comment>导入目标</comment>
+  </data>
+  <data name="S_d6e16b153e0c1636" xml:space="preserve">
+    <value>等待检测模型 endpoint...</value>
+    <comment>等待检测模型 endpoint...</comment>
+  </data>
+  <data name="S_04ce473913f45a96" xml:space="preserve">
+    <value>点击“新建常用提示词”打开小窗口。列表只显示摘要，点击条目会快速复制完整提示词。</value>
+    <comment>点击“新建常用提示词”打开小窗口。列表只显示摘要，点击条目会快速复制完整提示词。</comment>
+  </data>
+  <data name="S_e1190f9a074cad3f" xml:space="preserve">
+    <value>点击“新建模板”或“保存当前为模板”，在弹窗里填写分类和模板内容。</value>
+    <comment>点击“新建模板”或“保存当前为模板”，在弹窗里填写分类和模板内容。</comment>
+  </data>
+  <data name="S_544a9d1448d0f2ac" xml:space="preserve">
+    <value>点击列表项会立即复制提示词。</value>
+    <comment>点击列表项会立即复制提示词。</comment>
+  </data>
+  <data name="S_f9a5517e74ac8585" xml:space="preserve">
+    <value>点击模板会直接插入到用户需求。</value>
+    <comment>点击模板会直接插入到用户需求。</comment>
+  </data>
+  <data name="S_d40aec9afef22846" xml:space="preserve">
+    <value>点击条目复制完整提示词；需要改内容时右键打开菜单。</value>
+    <comment>点击条目复制完整提示词；需要改内容时右键打开菜单。</comment>
+  </data>
+  <data name="S_617a4b616ddb5edf" xml:space="preserve">
+    <value>电影镜头、对白、分镜</value>
+    <comment>电影镜头、对白、分镜</comment>
+  </data>
+  <data name="S_7a6f4cb7c4d84a18" xml:space="preserve">
+    <value>豆包 / 火山方舟</value>
+    <comment>豆包 / 火山方舟</comment>
+  </data>
+  <data name="S_568c247468f670da" xml:space="preserve">
+    <value>豆包当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</value>
+    <comment>豆包当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</comment>
+  </data>
+  <data name="S_ea54344d347c82c7" xml:space="preserve">
+    <value>短视频、产品、首尾帧</value>
+    <comment>短视频、产品、首尾帧</comment>
+  </data>
+  <data name="S_f6f4688ff23d50c6" xml:space="preserve">
+    <value>发送</value>
+    <comment>发送</comment>
+  </data>
+  <data name="S_0d4748b90beb5264" xml:space="preserve">
+    <value>发送 / 优化</value>
+    <comment>发送 / 优化</comment>
+  </data>
+  <data name="S_56f7bbbb0a5c9bde" xml:space="preserve">
+    <value>发送给模型前本地脱敏敏感信息</value>
+    <comment>发送给模型前本地脱敏敏感信息</comment>
+  </data>
+  <data name="S_7ed25833a5894ef8" xml:space="preserve">
+    <value>发送审计</value>
+    <comment>发送审计</comment>
+  </data>
+  <data name="S_07548c2c6511d4d1" xml:space="preserve">
+    <value>放大</value>
+    <comment>放大</comment>
+  </data>
+  <data name="S_292c06f0045a45d0" xml:space="preserve">
+    <value>分类</value>
+    <comment>分类</comment>
+  </data>
+  <data name="S_42cafd2fbc423c58" xml:space="preserve">
+    <value>分类筛选</value>
+    <comment>分类筛选</comment>
+  </data>
+  <data name="S_cbf62824f19e9c41" xml:space="preserve">
+    <value>附件托盘</value>
+    <comment>附件托盘</comment>
+  </data>
+  <data name="S_e21f935f11d7e966" xml:space="preserve">
+    <value>复制</value>
+    <comment>复制</comment>
+  </data>
+  <data name="S_2eb58f91732cc83a" xml:space="preserve">
+    <value>复制发送文本</value>
+    <comment>复制发送文本</comment>
+  </data>
+  <data name="S_80e0d17325ca6fd4" xml:space="preserve">
+    <value>复制提示词</value>
+    <comment>复制提示词</comment>
+  </data>
+  <data name="S_492d75a645f172cc" xml:space="preserve">
+    <value>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio 开源项目以及其他开源软件。</value>
+    <comment>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio 开源项目以及其他开源软件。</comment>
+  </data>
+  <data name="S_d92b7a8733f4c8b2" xml:space="preserve">
+    <value>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat 开源项目以及其他开源软件。</value>
+    <comment>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat 开源项目以及其他开源软件。</comment>
+  </data>
+  <data name="S_149ee828e8f00be2" xml:space="preserve">
+    <value>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat、Female Portrait Prompt Director Skill 开源项目以及其他开源软件。</value>
+    <comment>该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat、Female Portrait Prompt Director Skill 开源项目以及其他开源软件。</comment>
+  </data>
+  <data name="S_a51e24e6e628e60e" xml:space="preserve">
+    <value>个优化目标</value>
+    <comment>个优化目标</comment>
+  </data>
+  <data name="S_4e957bfb536a403f" xml:space="preserve">
+    <value>更强镜头语言</value>
+    <comment>更强镜头语言</comment>
+  </data>
+  <data name="S_48142fbbd345fbb7" xml:space="preserve">
+    <value>更适合视频模型</value>
+    <comment>更适合视频模型</comment>
+  </data>
+  <data name="S_f87b38a8eb0a387e" xml:space="preserve">
+    <value>挂载 Skill</value>
+    <comment>挂载 Skill</comment>
+  </data>
+  <data name="S_2c24bc920de06e89" xml:space="preserve">
+    <value>挂载语言包</value>
+    <comment>挂载语言包</comment>
+  </data>
+  <data name="S_7d9eb7acb13e2462" xml:space="preserve">
+    <value>关闭</value>
+    <comment>关闭</comment>
+  </data>
+  <data name="S_4efca0d10c5feb8e" xml:space="preserve">
+    <value>关于</value>
+    <comment>关于</comment>
+  </data>
+  <data name="S_bd7abebaa86a5562" xml:space="preserve">
+    <value>管理可分享的优化目标包。导入后会成为右侧优化目标区域和小窗口下拉里的可选项。</value>
+    <comment>管理可分享的优化目标包。导入后会成为右侧优化目标区域和小窗口下拉里的可选项。</comment>
+  </data>
+  <data name="S_9c78be4501840187" xml:space="preserve">
+    <value>管理已挂载的 Skill 和 Skill 包。右侧栏的 Skill 选项卡只负责快速插入使用。</value>
+    <comment>管理已挂载的 Skill 和 Skill 包。右侧栏的 Skill 选项卡只负责快速插入使用。</comment>
+  </data>
+  <data name="S_1293355f5055d5f5" xml:space="preserve">
+    <value>还没有挂载 Skill，请到左侧 Skill 管理添加。</value>
+    <comment>还没有挂载 Skill，请到左侧 Skill 管理添加。</comment>
+  </data>
+  <data name="S_8dd10c129761e63a" xml:space="preserve">
+    <value>好的，把你想优化的需求发给我；我会边聊天边整理成下面的当前提示词和优化后提示词。</value>
+    <comment>好的，把你想优化的需求发给我；我会边聊天边整理成下面的当前提示词和优化后提示词。</comment>
+  </data>
+  <data name="S_33a3925b62344e57" xml:space="preserve">
+    <value>恢复默认设置</value>
+    <comment>恢复默认设置</comment>
+  </data>
+  <data name="S_144e1f1911d4d3a1" xml:space="preserve">
+    <value>回放历史</value>
+    <comment>回放历史</comment>
+  </data>
+  <data name="S_f2953189a9a4ede1" xml:space="preserve">
+    <value>即梦</value>
+    <comment>即梦</comment>
+  </data>
+  <data name="S_828b35c1f11b390b" xml:space="preserve">
+    <value>即梦 / Seedance</value>
+    <comment>即梦 / Seedance</comment>
+  </data>
+  <data name="S_56fd975f4cea21a7" xml:space="preserve">
+    <value>继续编辑</value>
+    <comment>继续编辑</comment>
+  </data>
+  <data name="S_2e6fa68ccd06af30" xml:space="preserve">
+    <value>继续补充你想修改的需求...</value>
+    <comment>继续补充你想修改的需求...</comment>
+  </data>
+  <data name="S_353b542ab1387c69" xml:space="preserve">
+    <value>剪贴板暂时被占用，请再点一次复制</value>
+    <comment>剪贴板暂时被占用，请再点一次复制</comment>
+  </data>
+  <data name="S_2cd0f6ef3414e566" xml:space="preserve">
+    <value>剪贴板暂时被占用，无法插入</value>
+    <comment>剪贴板暂时被占用，无法插入</comment>
+  </data>
+  <data name="S_20b54706d6f202aa" xml:space="preserve">
+    <value>剪贴板暂时被占用，无法插入英文提示词</value>
+    <comment>剪贴板暂时被占用，无法插入英文提示词</comment>
+  </data>
+  <data name="S_9f7fbae11873cc28" xml:space="preserve">
+    <value>结构化时间与镜头序列</value>
+    <comment>结构化时间与镜头序列</comment>
+  </data>
+  <data name="S_029320ad166c1807" xml:space="preserve">
+    <value>截图</value>
+    <comment>截图</comment>
+  </data>
+  <data name="S_d1c76800f0871fca" xml:space="preserve">
+    <value>界面语言</value>
+    <comment>界面语言</comment>
+  </data>
+  <data name="S_0b7a212c54b91559" xml:space="preserve">
+    <value>开源角色提示词库</value>
+    <comment>开源角色提示词库</comment>
+  </data>
+  <data name="S_144945601de405bb" xml:space="preserve">
+    <value>可用模型</value>
+    <comment>可用模型</comment>
+  </data>
+  <data name="S_9705a803bb417ef1" xml:space="preserve">
+    <value>可直接粘贴图片，或通过图片按钮选择 / OCR</value>
+    <comment>可直接粘贴图片，或通过图片按钮选择 / OCR</comment>
+  </data>
+  <data name="S_467e1512b3b5a3ad" xml:space="preserve">
+    <value>快捷键无效或已被其他程序占用，请换一个组合</value>
+    <comment>快捷键无效或已被其他程序占用，请换一个组合</comment>
+  </data>
+  <data name="S_d848752fadabaa34" xml:space="preserve">
+    <value>快速提示词模板</value>
+    <comment>快速提示词模板</comment>
+  </data>
+  <data name="S_1a5ac0bd0b6b5765" xml:space="preserve">
+    <value>来源：</value>
+    <comment>来源：</comment>
+  </data>
+  <data name="S_0e76960093379060" xml:space="preserve">
+    <value>历史记录</value>
+    <comment>历史记录</comment>
+  </data>
+  <data name="S_febb4d62dde89515" xml:space="preserve">
+    <value>例如：豆包 / Midjourney / GPT-4o / 本地模型</value>
+    <comment>例如：豆包 / Midjourney / GPT-4o / 本地模型</comment>
+  </data>
+  <data name="S_9e1ebdf535886dcf" xml:space="preserve">
+    <value>例如：角色定位</value>
+    <comment>例如：角色定位</comment>
+  </data>
+  <data name="S_3ca792df56177ff9" xml:space="preserve">
+    <value>例如：流畅设计</value>
+    <comment>例如：流畅设计</comment>
+  </data>
+  <data name="S_ca4c455a27f6e4c6" xml:space="preserve">
+    <value>例如：UI 设计</value>
+    <comment>例如：UI 设计</comment>
+  </data>
+  <data name="S_caae267f9ec9e2af" xml:space="preserve">
+    <value>论文去AI味</value>
+    <comment>论文去AI味</comment>
+  </data>
+  <data name="S_d5d7d4dc91d9b9a9" xml:space="preserve">
+    <value>没有读取到剪贴板文本</value>
+    <comment>没有读取到剪贴板文本</comment>
+  </data>
+  <data name="S_c485d9cf1d90b7f9" xml:space="preserve">
+    <value>没有读取到文本</value>
+    <comment>没有读取到文本</comment>
+  </data>
+  <data name="S_faaa1bce07be336c" xml:space="preserve">
+    <value>没有记录到目标窗口，请用快捷键呼出后再试</value>
+    <comment>没有记录到目标窗口，请用快捷键呼出后再试</comment>
+  </data>
+  <data name="S_c8c324c6150fec27" xml:space="preserve">
+    <value>没有可补充的优化结果</value>
+    <comment>没有可补充的优化结果</comment>
+  </data>
+  <data name="S_e9ab0f6b8bf89e61" xml:space="preserve">
+    <value>没有可插入的提示词</value>
+    <comment>没有可插入的提示词</comment>
+  </data>
+  <data name="S_d0ac86da19292f45" xml:space="preserve">
+    <value>没有可插入的英文提示词</value>
+    <comment>没有可插入的英文提示词</comment>
+  </data>
+  <data name="S_6a4c98a71dc871f0" xml:space="preserve">
+    <value>没有可导出的结果</value>
+    <comment>没有可导出的结果</comment>
+  </data>
+  <data name="S_1dc2b136c985099d" xml:space="preserve">
+    <value>没有可复制的结果</value>
+    <comment>没有可复制的结果</comment>
+  </data>
+  <data name="S_d547557acd3d761e" xml:space="preserve">
+    <value>没有可复制的英文提示词</value>
+    <comment>没有可复制的英文提示词</comment>
+  </data>
+  <data name="S_e8f5e3d4543768ae" xml:space="preserve">
+    <value>没有命中内置原生思考标签，深度思考会使用提示词式思考摘要。</value>
+    <comment>没有命中内置原生思考标签，深度思考会使用提示词式思考摘要。</comment>
+  </data>
+  <data name="S_688cafb19eef26b4" xml:space="preserve">
+    <value>没有找到开源项目引用文档</value>
+    <comment>没有找到开源项目引用文档</comment>
+  </data>
+  <data name="S_43323329d12b8f44" xml:space="preserve">
+    <value>没有找到要删除的常用提示词</value>
+    <comment>没有找到要删除的常用提示词</comment>
+  </data>
+  <data name="S_83bbc6855a6d9c79" xml:space="preserve">
+    <value>没有找到优化目标格式文档</value>
+    <comment>没有找到优化目标格式文档</comment>
+  </data>
+  <data name="S_56d80c4bb94de359" xml:space="preserve">
+    <value>命令面板</value>
+    <comment>命令面板</comment>
+  </data>
+  <data name="S_56b564b75c7fdb48" xml:space="preserve">
+    <value>模板</value>
+    <comment>模板</comment>
+  </data>
+  <data name="S_aea1b027f46b5464" xml:space="preserve">
+    <value>模型 endpoint 不可用</value>
+    <comment>模型 endpoint 不可用</comment>
+  </data>
+  <data name="S_ce0c9e4d1a3f700b" xml:space="preserve">
+    <value>模型标签：</value>
+    <comment>模型标签：</comment>
+  </data>
+  <data name="S_d459f1619b8c5735" xml:space="preserve">
+    <value>模型标签：未检测</value>
+    <comment>模型标签：未检测</comment>
+  </data>
+  <data name="S_df285105f741c8da" xml:space="preserve">
+    <value>模型不可用，已输出 Skill 生成草稿</value>
+    <comment>模型不可用，已输出 Skill 生成草稿</comment>
+  </data>
+  <data name="S_2d54bcd8a5e193ba" xml:space="preserve">
+    <value>模型调用失败，已使用本地结构化：</value>
+    <comment>模型调用失败，已使用本地结构化：</comment>
+  </data>
+  <data name="S_2eb7bfd3de3b217a" xml:space="preserve">
+    <value>模型管理</value>
+    <comment>模型管理</comment>
+  </data>
+  <data name="S_0058a914be47863d" xml:space="preserve">
+    <value>模型连接不可用</value>
+    <comment>模型连接不可用</comment>
+  </data>
+  <data name="S_dcdd4bf2e201bc4b" xml:space="preserve">
+    <value>模型配置不完整，已使用本地结构化</value>
+    <comment>模型配置不完整，已使用本地结构化</comment>
+  </data>
+  <data name="S_120a581ae0a1ed27" xml:space="preserve">
+    <value>模型未启用，已使用本地结构化</value>
+    <comment>模型未启用，已使用本地结构化</comment>
+  </data>
+  <data name="S_882522fb77b3a602" xml:space="preserve">
+    <value>目标平台 / 优化模式</value>
+    <comment>目标平台 / 优化模式</comment>
+  </data>
+  <data name="S_d7d22c0959c5b8ac" xml:space="preserve">
+    <value>内置模板不能编辑</value>
+    <comment>内置模板不能编辑</comment>
+  </data>
+  <data name="S_58d428b72ccfc6d2" xml:space="preserve">
+    <value>内置模板不能删除</value>
+    <comment>内置模板不能删除</comment>
+  </data>
+  <data name="S_b331d0cc6bf56d0a" xml:space="preserve">
+    <value>女性人像 Skill</value>
+    <comment>女性人像 Skill</comment>
+  </data>
+  <data name="S_d27b857803cd117a" xml:space="preserve">
+    <value>启用 OpenAI-compatible 模型优化</value>
+    <comment>启用 OpenAI-compatible 模型优化</comment>
+  </data>
+  <data name="S_42f0152ba7c6cd7c" xml:space="preserve">
+    <value>启用全局快捷键呼出置顶小窗口</value>
+    <comment>启用全局快捷键呼出置顶小窗口</comment>
+  </data>
+  <data name="S_7aa32f4a9d409279" xml:space="preserve">
+    <value>切换模型</value>
+    <comment>切换模型</comment>
+  </data>
+  <data name="S_9768be40e9310726" xml:space="preserve">
+    <value>清除历史</value>
+    <comment>清除历史</comment>
+  </data>
+  <data name="S_8c86d54346a1488d" xml:space="preserve">
+    <value>清除收藏</value>
+    <comment>清除收藏</comment>
+  </data>
+  <data name="S_d043e23a91ae5068" xml:space="preserve">
+    <value>清空记录</value>
+    <comment>清空记录</comment>
+  </data>
+  <data name="S_c52ff5ea803d5775" xml:space="preserve">
+    <value>清空选择</value>
+    <comment>清空选择</comment>
+  </data>
+  <data name="S_df7306e351525e92" xml:space="preserve">
+    <value>请输入常用提示词内容。</value>
+    <comment>请输入常用提示词内容。</comment>
+  </data>
+  <data name="S_5658a612e18dc3ba" xml:space="preserve">
+    <value>请先填写模板内容</value>
+    <comment>请先填写模板内容</comment>
+  </data>
+  <data name="S_d518e2f83d36a9b5" xml:space="preserve">
+    <value>请选择要插入的常用提示词</value>
+    <comment>请选择要插入的常用提示词</comment>
+  </data>
+  <data name="S_36136a6ac48afa9b" xml:space="preserve">
+    <value>请选择要插入的模板</value>
+    <comment>请选择要插入的模板</comment>
+  </data>
+  <data name="S_22935a8b46501229" xml:space="preserve">
+    <value>请选择要导出的优化目标</value>
+    <comment>请选择要导出的优化目标</comment>
+  </data>
+  <data name="S_46820a20cbfe72d6" xml:space="preserve">
+    <value>请选择要删除的常用提示词</value>
+    <comment>请选择要删除的常用提示词</comment>
+  </data>
+  <data name="S_5d313f8de23bccd0" xml:space="preserve">
+    <value>请选择要删除的历史记录</value>
+    <comment>请选择要删除的历史记录</comment>
+  </data>
+  <data name="S_e69c0153829e4f10" xml:space="preserve">
+    <value>请选择要删除的模板</value>
+    <comment>请选择要删除的模板</comment>
+  </data>
+  <data name="S_128e6e2119007e0e" xml:space="preserve">
+    <value>请选择要删除的优化目标</value>
+    <comment>请选择要删除的优化目标</comment>
+  </data>
+  <data name="S_536da91dc6f5f6f8" xml:space="preserve">
+    <value>请选择要载入的历史记录</value>
+    <comment>请选择要载入的历史记录</comment>
+  </data>
+  <data name="S_18a4914a6363f68d" xml:space="preserve">
+    <value>请选择要载入的模板</value>
+    <comment>请选择要载入的模板</comment>
+  </data>
+  <data name="S_19766ed6ccb2f4a3" xml:space="preserve">
+    <value>取消</value>
+    <comment>取消</comment>
+  </data>
+  <data name="S_a52ace420f2175d0" xml:space="preserve">
+    <value>全部</value>
+    <comment>全部</comment>
+  </data>
+  <data name="S_b68e3d0d86ad8025" xml:space="preserve">
+    <value>全局置顶小窗口快捷键</value>
+    <comment>全局置顶小窗口快捷键</comment>
+  </data>
+  <data name="S_e2d0a54968ead24e" xml:space="preserve">
+    <value>删除</value>
+    <comment>删除</comment>
+  </data>
+  <data name="S_183f22f8449fd1ee" xml:space="preserve">
+    <value>删除 Skill</value>
+    <comment>删除 Skill</comment>
+  </data>
+  <data name="S_5d1bd246ddbc3a7a" xml:space="preserve">
+    <value>删除历史</value>
+    <comment>删除历史</comment>
+  </data>
+  <data name="S_dace1fe3c5c33a62" xml:space="preserve">
+    <value>删除模板</value>
+    <comment>删除模板</comment>
+  </data>
+  <data name="S_7782623b9128d511" xml:space="preserve">
+    <value>删除模板失败</value>
+    <comment>删除模板失败</comment>
+  </data>
+  <data name="S_ba3d4857056e60df" xml:space="preserve">
+    <value>删除目标</value>
+    <comment>删除目标</comment>
+  </data>
+  <data name="S_6588546e9467e849" xml:space="preserve">
+    <value>删除优化目标失败</value>
+    <comment>删除优化目标失败</comment>
+  </data>
+  <data name="S_ff02f4a09c4afaa2" xml:space="preserve">
+    <value>上传图片</value>
+    <comment>上传图片</comment>
+  </data>
+  <data name="S_74a883a037bc227f" xml:space="preserve">
+    <value>设置</value>
+    <comment>设置</comment>
+  </data>
+  <data name="S_74a7f53bad399973" xml:space="preserve">
+    <value>设置已保存</value>
+    <comment>设置已保存</comment>
+  </data>
+  <data name="S_3b846f896abf92e0" xml:space="preserve">
+    <value>设置已保存，模型关闭时使用本地结构化</value>
+    <comment>设置已保存，模型关闭时使用本地结构化</comment>
+  </data>
+  <data name="S_380aed53d30dcf50" xml:space="preserve">
+    <value>深度思考</value>
+    <comment>深度思考</comment>
+  </data>
+  <data name="S_9282278c2a7c076a" xml:space="preserve">
+    <value>深度思考：提示词摘要</value>
+    <comment>深度思考：提示词摘要</comment>
+  </data>
+  <data name="S_ab6a10701ac5f764" xml:space="preserve">
+    <value>深度思考已开启：</value>
+    <comment>深度思考已开启：</comment>
+  </data>
+  <data name="S_b70f0a1fc693f3d5" xml:space="preserve">
+    <value>生成优化提示词</value>
+    <comment>生成优化提示词</comment>
+  </data>
+  <data name="S_d534be829e32196b" xml:space="preserve">
+    <value>视频生成</value>
+    <comment>视频生成</comment>
+  </data>
+  <data name="S_ea713ecd8537f77e" xml:space="preserve">
+    <value>收藏</value>
+    <comment>收藏</comment>
+  </data>
+  <data name="S_7f0c9ff9bfed4770" xml:space="preserve">
+    <value>收藏当前</value>
+    <comment>收藏当前</comment>
+  </data>
+  <data name="S_a8506f0b85827f21" xml:space="preserve">
+    <value>收起 / 展开菜单</value>
+    <comment>收起 / 展开菜单</comment>
+  </data>
+  <data name="S_784ee74b7fa3130e" xml:space="preserve">
+    <value>收起到浮窗</value>
+    <comment>收起到浮窗</comment>
+  </data>
+  <data name="S_cdb8fba5378a6aa8" xml:space="preserve">
+    <value>收起右侧栏</value>
+    <comment>收起右侧栏</comment>
+  </data>
+  <data name="S_3a78695388b38b5c" xml:space="preserve">
+    <value>首页</value>
+    <comment>首页</comment>
+  </data>
+  <data name="S_d21effd52f69d457" xml:space="preserve">
+    <value>输出语言：中英双语</value>
+    <comment>输出语言：中英双语</comment>
+  </data>
+  <data name="S_e4c63a7589d7a2b1" xml:space="preserve">
+    <value>输入需求</value>
+    <comment>输入需求</comment>
+  </data>
+  <data name="S_e602ad238d39ebf7" xml:space="preserve">
+    <value>输入一段常用提示词，保存后点击即可复制</value>
+    <comment>输入一段常用提示词，保存后点击即可复制</comment>
+  </data>
+  <data name="S_f3c9fa75647a6808" xml:space="preserve">
+    <value>思考过程</value>
+    <comment>思考过程</comment>
+  </data>
+  <data name="S_49c266baaaa70981" xml:space="preserve">
+    <value>搜索</value>
+    <comment>搜索</comment>
+  </data>
+  <data name="S_2eab96d60bdf46a4" xml:space="preserve">
+    <value>搜索标题、分类或内容</value>
+    <comment>搜索标题、分类或内容</comment>
+  </data>
+  <data name="S_66d7e4a1c738f0b1" xml:space="preserve">
+    <value>搜索历史</value>
+    <comment>搜索历史</comment>
+  </data>
+  <data name="S_e13a64d906f26413" xml:space="preserve">
+    <value>搜索命令、模板、Skill 或页面</value>
+    <comment>搜索命令、模板、Skill 或页面</comment>
+  </data>
+  <data name="S_39a3156b919f73a0" xml:space="preserve">
+    <value>搜索提示词组、分类或内容</value>
+    <comment>搜索提示词组、分类或内容</comment>
+  </data>
+  <data name="S_8e60e17844626143" xml:space="preserve">
+    <value>搜索需求、提示词、优化目标</value>
+    <comment>搜索需求、提示词、优化目标</comment>
+  </data>
+  <data name="S_790b6d17775902a5" xml:space="preserve">
+    <value>所属：</value>
+    <comment>所属：</comment>
+  </data>
+  <data name="S_20dddab3117899e3" xml:space="preserve">
+    <value>提供商预设</value>
+    <comment>提供商预设</comment>
+  </data>
+  <data name="S_0ab02dc430abe6f3" xml:space="preserve">
+    <value>提示词版本</value>
+    <comment>提示词版本</comment>
+  </data>
+  <data name="S_97f78730ff25f113" xml:space="preserve">
+    <value>提示词内容</value>
+    <comment>提示词内容</comment>
+  </data>
+  <data name="S_cf6179ebee853965" xml:space="preserve">
+    <value>提示词式思考摘要</value>
+    <comment>提示词式思考摘要</comment>
+  </data>
+  <data name="S_035823975b636071" xml:space="preserve">
+    <value>提示词优化</value>
+    <comment>提示词优化</comment>
+  </data>
+  <data name="S_79167859ad36c590" xml:space="preserve">
+    <value>提示词摘要</value>
+    <comment>提示词摘要</comment>
+  </data>
+  <data name="S_f01ec050eca5da4a" xml:space="preserve">
+    <value>添加 Skill</value>
+    <comment>添加 Skill</comment>
+  </data>
+  <data name="S_f4a31119f9f37db9" xml:space="preserve">
+    <value>填写 Base URL 和 API Key 后会自动检测可用性并刷新模型列表。</value>
+    <comment>填写 Base URL 和 API Key 后会自动检测可用性并刷新模型列表。</comment>
+  </data>
+  <data name="S_22ed8ccbc9476e25" xml:space="preserve">
+    <value>填写 URL 和 API Key 后自动刷新</value>
+    <comment>填写 URL 和 API Key 后自动刷新</comment>
+  </data>
+  <data name="S_d6ffa563463a4f6c" xml:space="preserve">
+    <value>条常用提示词</value>
+    <comment>条常用提示词</comment>
+  </data>
+  <data name="S_0b8db6b209b5c8ce" xml:space="preserve">
+    <value>条提示词模板</value>
+    <comment>条提示词模板</comment>
+  </data>
+  <data name="S_1ea5347ba00e365c" xml:space="preserve">
+    <value>通用 LLM</value>
+    <comment>通用 LLM</comment>
+  </data>
+  <data name="S_7572cea089ec797b" xml:space="preserve">
+    <value>通用、写作、提示词工程</value>
+    <comment>通用、写作、提示词工程</comment>
+  </data>
+  <data name="S_1aa4cb0bcca76e92" xml:space="preserve">
+    <value>图片</value>
+    <comment>图片</comment>
+  </data>
+  <data name="S_8d40d123b2e1e296" xml:space="preserve">
+    <value>未分类</value>
+    <comment>未分类</comment>
+  </data>
+  <data name="S_dcef80f5c5366ea9" xml:space="preserve">
+    <value>未配置模型</value>
+    <comment>未配置模型</comment>
+  </data>
+  <data name="S_bdbfefca9c47ae05" xml:space="preserve">
+    <value>文生图、角色、构图</value>
+    <comment>文生图、角色、构图</comment>
+  </data>
+  <data name="S_71988c4d8e0803ba" xml:space="preserve">
+    <value>文生文</value>
+    <comment>文生文</comment>
+  </data>
+  <data name="S_7c83a1486c275d20" xml:space="preserve">
+    <value>我的模板</value>
+    <comment>我的模板</comment>
+  </data>
+  <data name="S_407ff77a4215924a" xml:space="preserve">
+    <value>写真、服装、风格路由</value>
+    <comment>写真、服装、风格路由</comment>
+  </data>
+  <data name="S_c03e5023054bd08d" xml:space="preserve">
+    <value>新的会话已开始。把你想优化的需求发给我，我会边聊天边更新当前提示词和优化后提示词。</value>
+    <comment>新的会话已开始。把你想优化的需求发给我，我会边聊天边更新当前提示词和优化后提示词。</comment>
+  </data>
+  <data name="S_0d33235199fbc063" xml:space="preserve">
+    <value>新会话</value>
+    <comment>新会话</comment>
+  </data>
+  <data name="S_b31088ed9a58004d" xml:space="preserve">
+    <value>新建常用提示词</value>
+    <comment>新建常用提示词</comment>
+  </data>
+  <data name="S_22fc5d8c2951548b" xml:space="preserve">
+    <value>新建模板</value>
+    <comment>新建模板</comment>
+  </data>
+  <data name="S_35e3904a7b6117cc" xml:space="preserve">
+    <value>修改对比</value>
+    <comment>修改对比</comment>
+  </data>
+  <data name="S_a3114f43515cf08f" xml:space="preserve">
+    <value>修改后自动保存，标题栏会显示 Provider + 模型名称。</value>
+    <comment>修改后自动保存，标题栏会显示 Provider + 模型名称。</comment>
+  </data>
+  <data name="S_31c5463a02ec2b47" xml:space="preserve">
+    <value>需求 / 模板内容</value>
+    <comment>需求 / 模板内容</comment>
+  </data>
+  <data name="S_541a5ad4ac96acda" xml:space="preserve">
+    <value>选择常用 Provider 自动填充 Base URL 和推荐模型</value>
+    <comment>选择常用 Provider 自动填充 Base URL 和推荐模型</comment>
+  </data>
+  <data name="S_2f20728d8c7e9500" xml:space="preserve">
+    <value>选择目标对应模板</value>
+    <comment>选择目标对应模板</comment>
+  </data>
+  <data name="S_b181a58ffe4ab9c0" xml:space="preserve">
+    <value>选中历史后可以继续编辑，同一段对话会锁定当时使用的优化目标。</value>
+    <comment>选中历史后可以继续编辑，同一段对话会锁定当时使用的优化目标。</comment>
+  </data>
+  <data name="S_67469df01fa19763" xml:space="preserve">
+    <value>移除附件</value>
+    <comment>移除附件</comment>
+  </data>
+  <data name="S_2f010aac7b02b48b" xml:space="preserve">
+    <value>已按挂载 Skill 生成提示词：</value>
+    <comment>已按挂载 Skill 生成提示词：</comment>
+  </data>
+  <data name="S_76683599321ccbdb" xml:space="preserve">
+    <value>已保存为模板</value>
+    <comment>已保存为模板</comment>
+  </data>
+  <data name="S_387721c7aac41001" xml:space="preserve">
+    <value>已插入常用提示词</value>
+    <comment>已插入常用提示词</comment>
+  </data>
+  <data name="S_3ee904e5189f695c" xml:space="preserve">
+    <value>已插入到当前窗口</value>
+    <comment>已插入到当前窗口</comment>
+  </data>
+  <data name="S_7a81b20cdc5f1fd8" xml:space="preserve">
+    <value>已插入英文提示词到当前窗口</value>
+    <comment>已插入英文提示词到当前窗口</comment>
+  </data>
+  <data name="S_391065e4dc23592a" xml:space="preserve">
+    <value>已导出</value>
+    <comment>已导出</comment>
+  </data>
+  <data name="S_321f179c80ba93ea" xml:space="preserve">
+    <value>已导入</value>
+    <comment>已导入</comment>
+  </data>
+  <data name="S_5391b1d4f2152c17" xml:space="preserve">
+    <value>已调用模型优化</value>
+    <comment>已调用模型优化</comment>
+  </data>
+  <data name="S_16df71cf7e92a35d" xml:space="preserve">
+    <value>已发送附图</value>
+    <comment>已发送附图</comment>
+  </data>
+  <data name="S_0e0c8f0dde704108" xml:space="preserve">
+    <value>已附图</value>
+    <comment>已附图</comment>
+  </data>
+  <data name="S_4bbf8818de1edc8b" xml:space="preserve">
+    <value>已复制提示词；没有记录到目标窗口，需手动粘贴</value>
+    <comment>已复制提示词；没有记录到目标窗口，需手动粘贴</comment>
+  </data>
+  <data name="S_0e4530d54bbb7be8" xml:space="preserve">
+    <value>已复制英文提示词</value>
+    <comment>已复制英文提示词</comment>
+  </data>
+  <data name="S_552ea427b9cbc5ab" xml:space="preserve">
+    <value>已复制英文提示词；没有记录到目标窗口，需手动粘贴</value>
+    <comment>已复制英文提示词；没有记录到目标窗口，需手动粘贴</comment>
+  </data>
+  <data name="S_4ba3428526b64fbe" xml:space="preserve">
+    <value>已复制优化后的提示词</value>
+    <comment>已复制优化后的提示词</comment>
+  </data>
+  <data name="S_cc9213d2617d81c9" xml:space="preserve">
+    <value>已更新模板</value>
+    <comment>已更新模板</comment>
+  </data>
+  <data name="S_932227a99d54cfaa" xml:space="preserve">
+    <value>已挂载 Skill</value>
+    <comment>已挂载 Skill</comment>
+  </data>
+  <data name="S_426c828173ca2cd9" xml:space="preserve">
+    <value>已挂载优化目标</value>
+    <comment>已挂载优化目标</comment>
+  </data>
+  <data name="S_40d6b7f902e57d01" xml:space="preserve">
+    <value>已关闭深度思考</value>
+    <comment>已关闭深度思考</comment>
+  </data>
+  <data name="S_0a4a35c29cf4306f" xml:space="preserve">
+    <value>已恢复默认设置</value>
+    <comment>已恢复默认设置</comment>
+  </data>
+  <data name="S_541578ce1b98479f" xml:space="preserve">
+    <value>已连接，发现模型</value>
+    <comment>已连接，发现模型</comment>
+  </data>
+  <data name="S_83fc3ee85140171b" xml:space="preserve">
+    <value>已切换模型</value>
+    <comment>已切换模型</comment>
+  </data>
+  <data name="S_d9e4aef513f92885" xml:space="preserve">
+    <value>已切换优化目标</value>
+    <comment>已切换优化目标</comment>
+  </data>
+  <data name="S_867fd81e087f5d37" xml:space="preserve">
+    <value>已清空模板选择</value>
+    <comment>已清空模板选择</comment>
+  </data>
+  <data name="S_9c1750017f68e240" xml:space="preserve">
+    <value>已取消保存模板</value>
+    <comment>已取消保存模板</comment>
+  </data>
+  <data name="S_b16c7e12c1c79b4d" xml:space="preserve">
+    <value>已取消编辑常用提示词</value>
+    <comment>已取消编辑常用提示词</comment>
+  </data>
+  <data name="S_32b06a3db719dda9" xml:space="preserve">
+    <value>已取消编辑模板</value>
+    <comment>已取消编辑模板</comment>
+  </data>
+  <data name="S_5043c5eeec6a845c" xml:space="preserve">
+    <value>已取消插入模板</value>
+    <comment>已取消插入模板</comment>
+  </data>
+  <data name="S_dbef83d53bfe1aa6" xml:space="preserve">
+    <value>已取消导出</value>
+    <comment>已取消导出</comment>
+  </data>
+  <data name="S_d71af6839ae91dbf" xml:space="preserve">
+    <value>已取消导入</value>
+    <comment>已取消导入</comment>
+  </data>
+  <data name="S_6db951bbc2753af4" xml:space="preserve">
+    <value>已取消附图</value>
+    <comment>已取消附图</comment>
+  </data>
+  <data name="S_2680cf453b961512" xml:space="preserve">
+    <value>已取消挂载语言包</value>
+    <comment>已取消挂载语言包</comment>
+  </data>
+  <data name="S_fb09922d4662fc5d" xml:space="preserve">
+    <value>已取消截图附图</value>
+    <comment>已取消截图附图</comment>
+  </data>
+  <data name="S_ea3c88b4b6034acc" xml:space="preserve">
+    <value>已取消模型外发，保留本地结构化结果</value>
+    <comment>已取消模型外发，保留本地结构化结果</comment>
+  </data>
+  <data name="S_9ac9d5cb4533994d" xml:space="preserve">
+    <value>已取消区域 OCR</value>
+    <comment>已取消区域 OCR</comment>
+  </data>
+  <data name="S_9147a55e74d78462" xml:space="preserve">
+    <value>已取消图片 OCR</value>
+    <comment>已取消图片 OCR</comment>
+  </data>
+  <data name="S_9dfbbe33346e11b0" xml:space="preserve">
+    <value>已取消新建常用提示词</value>
+    <comment>已取消新建常用提示词</comment>
+  </data>
+  <data name="S_85bd0d9525faeea7" xml:space="preserve">
+    <value>已删除历史记录</value>
+    <comment>已删除历史记录</comment>
+  </data>
+  <data name="S_8fa9d4a8b8272f35" xml:space="preserve">
+    <value>已删除模板</value>
+    <comment>已删除模板</comment>
+  </data>
+  <data name="S_cb2ba54cbaec99db" xml:space="preserve">
+    <value>已删除优化目标</value>
+    <comment>已删除优化目标</comment>
+  </data>
+  <data name="S_34deaab70b02a18b" xml:space="preserve">
+    <value>已套用提供商预设</value>
+    <comment>已套用提供商预设</comment>
+  </data>
+  <data name="S_2baac1b514aba098" xml:space="preserve">
+    <value>已脱敏并调用模型优化</value>
+    <comment>已脱敏并调用模型优化</comment>
+  </data>
+  <data name="S_6cb8d3b4bdb37d02" xml:space="preserve">
+    <value>已选择模型</value>
+    <comment>已选择模型</comment>
+  </data>
+  <data name="S_5db5a24be5b8e6ad" xml:space="preserve">
+    <value>已选择提示词组</value>
+    <comment>已选择提示词组</comment>
+  </data>
+  <data name="S_e084d8d8ed883e30" xml:space="preserve">
+    <value>已应用放大编辑内容</value>
+    <comment>已应用放大编辑内容</comment>
+  </data>
+  <data name="S_d01b95e3f94f1e20" xml:space="preserve">
+    <value>已载入历史记录</value>
+    <comment>已载入历史记录</comment>
+  </data>
+  <data name="S_150219d7bf14dec5" xml:space="preserve">
+    <value>应用并关闭</value>
+    <comment>应用并关闭</comment>
+  </data>
+  <data name="S_74b21fcf542fc18f" xml:space="preserve">
+    <value>英文翻译提示词</value>
+    <comment>英文翻译提示词</comment>
+  </data>
+  <data name="S_01e30cc06ce9a0b2" xml:space="preserve">
+    <value>用户导入、自建分类</value>
+    <comment>用户导入、自建分类</comment>
+  </data>
+  <data name="S_8a2a94fd50734ef3" xml:space="preserve">
+    <value>用户需求</value>
+    <comment>用户需求</comment>
+  </data>
+  <data name="S_7083beb1667b2c49" xml:space="preserve">
+    <value>优化后的结构化 Prompt 会显示在这里</value>
+    <comment>优化后的结构化 Prompt 会显示在这里</comment>
+  </data>
+  <data name="S_4eaa9324cdc50c8c" xml:space="preserve">
+    <value>优化后中文提示词</value>
+    <comment>优化后中文提示词</comment>
+  </data>
+  <data name="S_6e7d50e84f4731ef" xml:space="preserve">
+    <value>优化结果</value>
+    <comment>优化结果</comment>
+  </data>
+  <data name="S_641e073521c33455" xml:space="preserve">
+    <value>优化目标</value>
+    <comment>优化目标</comment>
+  </data>
+  <data name="S_30eaddeafeaeb4b6" xml:space="preserve">
+    <value>优化目标：</value>
+    <comment>优化目标：</comment>
+  </data>
+  <data name="S_0019af62dbfea75a" xml:space="preserve">
+    <value>优化目标：通用 LLM</value>
+    <comment>优化目标：通用 LLM</comment>
+  </data>
+  <data name="S_61307d9d1d87cd05" xml:space="preserve">
+    <value>语言包无效</value>
+    <comment>语言包无效</comment>
+  </data>
+  <data name="S_b65d9f2d942b0b6d" xml:space="preserve">
+    <value>语言包已挂载</value>
+    <comment>语言包已挂载</comment>
+  </data>
+  <data name="S_4c26a33e812274c3" xml:space="preserve">
+    <value>允许显式附图时向多模态模型外发图片</value>
+    <comment>允许显式附图时向多模态模型外发图片</comment>
+  </data>
+  <data name="S_49746002a2a9f2b1" xml:space="preserve">
+    <value>允许向模型 Provider 外发文本</value>
+    <comment>允许向模型 Provider 外发文本</comment>
+  </data>
+  <data name="S_65d0c27e19297ee3" xml:space="preserve">
+    <value>载入版本</value>
+    <comment>载入版本</comment>
+  </data>
+  <data name="S_59c2545a6af50c6f" xml:space="preserve">
+    <value>载入历史</value>
+    <comment>载入历史</comment>
+  </data>
+  <data name="S_5ea7c263cd396038" xml:space="preserve">
+    <value>暂无对应模板</value>
+    <comment>暂无对应模板</comment>
+  </data>
+  <data name="S_6cadc23f18c63682" xml:space="preserve">
+    <value>增强镜头运动与构图描述</value>
+    <comment>增强镜头运动与构图描述</comment>
+  </data>
+  <data name="S_58d640385e776921" xml:space="preserve">
+    <value>粘贴图片、OCR 图片或选择图片后会作为模型附图</value>
+    <comment>粘贴图片、OCR 图片或选择图片后会作为模型附图</comment>
+  </data>
+  <data name="S_44be835c139ac43f" xml:space="preserve">
+    <value>展开工作台</value>
+    <comment>展开工作台</comment>
+  </data>
+  <data name="S_0419d343b7299003" xml:space="preserve">
+    <value>正在补充需求...</value>
+    <comment>正在补充需求...</comment>
+  </data>
+  <data name="S_83ad58cf562f234f" xml:space="preserve">
+    <value>正在导入剪贴板...</value>
+    <comment>正在导入剪贴板...</comment>
+  </data>
+  <data name="S_b7a26a380fc89c99" xml:space="preserve">
+    <value>正在检测模型 endpoint...</value>
+    <comment>正在检测模型 endpoint...</comment>
+  </data>
+  <data name="S_e198f6292c6a0b7a" xml:space="preserve">
+    <value>正在截取目标窗口...</value>
+    <comment>正在截取目标窗口...</comment>
+  </data>
+  <data name="S_49286f33b674a0a6" xml:space="preserve">
+    <value>正在生成...</value>
+    <comment>正在生成...</comment>
+  </data>
+  <data name="S_a525f93bcb9da81c" xml:space="preserve">
+    <value>正在识别窗口文字...</value>
+    <comment>正在识别窗口文字...</comment>
+  </data>
+  <data name="S_d65bc956fde2aa90" xml:space="preserve">
+    <value>正在识别区域文字...</value>
+    <comment>正在识别区域文字...</comment>
+  </data>
+  <data name="S_7128eec831e409a1" xml:space="preserve">
+    <value>正在识别图片文字...</value>
+    <comment>正在识别图片文字...</comment>
+  </data>
+  <data name="S_5ed472310b9e4ea3" xml:space="preserve">
+    <value>正在选择截图区域...</value>
+    <comment>正在选择截图区域...</comment>
+  </data>
+  <data name="S_672deb7496742892" xml:space="preserve">
+    <value>正在选择图片...</value>
+    <comment>正在选择图片...</comment>
+  </data>
+  <data name="S_add87a0573b34554" xml:space="preserve">
+    <value>正在准备区域 OCR...</value>
+    <comment>正在准备区域 OCR...</comment>
+  </data>
+  <data name="S_565339bc4d33d728" xml:space="preserve">
+    <value>知道了</value>
+    <comment>知道了</comment>
+  </data>
+  <data name="S_00d60e31a4e6b834" xml:space="preserve">
+    <value>执行</value>
+    <comment>执行</comment>
+  </data>
+  <data name="S_1326ab8919f361e6" xml:space="preserve">
+    <value>直发大模型</value>
+    <comment>直发大模型</comment>
+  </data>
+  <data name="S_8a9779f421280dfc" xml:space="preserve">
+    <value>中文</value>
+    <comment>中文</comment>
+  </data>
+  <data name="S_e23a2dbc878699ae" xml:space="preserve">
+    <value>中文提示词</value>
+    <comment>中文提示词</comment>
+  </data>
+  <data name="S_9eb3f46f2b846c46" xml:space="preserve">
+    <value>中文优化 Prompt 会显示在这里</value>
+    <comment>中文优化 Prompt 会显示在这里</comment>
+  </data>
+  <data name="S_f0785b95ce69fc42" xml:space="preserve">
+    <value>主键</value>
+    <comment>主键</comment>
+  </data>
+  <data name="S_4e94d60858f99ae7" xml:space="preserve">
+    <value>字数：</value>
+    <comment>字数：</comment>
+  </data>
+  <data name="S_c971c0250b3ee269" xml:space="preserve">
+    <value>字数：0</value>
+    <comment>字数：0</comment>
+  </data>
+  <data name="S_e780dadaa2ef7c1e" xml:space="preserve">
+    <value>自定义 / OpenAI-compatible</value>
+    <comment>自定义 / OpenAI-compatible</comment>
+  </data>
+  <data name="S_cd47445b570657a5" xml:space="preserve">
+    <value>自定义场景</value>
+    <comment>自定义场景</comment>
+  </data>
+  <data name="S_4985637bcf673441" xml:space="preserve">
+    <value>自定义平台</value>
+    <comment>自定义平台</comment>
+  </data>
+  <data name="S_0286249762f7c943" xml:space="preserve">
+    <value>自动 / Auto</value>
+    <comment>自动 / Auto</comment>
+  </data>
+  <data name="S_143d6012d264a075" xml:space="preserve">
+    <value>自动 fallback</value>
+    <comment>自动 fallback</comment>
+  </data>
+  <data name="S_b15c1106c37e6281" xml:space="preserve">
+    <value>左键复制，右键编辑或删除。</value>
+    <comment>左键复制，右键编辑或删除。</comment>
+  </data>
+  <data name="S_cde8865d66e36615" xml:space="preserve">
+    <value>AI编程</value>
+    <comment>AI编程</comment>
+  </data>
+  <data name="S_830451b814b84107" xml:space="preserve">
+    <value>Base URL 格式不正确</value>
+    <comment>Base URL 格式不正确</comment>
+  </data>
+  <data name="S_9cb45f2924154bd0" xml:space="preserve">
+    <value>Claude 原生标签：thinking={type: enabled, budget_tokens: 4096}。</value>
+    <comment>Claude 原生标签：thinking={type: enabled, budget_tokens: 4096}。</comment>
+  </data>
+  <data name="S_748fe1274056dbdc" xml:space="preserve">
+    <value>Codex、Claude Code、反重力</value>
+    <comment>Codex、Claude Code、反重力</comment>
+  </data>
+  <data name="S_d19d74f7e826d0cb" xml:space="preserve">
+    <value>DeepSeek 原生标签：thinking=enabled、reasoning_effort=high、reasoning_content。</value>
+    <comment>DeepSeek 原生标签：thinking=enabled、reasoning_effort=high、reasoning_content。</comment>
+  </data>
+  <data name="S_cbba609bdef75993" xml:space="preserve">
+    <value>英语提示词会显示在这里</value>
+    <comment>English prompt will appear here</comment>
+  </data>
+  <data name="S_e3fec3ae1aa3f8c0" xml:space="preserve">
+    <value>Fire Eye OCR（本地 worker，可 fallback）</value>
+    <comment>Fire Eye OCR（本地 worker，可 fallback）</comment>
+  </data>
+  <data name="S_ae10e0a0e32adf56" xml:space="preserve">
+    <value>Gemini OpenAI-compatible 标签：reasoning_effort=high。</value>
+    <comment>Gemini OpenAI-compatible 标签：reasoning_effort=high。</comment>
+  </data>
+  <data name="S_6f71699684030571" xml:space="preserve">
+    <value>GLM / 智谱</value>
+    <comment>GLM / 智谱</comment>
+  </data>
+  <data name="S_e50b72f38f83b07a" xml:space="preserve">
+    <value>GLM 当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</value>
+    <comment>GLM 当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</comment>
+  </data>
+  <data name="S_1983effc5b04eeb3" xml:space="preserve">
+    <value>JSON 中没有可导入的项目</value>
+    <comment>JSON 中没有可导入的项目</comment>
+  </data>
+  <data name="S_aea4876076d2670b" xml:space="preserve">
+    <value>Kimi thinking 模型标签：reasoning_content。</value>
+    <comment>Kimi thinking 模型标签：reasoning_content。</comment>
+  </data>
+  <data name="S_3927eec4bec59f46" xml:space="preserve">
+    <value>MiniMax 当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</value>
+    <comment>MiniMax 当前模型名带 thinking/reasoner 标签，会尝试读取 reasoning_content。</comment>
+  </data>
+  <data name="S_67e8bbcbf0125f76" xml:space="preserve">
+    <value>OCR 后端</value>
+    <comment>OCR 后端</comment>
+  </data>
+  <data name="S_f213a8614f3108db" xml:space="preserve">
+    <value>OCR 截图</value>
+    <comment>OCR 截图</comment>
+  </data>
+  <data name="S_13e3264176c0ff4c" xml:space="preserve">
+    <value>OCR 图片</value>
+    <comment>OCR 图片</comment>
+  </data>
+  <data name="S_488c1fdb3380df28" xml:space="preserve">
+    <value>OCR 已在设置中关闭</value>
+    <comment>OCR 已在设置中关闭</comment>
+  </data>
+  <data name="S_f252d90169af80e1" xml:space="preserve">
+    <value>OpenAI 原生标签：reasoning_effort=high。</value>
+    <comment>OpenAI 原生标签：reasoning_effort=high。</comment>
+  </data>
+  <data name="S_37dd7a97cc12b7aa" xml:space="preserve">
+    <value>Skill 管理</value>
+    <comment>Skill 管理</comment>
+  </data>
+  <data name="S_9bde5e3506bd954c" xml:space="preserve">
+    <value>SKILL.md、CLAUDE.md、Rules</value>
+    <comment>SKILL.md、CLAUDE.md、Rules</comment>
+  </data>
+  <data name="S_79e72480d5c3ab96" xml:space="preserve">
+    <value>Skill体系</value>
+    <comment>Skill体系</comment>
+  </data>
+  <data name="S_a34b934115f4335b" xml:space="preserve">
+    <value>UI 设计</value>
+    <comment>UI 设计</comment>
+  </data>
+  <data name="S_4660c6a6f6321caa" xml:space="preserve">
+    <value>启用本地 OCR（火眼金睛 OCR）</value>
+    <comment>启用本地 OCR（火眼金睛 OCR）</comment>
+  </data>
+  <data name="S_220cc5c924b66b48" xml:space="preserve">
+    <value>火眼金睛 OCR（默认，失败时使用 Windows Media OCR 兜底）</value>
+    <comment>火眼金睛 OCR（默认，失败时使用 Windows Media OCR 兜底）</comment>
+  </data>
+  <data name="S_ce646537cea9fdb9" xml:space="preserve">
+    <value>自动兜底（火眼金睛 -&gt; Windows Media OCR）</value>
+    <comment>自动兜底（火眼金睛 -&gt; Windows Media OCR）</comment>
+  </data>
+  <data name="S_8ab2ade9bb767bcd" xml:space="preserve">
+    <value>从下拉菜单选择主键。支持 A-Z、0-9、Space、Tab、Enter、F1-F24。</value>
+    <comment>从下拉菜单选择主键。支持 A-Z、0-9、Space、Tab、Enter、F1-F24。</comment>
+  </data>
+  <data name="S_d4be174cc8e83902" xml:space="preserve">
+    <value>选择 Skill（可选）</value>
+    <comment>选择 Skill（可选）</comment>
+  </data>
+  <data name="S_a0eb09f8852a855c" xml:space="preserve">
+    <value>可连续补充需求；点“新会话”切换优化目标。</value>
+    <comment>可连续补充需求；点“新会话”切换优化目标。</comment>
+  </data>
+  <data name="S_e1f967409f64bd6e" xml:space="preserve">
+    <value>不使用 Skill</value>
+    <comment>不使用 Skill</comment>
+  </data>
+  <data name="S_6a95d2a3bf42f9c7" xml:space="preserve">
+    <value>仅按当前优化目标生成</value>
+    <comment>仅按当前优化目标生成</comment>
+  </data>
+  <data name="S_49f7352eeee8a2e4" xml:space="preserve">
+    <value>新会话已开始，可以切换优化目标或 Skill。</value>
+    <comment>新会话已开始，可以切换优化目标或 Skill。</comment>
+  </data>
+  <data name="S_6a064a843e7508c7" xml:space="preserve">
+    <value>你：</value>
+    <comment>你：</comment>
+  </data>
+  <data name="S_47e9443459dfaf12" xml:space="preserve">
+    <value>啊拼：</value>
+    <comment>啊拼：</comment>
+  </data>
+  <data name="S_afd8a25f30787ef4" xml:space="preserve">
+    <value>模板库</value>
+    <comment>模板库</comment>
+  </data>
+  <data name="S_796d682478fd83a6" xml:space="preserve">
+    <value>模板库</value>
+    <comment>模板库</comment>
+  </data>
+</root>

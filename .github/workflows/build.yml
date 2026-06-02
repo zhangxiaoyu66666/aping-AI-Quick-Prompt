@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  windows-app:
+    name: WinUI app
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore and build
+        run: >
+          msbuild src\PromptInputMethod.App\PromptInputMethod.App.csproj
+          /t:Restore,Build
+          /p:Configuration=Debug
+          /p:Platform=x64
+          /p:OutputPath=bin\CI\
+          /m
+          /v:minimal

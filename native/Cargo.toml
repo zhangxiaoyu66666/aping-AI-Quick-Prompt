@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "fire-eye-worker",
+]
+resolver = "2"
+
+[patch.crates-io]
+ocr-rs = { path = "ocr-rs-patched" }
+
+[profile.dev]
+opt-level = 3
+
+[profile.dev.package.ocr-rs]
+opt-level = 3
+
+[profile.dev.package.image]
+opt-level = 3
+
+[profile.dev.package.imageproc]
+opt-level = 3
+
+[profile.dev.package.jieba-rs]
+opt-level = 3

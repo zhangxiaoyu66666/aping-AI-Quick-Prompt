@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>PromptInputMethod.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;Win32</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <MakePriExe Condition="'$(MakePriExe)' == '' And Exists('$(WindowsSdkBinPath)x64\makepri.exe')">$(WindowsSdkBinPath)x64\makepri.exe</MakePriExe>
+    <MakePriExe Condition="'$(MakePriExe)' == '' And Exists('$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64\makepri.exe')">$(WindowsSdkDir)bin\$(WindowsTargetPlatformVersion)\x64\makepri.exe</MakePriExe>
+    <MakePriExe Condition="'$(MakePriExe)' == '' And Exists('C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makepri.exe')">C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makepri.exe</MakePriExe>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'Win32'">
+    <PlatformTarget>x86</PlatformTarget>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' != 'Win32'">
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250205002" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\skills\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\docs\open-source-references.md" Link="docs\open-source-references.md" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\optimization-target-format.md" Link="docs\optimization-target-format.md" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\native\target\debug\fire-eye-ocr-worker.exe" Link="fire-eye-ocr-worker.exe" CopyToOutputDirectory="PreserveNewest" Condition="'$(Configuration)' == 'Debug' And Exists('..\..\native\target\debug\fire-eye-ocr-worker.exe')" />
+    <Content Include="..\..\native\target\release\fire-eye-ocr-worker.exe" Link="fire-eye-ocr-worker.exe" CopyToOutputDirectory="PreserveNewest" Condition="'$(Configuration)' == 'Release' And Exists('..\..\native\target\release\fire-eye-ocr-worker.exe')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PromptInputMethod.Core\PromptInputMethod.Core.csproj" />
+  </ItemGroup>
+
+  <Target Name="RemoveLegacyStandaloneResourcesPri" AfterTargets="Build">
+    <Delete Files="$(TargetDir)resources.pri" Condition="Exists('$(TargetDir)resources.pri')" />
+  </Target>
+
+  <Target Name="GenerateAppLocalizationPri" AfterTargets="RemoveLegacyStandaloneResourcesPri">
+    <MakeDir Directories="$(TargetDir)" />
+    <Exec Condition="Exists('$(MakePriExe)')" Command="&quot;$(MakePriExe)&quot; new /pr &quot;$(MSBuildProjectDirectory)\Strings&quot; /cf &quot;$(MSBuildProjectDirectory)\priconfig.xml&quot; /of &quot;$(TargetDir)localization.pri&quot; /o" />
+    <Warning Condition="!Exists('$(MakePriExe)')" Text="MakePri.exe was not found; app MRT localization localization.pri was not generated." />
+  </Target>
+</Project>

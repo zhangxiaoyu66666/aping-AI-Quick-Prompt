@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PromptInputMethod.App/PromptInputMethod.App.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="src/PromptInputMethod.Core/PromptInputMethod.Core.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,15 @@
+* text=auto
+
+# Copied upstream/reference trees should not dominate GitHub language stats.
+ChatGPT-Shortcut-main/** linguist-vendored
+SD-Anima-Prompt-Studio-main/** linguist-vendored
+native/ocr-rs-patched/3rd_party/** linguist-vendored
+
+# Binary assets.
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.mnn binary
+*.zip binary

@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a PromptBar improvement.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user workflow is blocked or painful today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should PromptBar do?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - UI layout
+        - Model provider
+        - OCR
+        - Templates
+        - Skill system
+        - Localization
+        - Hotkey / window behavior
+        - Settings / storage
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy or security impact
+      description: Mention if this touches model calls, OCR capture, clipboard, local files, credentials, or user prompt storage.

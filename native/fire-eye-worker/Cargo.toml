@@ -1,0 +1,17 @@
+[package]
+name = "fire-eye-ocr-worker"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+default = ["gpu"]
+gpu = ["ocr-rs/vulkan", "ocr-rs/opencl"]
+
+[dependencies]
+base64 = "0.22"
+image = "0.25"
+jieba-rs = "0.8.1"
+ocr-rs = { version = "2.2.2", features = ["build-mnn-from-source"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

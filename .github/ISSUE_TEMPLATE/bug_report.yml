@@ -1,0 +1,71 @@
+name: Bug report
+description: Report a reproducible PromptBar problem.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please remove API keys, private prompts, screenshots with secrets, and local file paths you do not want public.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact actions that trigger the issue.
+      placeholder: |
+        1. Open PromptBar
+        2. Select ...
+        3. Click ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - UI layout
+        - Model provider
+        - OCR
+        - Templates
+        - Skill system
+        - Localization
+        - Hotkey / window behavior
+        - Settings / storage
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: commit hash, branch name, or release version
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: Windows version, architecture, Visual Studio version, model provider if relevant
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste logs or attach screenshots only after removing secrets.
