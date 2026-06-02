@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-啊拼 / AI Quick Prompt is pre-1.0. Security fixes are applied to the current main development line.
+啊拼 / AI Quick Prompt 1.0 is the first public GPL release. Security fixes are applied to the current public GitHub line, and private Microsoft Store-only features should be reported against their separate release channel.
 
 ## Reporting A Vulnerability
 

@@ -19,7 +19,7 @@ It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. 
 
 ## Current Status
 
-AI Quick Prompt is an early desktop app, not a polished public release. The current codebase already includes:
+AI Quick Prompt 1.0 is the first public GPL release. The current codebase includes:
 
 - WinUI 3 expanded and compact prompt windows.
 - Global hotkey entry for a topmost prompt window.
@@ -31,7 +31,7 @@ AI Quick Prompt is an early desktop app, not a polished public release. The curr
 - Local OCR routing and optional Rust worker integration.
 - Built-in Chinese and English UI resources plus mounted language-pack support.
 
-Before publishing binaries, review third-party model assets and vendored native dependencies. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [docs/license-inventory.md](docs/license-inventory.md).
+The 1.0 OCR model and vendored native dependency review is complete. Fire Eye OCR may ship with embedded PP-OCRv5 model assets when the release includes the required Apache-2.0 notices. See [docs/ocr-model-license-review.md](docs/ocr-model-license-review.md), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and [docs/license-inventory.md](docs/license-inventory.md).
 
 Copied upstream source trees, local OCR model files, and old migration reference trees are intentionally ignored by Git. The public repository keeps generated app template data, bundled Skill packages with their own notices, the integrated native OCR code, and attribution documents. See [docs/template-source-imports.md](docs/template-source-imports.md) if you need to recreate local reference folders for maintenance.
 
@@ -177,19 +177,33 @@ The repository includes:
 - GitHub issue templates and pull request template.
 - GitHub Actions Windows build workflow.
 - Template source import notes for local-only upstream references.
+- 1.0 release readiness notes, OCR model license review, and lightweight release checks.
 
 For Codex for Open Source preparation, see [docs/codex-for-open-source.md](docs/codex-for-open-source.md).
 
 Example mounted Skill: [examples/skills/aipin-template-review/SKILL.md](examples/skills/aipin-template-review/SKILL.md).
 
-## Roadmap
+## Release Checks
 
-- Finish public-release license review for OCR model assets and vendored native dependencies.
-- Keep copied upstream prompt/template project trees out of Git; publish generated template data plus attribution until a reviewed import pipeline exists.
-- Add lightweight automated tests for prompt routing, template import/export, Skill matching, and provider validation.
-- Improve accessibility, keyboard navigation, and high-DPI layout coverage.
-- Add screenshot-based UI regression checks for expanded, compact, narrow, and high-DPI layouts.
-- Package a clean public demo build that excludes unreviewed third-party model assets unless their redistribution terms are confirmed.
+Run the lightweight non-GUI release checks:
+
+```powershell
+dotnet run --project tests\PromptInputMethod.ReleaseChecks\PromptInputMethod.ReleaseChecks.csproj --configuration Release
+```
+
+Capture layout screenshots for expanded, compact, narrow, and current high-DPI display settings:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\Invoke-UiScreenshotChecks.ps1
+```
+
+Create a public demo package with notices and reviewed OCR assets:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\New-PublicDemoPackage.ps1
+```
+
+The completed 1.0 checklist lives in [docs/release-1.0-readiness.md](docs/release-1.0-readiness.md).
 
 ## Contributing
 

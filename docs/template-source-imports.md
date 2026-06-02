@@ -40,4 +40,4 @@ Before importing or regenerating any app data from those folders:
 
 ## OCR Model Assets
 
-`assets/fire_eye/` is reserved for local OCR model assets and charset files. These files remain ignored until their source, license, and redistribution terms are confirmed. Do not publish binaries that include them without updating the license inventory and release notices.
+`assets/fire_eye/` is reserved for local OCR model assets and charset files. The AI Quick Prompt 1.0 review confirms the PP-OCRv5 / MNN redistribution path in `docs/ocr-model-license-review.md`. The raw asset folder remains ignored because it is a large local cache; release binaries may include `fire-eye-ocr-worker.exe` with embedded reviewed OCR assets when the license inventory and notices ship with the package.

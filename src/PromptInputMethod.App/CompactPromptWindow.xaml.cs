@@ -849,6 +849,24 @@ public sealed partial class CompactPromptWindow : Window
         await GenerateOptimizedPromptAsync(mergedRequest);
     }
 
+    private void SendKeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        ChatSendButton_Click(sender, new RoutedEventArgs());
+        args.Handled = true;
+    }
+
+    private void NewSessionKeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        NewSessionButton_Click(sender, new RoutedEventArgs());
+        args.Handled = true;
+    }
+
+    private async void CommandPaletteKeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        await ShowCommandPaletteAsync();
+        args.Handled = true;
+    }
+
     private void DeepThinkingToggle_Changed(object sender, RoutedEventArgs e)
     {
         if (!_uiReady || _loadingSettings || _syncingDeepThinkingSelection)

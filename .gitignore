@@ -4,6 +4,7 @@ obj/
 out/
 publish/
 TestResults/
+artifacts/
 
 # Visual Studio
 .vs/

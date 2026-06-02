@@ -39,7 +39,7 @@ If the project receives OpenAI API credits, the highest-impact uses would be:
 
 ## Gaps To Close Before Public Push
 
-- Confirm redistribution terms for OCR model assets in `assets/fire_eye`.
+- Keep the completed OCR model redistribution review in `docs/ocr-model-license-review.md` synchronized with release packages.
 - Confirm notices for vendored MNN and patched `ocr-rs` files.
 - Add a real security contact before publishing the repository.
 - Add screenshots or a short demo video to the README once UI stabilizes.
@@ -58,7 +58,7 @@ AI Quick Prompt is an open-source Windows prompt workbench built with WinUI 3 an
 - Keep `THIRD_PARTY_NOTICES.md` and `docs/license-inventory.md` current.
 - Keep GPL contribution and project-license wording consistent across README, CONTRIBUTING, NOTICE, and release artifacts.
 - Run the WinUI MSBuild command before release branches.
-- Do not publish binaries with unreviewed third-party model assets.
+- Do not publish binaries with unreviewed third-party model assets. The Fire Eye OCR / PP-OCRv5 assets are reviewed for 1.0 when shipped with the documented Apache-2.0 notices.
 - Keep prompt templates attributable to their original open-source project names.
 - Keep local-only upstream reference folders and OCR model assets out of Git until their redistribution path is deliberately reviewed.
 - Keep example Skills under `examples/skills/` small, reviewable, and free of private user data.

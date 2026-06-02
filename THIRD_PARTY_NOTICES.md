@@ -10,7 +10,7 @@ The original AI Quick Prompt / 啊拼 source code and documentation are licensed
 
 Third-party components, prompt datasets, bundled Skill packages, framework/runtime packages, and OCR/model assets remain under their own licenses. Their inclusion or attribution here does not relicense them under GPL.
 
-The public source tree does not track copied upstream project trees, old migration reference trees, or local OCR model files. Those folders may exist locally for maintenance, but release packaging must follow the license inventory and confirmed redistribution terms.
+The public source tree does not track copied upstream project trees, old migration reference trees, or local OCR model files. Those folders may exist locally for maintenance; release packaging follows the license inventory and the completed OCR review in [docs/ocr-model-license-review.md](docs/ocr-model-license-review.md).
 
 ## Referenced Open-Source Projects
 
@@ -60,13 +60,16 @@ The public source tree does not track copied upstream project trees, old migrati
 ### MNN
 
 - Purpose: native inference backend used by the optional OCR worker dependency tree.
-- Notice: retain upstream license files under the vendored dependency tree.
+- License: Apache-2.0.
+- Notice: retain upstream license files under the vendored dependency tree, including `native/ocr-rs-patched/3rd_party/MNN/LICENSE.txt` and bundled third-party license files.
 
 ### OCR Model Assets
 
 - Purpose: optional local Fire Eye OCR model assets.
-- Status: local-only ignored files; redistribution terms must be confirmed before publishing binaries that include these assets.
+- Source: PaddleOCR / PP-OCRv5 mobile detection and recognition model family.
+- License: Apache-2.0 per official PaddlePaddle PP-OCRv5 model cards and PaddleOCR repository.
+- Status: local-only ignored source assets, embedded into `fire-eye-ocr-worker.exe` for release builds. The 1.0 license review and asset hashes are recorded in [docs/ocr-model-license-review.md](docs/ocr-model-license-review.md).
 
 ## Important Packaging Note
 
-Do not publish release binaries that bundle third-party model assets or vendored native dependencies until the license inventory is complete and reviewed. Generated template datasets should keep clear source labels and matching attribution. Copied upstream project trees should remain outside Git unless they are deliberately vendored with their full license files.
+AI Quick Prompt 1.0 may publish release binaries that include the Fire Eye OCR worker and embedded PP-OCRv5 model assets, provided this notice, the license inventory, the OCR model review, and the required Apache-2.0 license files are included. Generated template datasets should keep clear source labels and matching attribution. Copied upstream project trees should remain outside Git unless they are deliberately vendored with their full license files.

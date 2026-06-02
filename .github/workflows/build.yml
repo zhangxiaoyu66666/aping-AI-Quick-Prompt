@@ -26,6 +26,9 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
+      - name: Release checks
+        run: dotnet run --project tests\PromptInputMethod.ReleaseChecks\PromptInputMethod.ReleaseChecks.csproj --configuration Release
+
       - name: Restore and build
         run: >
           msbuild src\PromptInputMethod.App\PromptInputMethod.App.csproj

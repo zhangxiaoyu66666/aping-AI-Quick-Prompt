@@ -7,7 +7,12 @@
     mc:Ignorable="d"
     Title="啊拼">
 
-    <Grid Background="Transparent">
+    <Grid Background="Transparent" AutomationProperties.Name="AI Quick Prompt Workbench">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="Enter" Modifiers="Control" Invoked="SendKeyboardAccelerator_Invoked" />
+            <KeyboardAccelerator Key="N" Modifiers="Control" Invoked="NewSessionKeyboardAccelerator_Invoked" />
+            <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="CommandPaletteKeyboardAccelerator_Invoked" />
+        </Grid.KeyboardAccelerators>
         <Grid.Resources>
             <SolidColorBrush x:Key="SettingsNavSelectedBackgroundBrush" Color="#14000000" />
             <SolidColorBrush x:Key="SettingsNavSelectedIndicatorBrush" Color="#FF0067C0" />
@@ -144,7 +149,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Button x:Name="TopSidebarMenuButton" Visibility="Collapsed" Style="{StaticResource IconButtonStyle}" Click="TopSidebarMenuButton_Click" ToolTipService.ToolTip="菜单">
+            <Button x:Name="TopSidebarMenuButton" Visibility="Collapsed" Style="{StaticResource IconButtonStyle}" Click="TopSidebarMenuButton_Click" ToolTipService.ToolTip="菜单" AutomationProperties.Name="菜单" AccessKey="M">
                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE700;" FontSize="17" />
             </Button>
             <Image Grid.Column="1" Width="34" Height="34" Source="Assets/logo.png" Stretch="Uniform" VerticalAlignment="Center" />
@@ -152,13 +157,13 @@
                 <TextBlock Text="啊拼" FontSize="17" FontWeight="SemiBold" />
                 <TextBlock Text="AI Quick Prompt" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
-            <Button Grid.Column="3" Style="{StaticResource IconButtonStyle}" Click="CommandPaletteButton_Click" ToolTipService.ToolTip="命令面板">
+            <Button Grid.Column="3" Style="{StaticResource IconButtonStyle}" Click="CommandPaletteButton_Click" ToolTipService.ToolTip="命令面板" AutomationProperties.Name="命令面板" AccessKey="F">
                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE721;" FontSize="16" />
             </Button>
-            <Button x:Name="TopModelButton" Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Click="ModelMenuButton_Click" ToolTipService.ToolTip="切换模型" Padding="10,6" MinHeight="34">
+            <Button x:Name="TopModelButton" Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Click="ModelMenuButton_Click" ToolTipService.ToolTip="切换模型" Padding="10,6" MinHeight="34" AutomationProperties.Name="切换模型" AccessKey="L">
                 <TextBlock x:Name="TopModelText" Text="当前模型：本地结构化" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" MaxWidth="420" />
             </Button>
-            <Button Grid.Column="5" Style="{StaticResource IconButtonStyle}" Click="SettingsButton_Click" ToolTipService.ToolTip="设置">
+            <Button Grid.Column="5" Style="{StaticResource IconButtonStyle}" Click="SettingsButton_Click" ToolTipService.ToolTip="设置" AutomationProperties.Name="设置" AccessKey="S">
                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" FontSize="17" />
             </Button>
         </Grid>
