@@ -1,6 +1,12 @@
 # Contributing
 
-Thanks for helping improve PromptBar. The project is early, Windows-focused, and privacy-sensitive, so small focused patches are easiest to review.
+Thanks for helping improve 啊拼 / AI Quick Prompt. The project is early, Windows-focused, GPL-licensed, and privacy-sensitive, so small focused patches are easiest to review.
+
+## License Of Contributions
+
+By submitting a contribution, you agree that your contribution is licensed under the same license as the project: GNU General Public License version 3 or any later version (`GPL-3.0-or-later`).
+
+Do not contribute code, templates, model assets, images, or copied files unless you have the right to provide them under compatible terms and can keep the required upstream notices.
 
 ## Development Setup
 
@@ -30,6 +36,7 @@ cargo build -p fire-eye-ocr-worker --manifest-path native\Cargo.toml --release
 - Include screenshots or short screen recordings for UI changes when possible.
 - Note whether model calls, OCR, clipboard behavior, or local storage behavior changed.
 - Run the relevant build or explain why it could not be run.
+- Update `README.md`, `THIRD_PARTY_NOTICES.md`, or `docs/license-inventory.md` when a change adds a dependency, bundled Skill, template source, model asset, or copied upstream material.
 
 ## Code Guidelines
 
@@ -38,6 +45,7 @@ cargo build -p fire-eye-ocr-worker --manifest-path native\Cargo.toml --release
 - Do not add permanent compatibility shims unless they are required by the current behavior.
 - Do not modify vendored upstream projects or copied reference projects unless the PR is specifically about them.
 - Keep user data, prompts, API keys, screenshots, and local app settings out of commits.
+- Keep GPL headers, SPDX metadata, and third-party notices accurate when adding new source files or assets.
 
 ## Good First Areas
 

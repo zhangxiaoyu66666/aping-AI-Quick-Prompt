@@ -2,6 +2,8 @@
 
 This note is a practical checklist for making AI Quick Prompt easier to evaluate as an open-source project and easier to maintain with AI coding agents.
 
+The project is released under `GPL-3.0-or-later`; third-party template sources, bundled Skills, runtime packages, and model assets retain their own licenses and notices.
+
 ## Project Pitch
 
 AI Quick Prompt is a Windows Fluent prompt launcher and prompt workbench. It helps users turn rough intent, OCR text, screenshots, prompt templates, and mounted `SKILL.md` workflows into structured prompts for general LLMs, image models, video models, coding agents, and local OpenAI-compatible providers.
@@ -43,6 +45,7 @@ If the project receives OpenAI API credits, the highest-impact uses would be:
 - Add screenshots or a short demo video to the README once UI stabilizes.
 - Add tests for template import/export, language pack loading, Skill matching, and model endpoint validation.
 - Decide whether large copied upstream trees and archives should remain in the repository or be replaced by documented import scripts.
+- Keep the GPL project license, `NOTICE.md`, and third-party notice files synchronized before public pushes.
 
 ## Suggested Application Summary
 
@@ -53,6 +56,7 @@ AI Quick Prompt is an open-source Windows prompt workbench built with WinUI 3 an
 - Keep `README.md` accurate after UI or workflow changes.
 - Update `CHANGELOG.md` for user-visible behavior.
 - Keep `THIRD_PARTY_NOTICES.md` and `docs/license-inventory.md` current.
+- Keep GPL contribution and project-license wording consistent across README, CONTRIBUTING, NOTICE, and release artifacts.
 - Run the WinUI MSBuild command before release branches.
 - Do not publish binaries with unreviewed third-party model assets.
 - Keep prompt templates attributable to their original open-source project names.

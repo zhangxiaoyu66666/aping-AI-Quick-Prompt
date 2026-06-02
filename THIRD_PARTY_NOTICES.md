@@ -4,17 +4,25 @@ AI Quick Prompt / 啊拼 includes original project code plus references, templat
 
 This file is a high-level notice. See [docs/license-inventory.md](docs/license-inventory.md) and [docs/open-source-references.md](docs/open-source-references.md) for the working inventory.
 
+## Project License
+
+The original AI Quick Prompt / 啊拼 source code and documentation are licensed under the GNU General Public License, version 3 or any later version (`GPL-3.0-or-later`). See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
+
+Third-party components, copied reference projects, prompt datasets, bundled Skill packages, framework/runtime packages, and OCR/model assets remain under their own licenses. Their inclusion or attribution here does not relicense them under GPL.
+
 ## Referenced Open-Source Projects
 
 ### ChatGPT-Shortcut
 
 - Purpose: built-in prompt template inspiration and prompt workflow references.
 - Repository/source: upstream ChatGPT-Shortcut project.
+- License: retain the upstream license and notices from the copied project tree if publishing it.
 - Notice: AI Quick Prompt keeps the upstream project name in template source labels to preserve attribution.
 
 ### SD-Anima-Prompt-Studio
 
 - Purpose: image prompt template inspiration for text-to-image and character prompt flows.
+- License: retain the upstream license and notices from the copied project tree if publishing it.
 - Notice: AI Quick Prompt keeps the upstream project name in template source labels to preserve attribution.
 
 ### prompts.chat
@@ -56,4 +64,4 @@ This file is a high-level notice. See [docs/license-inventory.md](docs/license-i
 
 ## Important Packaging Note
 
-Do not publish release binaries that bundle third-party model assets, vendored native dependencies, or copied upstream project trees until the license inventory is complete and reviewed.
+Do not publish release binaries that bundle third-party model assets, vendored native dependencies, copied upstream project trees, or generated template datasets until the license inventory is complete and reviewed.

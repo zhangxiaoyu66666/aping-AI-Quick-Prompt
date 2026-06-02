@@ -1,6 +1,6 @@
-# AI Quick Prompt
+# 啊拼 / AI Quick Prompt
 
-AI Quick Prompt is a Windows Fluent prompt workbench for turning rough intent, OCR text, clipboard context, image references, local templates, and mounted Skill workflows into clearer prompts.
+啊拼 / AI Quick Prompt is a GPL-licensed Windows Fluent prompt workbench for turning rough intent, OCR text, clipboard context, image references, local templates, and mounted Skill workflows into clearer prompts.
 
 It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. The app is designed for Windows users who move between ChatGPT, Claude, Gemini, local OpenAI-compatible models, image models, video models, and coding agents.
 
@@ -13,7 +13,7 @@ It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. 
 - **Template library**: built-in template groups inspired by `ChatGPT-Shortcut`, `prompts.chat`, and `SD-Anima-Prompt-Studio`, plus the bundled `Female Portrait Prompt Director Skill` and user templates with categories.
 - **Quick prompts**: user-managed common prompts with left-click copy and right-click edit/delete.
 - **JSON import/export**: templates, quick prompts, and language packs can be imported or exported without one-by-one manual entry.
-- **OCR input**: local Windows Media OCR and optional Fire Eye OCR worker can turn images or screenshots into editable user requirements.
+- **OCR input**: Fire Eye OCR is the preferred local OCR path, with Windows Media OCR kept only as a fallback when the worker is unavailable.
 - **OpenAI-compatible providers**: configure base URL, API key, and model name for local or remote chat-completions-compatible endpoints.
 - **Privacy-aware defaults**: API keys are stored in Windows Credential Manager; OCR is local unless the user explicitly sends image context to a model provider.
 
@@ -29,9 +29,20 @@ AI Quick Prompt is an early desktop app, not a polished public release. The curr
 - Built-in and user-defined templates.
 - AI coding and Skill-system prompt targets.
 - Local OCR routing and optional Rust worker integration.
-- Multilingual JSON language packs for Chinese and English.
+- Built-in Chinese and English UI resources plus mounted language-pack support.
 
 Before publishing binaries, review third-party model assets and vendored native dependencies. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [docs/license-inventory.md](docs/license-inventory.md).
+
+## License
+
+The original source code and documentation in this repository are released under the GNU General Public License, version 3 or any later version (`GPL-3.0-or-later`).
+
+- Full license text: [LICENSE](LICENSE).
+- Project notice: [NOTICE.md](NOTICE.md).
+- Third-party notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- Working dependency inventory: [docs/license-inventory.md](docs/license-inventory.md).
+
+Third-party components, copied reference projects, prompt datasets, bundled Skill packages, model assets, and framework/runtime dependencies remain under their own licenses. GPL licensing of this repository does not relicense those upstream materials.
 
 ## Screens And Workflow
 
@@ -147,11 +158,12 @@ docs/                        privacy, license inventory, open-source references
 reference/                   design and implementation references
 ```
 
-## Open-Source Readiness
+## Open-Source Files
 
 The repository includes:
 
-- MIT project license.
+- GPL project license.
+- Project notice.
 - Third-party notices and working license inventory.
 - Contributing guide.
 - Security policy.
@@ -168,6 +180,7 @@ Example mounted Skill: [examples/skills/aipin-template-review/SKILL.md](examples
 ## Roadmap
 
 - Finish public-release license review for OCR model assets and vendored native dependencies.
+- Decide whether copied upstream prompt/template project trees should remain in the public repository or be replaced by import scripts plus generated template data.
 - Add lightweight automated tests for prompt routing, template import/export, Skill matching, and provider validation.
 - Improve accessibility, keyboard navigation, and high-DPI layout coverage.
 - Add screenshot-based UI regression checks for expanded, compact, narrow, and high-DPI layouts.

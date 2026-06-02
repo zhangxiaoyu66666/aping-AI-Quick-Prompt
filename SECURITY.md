@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-PromptBar is pre-1.0. Security fixes are applied to the current main development line.
+啊拼 / AI Quick Prompt is pre-1.0. Security fixes are applied to the current main development line.
 
 ## Reporting A Vulnerability
 
