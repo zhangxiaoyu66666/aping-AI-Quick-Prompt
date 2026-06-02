@@ -8,6 +8,7 @@
 - Added AI coding prompt templates for Codex, Claude Code, Antigravity, and related agentic coding tools.
 - Added Veo 3 and Jimeng / Seedance video prompt template groups.
 - Switched the project license from MIT to GPL-3.0-or-later and refreshed open-source notices.
+- Stopped tracking copied upstream template source trees and local OCR model assets for a cleaner public source tree.
 - Refined expanded UI toward an 啊拼 / AI Quick Prompt desktop workbench layout with Chinese and English prompt panes.
 
 ## 0.1.0

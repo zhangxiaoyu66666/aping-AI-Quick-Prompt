@@ -6,7 +6,7 @@ This project reuses selected ideas and native OCR components from the `xiaxia-pe
 
 - `native/fire-eye-worker` is migrated from the Xiaxia Pet Fire Eye OCR worker and adapted to a standalone stdin/stdout JSON protocol.
 - `native/ocr-rs-patched` is migrated from the Xiaxia Pet patched OCR library and adjusted for this workspace, Windows CMake/Ninja discovery, and OpenCL/Vulkan/CPU scheduling.
-- `assets/fire_eye` contains the Fire Eye OCR model assets used by the worker.
+- The ignored local-only `assets/fire_eye` path is reserved for Fire Eye OCR model assets used by the worker.
 - OCR result concepts such as provider ID, text, lines, words, bounding boxes, and backend metadata are preserved so the app can route OCR providers consistently.
 
 ## Rewritten In This Project

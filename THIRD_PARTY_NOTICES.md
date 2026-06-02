@@ -10,20 +10,24 @@ The original AI Quick Prompt / 啊拼 source code and documentation are licensed
 
 Third-party components, copied reference projects, prompt datasets, bundled Skill packages, framework/runtime packages, and OCR/model assets remain under their own licenses. Their inclusion or attribution here does not relicense them under GPL.
 
+The public source tree does not track copied upstream project trees or local OCR model files. Those folders may exist locally for maintenance, but release packaging must follow the license inventory and confirmed redistribution terms.
+
 ## Referenced Open-Source Projects
 
 ### ChatGPT-Shortcut
 
 - Purpose: built-in prompt template inspiration and prompt workflow references.
 - Repository/source: upstream ChatGPT-Shortcut project.
-- License: retain the upstream license and notices from the copied project tree if publishing it.
+- License: retain the upstream license and notices for any imported template content.
 - Notice: AI Quick Prompt keeps the upstream project name in template source labels to preserve attribution.
+  The copied upstream source tree is a local-only ignored reference folder, not part of the public repository.
 
 ### SD-Anima-Prompt-Studio
 
 - Purpose: image prompt template inspiration for text-to-image and character prompt flows.
-- License: retain the upstream license and notices from the copied project tree if publishing it.
+- License: retain the upstream license and notices for any imported template content.
 - Notice: AI Quick Prompt keeps the upstream project name in template source labels to preserve attribution.
+  The copied upstream source tree is a local-only ignored reference folder, not part of the public repository.
 
 ### prompts.chat
 
@@ -60,8 +64,8 @@ Third-party components, copied reference projects, prompt datasets, bundled Skil
 ### OCR Model Assets
 
 - Purpose: optional local Fire Eye OCR model assets.
-- Status: redistribution terms must be confirmed before publishing binaries that include these assets.
+- Status: local-only ignored files; redistribution terms must be confirmed before publishing binaries that include these assets.
 
 ## Important Packaging Note
 
-Do not publish release binaries that bundle third-party model assets, vendored native dependencies, copied upstream project trees, or generated template datasets until the license inventory is complete and reviewed.
+Do not publish release binaries that bundle third-party model assets or vendored native dependencies until the license inventory is complete and reviewed. Generated template datasets should keep clear source labels and matching attribution. Copied upstream project trees should remain outside Git unless they are deliberately vendored with their full license files.

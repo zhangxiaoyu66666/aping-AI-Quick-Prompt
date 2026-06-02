@@ -33,6 +33,8 @@ AI Quick Prompt is an early desktop app, not a polished public release. The curr
 
 Before publishing binaries, review third-party model assets and vendored native dependencies. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [docs/license-inventory.md](docs/license-inventory.md).
 
+Copied upstream source trees and local OCR model files are intentionally ignored by Git. The public repository keeps generated app template data, bundled Skill packages with their own notices, and attribution documents. See [docs/template-source-imports.md](docs/template-source-imports.md) if you need to recreate local reference folders for maintenance.
+
 ## License
 
 The original source code and documentation in this repository are released under the GNU General Public License, version 3 or any later version (`GPL-3.0-or-later`).
@@ -86,6 +88,7 @@ AI Quick Prompt includes built-in template groups inspired by open-source prompt
 - `Female Portrait Prompt Director Skill`: built-in text-to-image Skill workflow for female portrait prompts, fashion/ecommerce try-on prompts, style routing, reference-image preservation, prompt optimization, and safety rewriting.
 
 The original project names are intentionally preserved in source labels for attribution. AI Quick Prompt does not include unrelated website, account, community, membership, or paid-feature logic from those projects. Bundled Skill packages retain their original LICENSE and NOTICE files under `src/PromptInputMethod.App/Data/skills/`.
+The copied upstream source trees are not tracked in the public repo; only generated template data and source labels are kept.
 
 ## Privacy Model
 
@@ -158,6 +161,8 @@ docs/                        privacy, license inventory, open-source references
 reference/                   design and implementation references
 ```
 
+Local-only reference folders such as `ChatGPT-Shortcut-main/`, `SD-Anima-Prompt-Studio-main/`, and `assets/fire_eye/` are ignored. They are useful during maintenance, but they are not required for a normal app build.
+
 ## Open-Source Files
 
 The repository includes:
@@ -172,6 +177,7 @@ The repository includes:
 - Agent instructions for future coding assistants.
 - GitHub issue templates and pull request template.
 - GitHub Actions Windows build workflow.
+- Template source import notes for local-only upstream references.
 
 For Codex for Open Source preparation, see [docs/codex-for-open-source.md](docs/codex-for-open-source.md).
 
@@ -180,7 +186,7 @@ Example mounted Skill: [examples/skills/aipin-template-review/SKILL.md](examples
 ## Roadmap
 
 - Finish public-release license review for OCR model assets and vendored native dependencies.
-- Decide whether copied upstream prompt/template project trees should remain in the public repository or be replaced by import scripts plus generated template data.
+- Keep copied upstream prompt/template project trees out of Git; publish generated template data plus attribution until a reviewed import pipeline exists.
 - Add lightweight automated tests for prompt routing, template import/export, Skill matching, and provider validation.
 - Improve accessibility, keyboard navigation, and high-DPI layout coverage.
 - Add screenshot-based UI regression checks for expanded, compact, narrow, and high-DPI layouts.

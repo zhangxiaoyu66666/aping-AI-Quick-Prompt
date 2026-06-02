@@ -13,6 +13,6 @@ third-party materials remain under their own licenses and notices. See
 [docs/license-inventory.md](docs/license-inventory.md) for the current working
 inventory.
 
-The repository may contain assets whose redistribution terms still need final
-review before publishing release binaries, especially local OCR model assets
-under `assets/fire_eye`.
+Maintainer workspaces may contain local-only assets whose redistribution terms
+still need final review before publishing release binaries, especially OCR
+model assets under the ignored `assets/fire_eye` path.

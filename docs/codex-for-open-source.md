@@ -44,7 +44,7 @@ If the project receives OpenAI API credits, the highest-impact uses would be:
 - Add a real security contact before publishing the repository.
 - Add screenshots or a short demo video to the README once UI stabilizes.
 - Add tests for template import/export, language pack loading, Skill matching, and model endpoint validation.
-- Decide whether large copied upstream trees and archives should remain in the repository or be replaced by documented import scripts.
+- Keep large copied upstream trees and local OCR model assets ignored; publish generated app data, bundled Skill notices, and attribution documents instead.
 - Keep the GPL project license, `NOTICE.md`, and third-party notice files synchronized before public pushes.
 
 ## Suggested Application Summary
@@ -60,4 +60,5 @@ AI Quick Prompt is an open-source Windows prompt workbench built with WinUI 3 an
 - Run the WinUI MSBuild command before release branches.
 - Do not publish binaries with unreviewed third-party model assets.
 - Keep prompt templates attributable to their original open-source project names.
+- Keep local-only upstream reference folders and OCR model assets out of Git until their redistribution path is deliberately reviewed.
 - Keep example Skills under `examples/skills/` small, reviewable, and free of private user data.

@@ -39,6 +39,13 @@ target/
 # Large copied upstream archives
 *-main.zip
 
+# Local upstream source trees kept for regeneration/reference only.
+ChatGPT-Shortcut-main/
+SD-Anima-Prompt-Studio-main/
+
+# Local OCR model assets; confirm redistribution terms before publishing.
+assets/fire_eye/
+
 # Temporary files
 *.tmp
 *.temp
