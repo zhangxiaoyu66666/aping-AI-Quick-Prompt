@@ -14,6 +14,7 @@ using PromptInputMethod.App.Services;
 using PromptInputMethod.Core.Llm;
 using PromptInputMethod.Core.Ocr;
 using PromptInputMethod.Core.Prompt;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -44,8 +45,10 @@ public sealed partial class CompactPromptWindow : Window
     private const double RightPanelExpandWidth = 840;
     private const double OutputStackWidth = 940;
     private const double OutputUnstackWidth = 1020;
-    private const int TypewriterFrameDelayMs = 12;
-    private const int TypewriterMaxFrames = 140;
+    private const int TypewriterFrameDelayMs = 18;
+    private const int TypewriterMinDurationMs = 700;
+    private const int TypewriterMaxDurationMs = 5200;
+    private const int TypewriterBoundaryLookahead = 8;
     private const string SkillTemplateSource = "Skill";
     private static readonly nint HwndTopmost = new(-1);
     private static readonly nint HwndNotTopmost = new(-2);
@@ -548,7 +551,12 @@ public sealed partial class CompactPromptWindow : Window
         yield return HelpPage;
     }
 
-    private static void AnimateElementIn(FrameworkElement? element, double verticalOffset, int durationMs)
+    private bool AreAnimationsEnabled()
+    {
+        return _settings.Ui.EnableAnimations;
+    }
+
+    private void AnimateElementIn(FrameworkElement? element, double verticalOffset, int durationMs)
     {
         if (element is null)
         {
@@ -559,6 +567,12 @@ public sealed partial class CompactPromptWindow : Window
         {
             transform = new TranslateTransform();
             element.RenderTransform = transform;
+        }
+
+        if (!AreAnimationsEnabled())
+        {
+            transform.Y = 0;
+            return;
         }
 
         transform.Y = verticalOffset;
@@ -686,6 +700,7 @@ public sealed partial class CompactPromptWindow : Window
         LlmRequestOptions? llmOptions = null;
         var canSyncEnglishWithModel = false;
         var deepThinkingEnabled = IsDeepThinkingEnabled();
+        var pendingThinkingMessage = AddPendingThinkingMessage(deepThinkingEnabled);
 
         SceneText.Text = FormatSceneText(scene);
 
@@ -708,7 +723,8 @@ public sealed partial class CompactPromptWindow : Window
                 var providerName = DetectProviderName(llmOptions.BaseUrl, llmOptions.Model);
                 try
                 {
-                    var modelResult = await _llmClient.CompleteWithResultAsync(new LlmRequest(promptToSend, imagesToSend, reasoningOptions), llmOptions);
+                    var streamProgress = new PendingThinkingProgress(pendingThinkingMessage);
+                    var modelResult = await _llmClient.CompleteWithResultStreamingAsync(new LlmRequest(promptToSend, imagesToSend, reasoningOptions), llmOptions, streamProgress);
                     await Task.Run(() => _modelSendAuditService.Save(
                         providerName,
                         llmOptions.Model,
@@ -766,7 +782,7 @@ public sealed partial class CompactPromptWindow : Window
         }
         catch (Exception ex)
         {
-            SetStatus($"{L("模型调用失败，已使用本地结构化：")}{ex.Message}");
+            SetStatus($"{L("模型调用失败，已使用本地结构化：")}{NormalizeModelGenerationError(ex)}");
         }
 
         var cleaned = await Task.Run(() =>
@@ -778,6 +794,7 @@ public sealed partial class CompactPromptWindow : Window
         protocolResult = cleaned.Protocol;
         finalPrompt = cleaned.Prompt;
 
+        RemoveTransientChatMessage(pendingThinkingMessage);
         AddProtocolAssistantMessage(protocolResult, animate: true);
         var outputToken = ResetOutputTypewriter();
         var chineseAnimation = SetChineseOutputWithTypewriterAsync(finalPrompt, outputToken);
@@ -1008,6 +1025,46 @@ public sealed partial class CompactPromptWindow : Window
         }
 
         return string.Join(L("，"), parts);
+    }
+
+    private static string NormalizeModelGenerationError(Exception ex)
+    {
+        if (ex is OperationCanceledException)
+        {
+            return "模型请求被取消。请检查网络连接、代理或提供商是否中断连接。";
+        }
+
+        if (ex is HttpRequestException)
+        {
+            var message = ex.Message.Trim();
+            if (LooksLikeQuotaOrBillingError(message))
+            {
+                return $"模型服务返回余额或额度不足：{TrimStatusMessage(message)}";
+            }
+
+            return TrimStatusMessage(message);
+        }
+
+        return TrimStatusMessage(ex.Message);
+    }
+
+    private static bool LooksLikeQuotaOrBillingError(string message)
+    {
+        return message.Contains("insufficient_quota", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("quota", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("billing", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("balance", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("credit", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("余额", StringComparison.Ordinal)
+            || message.Contains("额度", StringComparison.Ordinal)
+            || message.Contains("欠费", StringComparison.Ordinal)
+            || message.Contains("402", StringComparison.Ordinal);
+    }
+
+    private static string TrimStatusMessage(string message)
+    {
+        var normalized = string.IsNullOrWhiteSpace(message) ? "未知错误" : message.Trim();
+        return normalized.Length > 900 ? $"{normalized[..900]}..." : normalized;
     }
 
     private async void RefineFromOutputButton_Click(object sender, RoutedEventArgs e)
@@ -3427,6 +3484,7 @@ Skill 文件：{skillPath}
         _settings.Model.TimeoutSeconds = 30;
         _settings.Ocr.PreferredProvider = (OcrProviderBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? OcrProviderIds.FireEye;
         _settings.Ocr.TimeoutSeconds = 15;
+        _settings.Ui.EnableAnimations = AnimationEnabledBox.IsChecked == true;
         _settings.Ui.DeepThinking = IsDeepThinkingEnabled();
         var selectedLanguageItem = LanguageBox.SelectedItem as ComboBoxItem;
         _settings.Ui.LanguageCode = selectedLanguageItem?.Tag?.ToString() ?? "auto";
@@ -4791,6 +4849,7 @@ Skill 文件：{skillPath}
         HotkeyAltBox.IsChecked = _settings.Hotkey.Alt;
         HotkeyWinBox.IsChecked = _settings.Hotkey.Win;
         SelectHotkeyMainKey(_settings.Hotkey.Key);
+        AnimationEnabledBox.IsChecked = _settings.Ui.EnableAnimations;
         OcrEnabledBox.IsChecked = _settings.Privacy.OcrEnabled;
         SelectOcrProvider(_settings.Ocr.PreferredProvider);
         var languagePack = _localizationService.Load(_settings.Ui.LanguageCode, _settings.Ui.MountedLanguagePackPath);
@@ -6582,6 +6641,82 @@ Skill 文件：{skillPath}
 
     private readonly record struct EnglishPromptResult(string Text, string? Status);
 
+    private sealed class TransientChatMessage
+    {
+        private int _contentCharacters;
+        private int _reasoningCharacters;
+        private int _tickerStopped;
+
+        public TransientChatMessage(IReadOnlyList<UIElement> elements, IReadOnlyList<TextBlock> elapsedTexts, IReadOnlyList<TextBlock> detailTexts, DateTimeOffset startedAt, CancellationTokenSource tickerCts)
+        {
+            Elements = elements;
+            ElapsedTexts = elapsedTexts;
+            DetailTexts = detailTexts;
+            StartedAt = startedAt;
+            TickerCts = tickerCts;
+            Stopwatch = Stopwatch.StartNew();
+        }
+
+        public IReadOnlyList<UIElement> Elements { get; }
+
+        public IReadOnlyList<TextBlock> ElapsedTexts { get; }
+
+        public IReadOnlyList<TextBlock> DetailTexts { get; }
+
+        public DateTimeOffset StartedAt { get; }
+
+        public CancellationTokenSource TickerCts { get; }
+
+        public Stopwatch Stopwatch { get; }
+
+        public int ContentCharacters => Volatile.Read(ref _contentCharacters);
+
+        public int ReasoningCharacters => Volatile.Read(ref _reasoningCharacters);
+
+        public void AddStreamUpdate(LlmStreamUpdate update)
+        {
+            if (!string.IsNullOrEmpty(update.ContentDelta))
+            {
+                Interlocked.Add(ref _contentCharacters, update.ContentDelta.Length);
+            }
+
+            if (!string.IsNullOrEmpty(update.ReasoningDelta))
+            {
+                Interlocked.Add(ref _reasoningCharacters, update.ReasoningDelta.Length);
+            }
+        }
+
+        public void StopTicker()
+        {
+            if (Interlocked.Exchange(ref _tickerStopped, 1) != 0)
+            {
+                return;
+            }
+
+            if (!TickerCts.IsCancellationRequested)
+            {
+                TickerCts.Cancel();
+            }
+
+            TickerCts.Dispose();
+        }
+    }
+
+    private sealed class PendingThinkingProgress : IProgress<LlmStreamUpdate>
+    {
+        private readonly TransientChatMessage? _message;
+
+        public PendingThinkingProgress(TransientChatMessage? message)
+        {
+            _message = message;
+        }
+
+        public void Report(LlmStreamUpdate value)
+        {
+            _message?.AddStreamUpdate(value);
+        }
+    }
+
     private string BuildMountedSkillExecutionPrompt(string userRequest, PromptTemplateCatalogItem skill, string baseLocalPrompt)
     {
         var description = FallbackText(ExtractSkillDescription(skill.Text), "该 Skill 已在当前工作流中挂载，请按其说明执行。");
@@ -7551,7 +7686,6 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
     private async Task AnimateTextBoxesAsync(string text, Action updateCounts, CancellationToken cancellationToken, params TextBox[] boxes)
     {
         var cleanText = text ?? string.Empty;
-        var chunkSize = CalculateTypewriterChunkSize(cleanText.Length);
         _syncingText = true;
         try
         {
@@ -7561,24 +7695,22 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
             }
             updateCounts();
 
-            for (var length = chunkSize; length < cleanText.Length; length += chunkSize)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var partial = cleanText[..length];
-                foreach (var box in boxes)
+            await AnimateTypewriterTextAsync(
+                cleanText,
+                value =>
                 {
-                    box.Text = partial;
-                    box.Select(partial.Length, 0);
-                }
+                    foreach (var box in boxes)
+                    {
+                        box.Text = value;
+                    }
 
-                updateCounts();
-                await Task.Delay(TypewriterFrameDelayMs, cancellationToken);
-            }
+                    updateCounts();
+                },
+                cancellationToken);
 
             foreach (var box in boxes)
             {
                 box.Text = cleanText;
-                box.Select(cleanText.Length, 0);
             }
             updateCounts();
         }
@@ -7591,9 +7723,143 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         }
     }
 
-    private static int CalculateTypewriterChunkSize(int textLength)
+    private async Task AnimateTypewriterTextAsync(string text, Action<string> applyText, CancellationToken cancellationToken)
     {
-        return Math.Max(1, (int)Math.Ceiling(textLength / (double)TypewriterMaxFrames));
+        if (text.Length == 0 || !AreAnimationsEnabled())
+        {
+            applyText(text);
+            return;
+        }
+
+        var durationMs = CalculateTypewriterDurationMs(text.Length);
+        var stopwatch = Stopwatch.StartNew();
+        var revealedLength = 0;
+
+        while (revealedLength < text.Length)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!AreAnimationsEnabled())
+            {
+                applyText(text);
+                return;
+            }
+
+            var progress = Math.Clamp(stopwatch.Elapsed.TotalMilliseconds / durationMs, 0d, 1d);
+            var eased = EaseTypewriterProgress(progress);
+            var desiredLength = Math.Max(revealedLength + 1, (int)Math.Round(text.Length * eased));
+            var nextLength = SnapTypewriterRevealLength(text, desiredLength, revealedLength);
+
+            if (nextLength > revealedLength)
+            {
+                revealedLength = nextLength;
+                applyText(text[..revealedLength]);
+                await WaitForNextRenderAsync(cancellationToken);
+            }
+
+            if (revealedLength >= text.Length)
+            {
+                break;
+            }
+
+            await Task.Delay(CalculateTypewriterCadenceDelay(text, revealedLength), cancellationToken);
+        }
+    }
+
+    private static async Task WaitForNextRenderAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        EventHandler<object>? handler = null;
+        handler = (_, _) => completion.TrySetResult();
+
+        CompositionTarget.Rendering += handler;
+        try
+        {
+            var fallbackDelay = Task.Delay(64, cancellationToken);
+            var completed = await Task.WhenAny(completion.Task, fallbackDelay);
+            await completed;
+        }
+        finally
+        {
+            CompositionTarget.Rendering -= handler;
+        }
+    }
+
+    private static int CalculateTypewriterDurationMs(int textLength)
+    {
+        var duration = TypewriterMinDurationMs + (int)Math.Round(Math.Sqrt(textLength) * 95);
+        return Math.Clamp(duration, TypewriterMinDurationMs, TypewriterMaxDurationMs);
+    }
+
+    private static double EaseTypewriterProgress(double progress)
+    {
+        var value = Math.Clamp(progress, 0d, 1d);
+        return value * value * (3d - 2d * value);
+    }
+
+    private static int SnapTypewriterRevealLength(string text, int desiredLength, int previousLength)
+    {
+        var length = Math.Clamp(desiredLength, previousLength + 1, text.Length);
+        if (length >= text.Length)
+        {
+            return text.Length;
+        }
+
+        if (char.IsHighSurrogate(text[length - 1]))
+        {
+            return Math.Min(text.Length, length + 1);
+        }
+
+        if (IsTypewriterBoundary(text[length - 1]) || IsTypewriterBoundary(text[length]))
+        {
+            return length;
+        }
+
+        var forwardLimit = Math.Min(text.Length, length + TypewriterBoundaryLookahead);
+        for (var i = length + 1; i <= forwardLimit; i++)
+        {
+            if (IsTypewriterBoundary(text[i - 1]))
+            {
+                return i;
+            }
+        }
+
+        var backwardLimit = Math.Max(previousLength + 1, length - 4);
+        for (var i = length - 1; i >= backwardLimit; i--)
+        {
+            if (IsTypewriterBoundary(text[i - 1]))
+            {
+                return i;
+            }
+        }
+
+        return length;
+    }
+
+    private static TimeSpan CalculateTypewriterCadenceDelay(string text, int revealedLength)
+    {
+        if (revealedLength <= 0 || revealedLength > text.Length)
+        {
+            return TimeSpan.FromMilliseconds(TypewriterFrameDelayMs);
+        }
+
+        var last = text[revealedLength - 1];
+        var extraDelay = last switch
+        {
+            '\n' => 52,
+            '。' or '！' or '？' or '.' or '!' or '?' => 42,
+            '，' or '、' or '；' or ';' or ',' or ':' or '：' => 18,
+            _ => 0
+        };
+
+        return TimeSpan.FromMilliseconds(TypewriterFrameDelayMs + extraDelay);
+    }
+
+    private static bool IsTypewriterBoundary(char value)
+    {
+        return char.IsWhiteSpace(value)
+            || char.IsPunctuation(value)
+            || value is '，' or '。' or '、' or '；' or '：' or '！' or '？' or '（' or '）' or '【' or '】' or '《' or '》';
     }
 
     private static string StripPromptMarkdown(string text)
@@ -7914,6 +8180,200 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         }
     }
 
+    private TransientChatMessage? AddPendingThinkingMessage(bool deepThinkingEnabled)
+    {
+        if ((ChatMessagesPanel is null && CompactChatMessagesPanel is null) || !DispatcherQueue.HasThreadAccess)
+        {
+            return null;
+        }
+
+        var text = deepThinkingEnabled
+            ? "正在思考，等待模型返回。返回后会替换为正式思考过程和提示词摘要。"
+            : "正在整理需求，等待模型返回。返回后会替换为正式提示词摘要。";
+        var timestamp = DateTimeOffset.Now;
+        var elements = new List<UIElement>(2);
+        var elapsedTexts = new List<TextBlock>(2);
+        var detailTexts = new List<TextBlock>(2);
+
+        if (ChatMessagesPanel is not null)
+        {
+            var (element, elapsedText, detailText) = CreatePendingThinkingMessageElement(text, timestamp);
+            ChatMessagesPanel.Children.Add(element);
+            elements.Add(element);
+            elapsedTexts.Add(elapsedText);
+            detailTexts.Add(detailText);
+        }
+
+        if (CompactChatMessagesPanel is not null)
+        {
+            var (element, elapsedText, detailText) = CreatePendingThinkingMessageElement(text, timestamp);
+            CompactChatMessagesPanel.Children.Add(element);
+            elements.Add(element);
+            elapsedTexts.Add(elapsedText);
+            detailTexts.Add(detailText);
+        }
+
+        if (CompactChatStatusText is not null)
+        {
+            CompactChatStatusText.Text = L("啊拼正在思考...");
+        }
+
+        var message = new TransientChatMessage(elements, elapsedTexts, detailTexts, timestamp, new CancellationTokenSource());
+        RefreshPendingThinkingMessage(message);
+        _ = RunPendingThinkingTickerAsync(message);
+        return message;
+    }
+
+    private async Task RunPendingThinkingTickerAsync(TransientChatMessage message)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+            while (await timer.WaitForNextTickAsync(message.TickerCts.Token))
+            {
+                if (!DispatcherQueue.TryEnqueue(() => RefreshPendingThinkingMessage(message)))
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
+    private void RemoveTransientChatMessage(TransientChatMessage? message)
+    {
+        if (message is null)
+        {
+            return;
+        }
+
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            DispatcherQueue.TryEnqueue(() => RemoveTransientChatMessage(message));
+            return;
+        }
+
+        message.StopTicker();
+        foreach (var element in message.Elements)
+        {
+            ChatMessagesPanel?.Children.Remove(element);
+            CompactChatMessagesPanel?.Children.Remove(element);
+        }
+    }
+
+    private void RefreshPendingThinkingMessage(TransientChatMessage message)
+    {
+        var elapsedSeconds = Math.Max(0, (int)Math.Floor(message.Stopwatch.Elapsed.TotalSeconds));
+        var elapsedText = $"{L("已思考")}{elapsedSeconds}{L("秒")}";
+        var contentCharacters = message.ContentCharacters;
+        var reasoningCharacters = message.ReasoningCharacters;
+        var detailText = contentCharacters + reasoningCharacters > 0
+            ? $"{L("正在接收模型输出")}，{L("正文")}{contentCharacters}{L("字")}，{L("思考")}{reasoningCharacters}{L("字")}。"
+            : L("等待模型开始返回内容。");
+
+        foreach (var textBlock in message.ElapsedTexts)
+        {
+            textBlock.Text = elapsedText;
+        }
+
+        foreach (var textBlock in message.DetailTexts)
+        {
+            textBlock.Text = detailText;
+        }
+
+        if (CompactChatStatusText is not null)
+        {
+            CompactChatStatusText.Text = $"{L("啊拼正在思考...")} {elapsedText}";
+        }
+    }
+
+    private (Grid Element, TextBlock ElapsedText, TextBlock DetailText) CreatePendingThinkingMessageElement(string text, DateTimeOffset timestamp)
+    {
+        var grid = new Grid
+        {
+            ColumnSpacing = 10
+        };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(42) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(54) });
+
+        var avatar = new Border
+        {
+            Width = 34,
+            Height = 34,
+            CornerRadius = new CornerRadius(17),
+            Background = ResourceBrush("ControlFillColorSecondaryBrush", Colors.WhiteSmoke),
+            Child = new FontIcon
+            {
+                FontFamily = new FontFamily("Segoe Fluent Icons"),
+                Glyph = "\uE82F",
+                FontSize = 18
+            }
+        };
+        var bubble = new Border
+        {
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(12, 9, 12, 9),
+            Background = ResourceBrush("LayerFillColorAltBrush", Colors.FloralWhite),
+            BorderBrush = ResourceBrush("AccentFillColorSecondaryBrush", Colors.DodgerBlue),
+            BorderThickness = new Thickness(1),
+            Child = BuildPendingThinkingBubbleContent(text, out var elapsedText, out var detailText)
+        };
+        var time = new TextBlock
+        {
+            Text = timestamp.ToLocalTime().ToString("HH:mm"),
+            FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = ResourceBrush("TextFillColorSecondaryBrush", Colors.DimGray)
+        };
+
+        Grid.SetColumn(avatar, 0);
+        Grid.SetColumn(bubble, 1);
+        Grid.SetColumn(time, 2);
+        grid.Children.Add(avatar);
+        grid.Children.Add(bubble);
+        grid.Children.Add(time);
+        return (grid, elapsedText, detailText);
+    }
+
+    private UIElement BuildPendingThinkingBubbleContent(string text, out TextBlock elapsedText, out TextBlock detailText)
+    {
+        elapsedText = new TextBlock
+        {
+            Text = L("已思考0秒"),
+            Foreground = ResourceBrush("TextFillColorTertiaryBrush", Colors.Gray),
+            FontSize = 12
+        };
+        detailText = new TextBlock
+        {
+            Text = L(text),
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = ResourceBrush("TextFillColorSecondaryBrush", Colors.DimGray),
+            FontSize = 13
+        };
+
+        return new StackPanel
+        {
+            Spacing = 6,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = L("正在思考"),
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = ResourceBrush("TextFillColorPrimaryBrush", Colors.Black)
+                },
+                elapsedText,
+                detailText
+            }
+        };
+    }
+
     private (Grid Container, Border Bubble, bool ShouldAnimateAssistant) CreateChatMessageElement(string displayText, bool isUser, bool isThinking, DateTimeOffset timestamp, bool animate)
     {
         var grid = new Grid
@@ -7939,7 +8399,7 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         };
 
         var bubbleForeground = ResourceBrush("TextFillColorPrimaryBrush", Colors.Black);
-        var shouldAnimateAssistant = animate && !isUser && !isThinking;
+        var shouldAnimateAssistant = animate && !isUser && !isThinking && AreAnimationsEnabled();
         var bubble = new Border
         {
             CornerRadius = new CornerRadius(12),
@@ -8105,12 +8565,7 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         {
             var textBlock = bubble.Child as TextBlock ?? BuildPlainAssistantBubbleContent(string.Empty, foreground);
             bubble.Child = textBlock;
-            var chunkSize = CalculateTypewriterChunkSize(cleanText.Length);
-            for (var length = chunkSize; length < cleanText.Length; length += chunkSize)
-            {
-                textBlock.Text = cleanText[..length];
-                await Task.Delay(TypewriterFrameDelayMs);
-            }
+            await AnimateTypewriterTextAsync(cleanText, value => textBlock.Text = value, CancellationToken.None);
 
             bubble.Child = BuildMarkdownBubbleContent(cleanText, foreground);
         }

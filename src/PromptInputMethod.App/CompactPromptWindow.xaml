@@ -1295,7 +1295,7 @@
                             </Grid>
                             <TextBlock x:Name="ModelCapabilityText" Text="模型标签：未检测" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                             <TextBlock x:Name="ModelProbeStatusText" Text="填写 Base URL 和 API Key 后会自动检测可用性并刷新模型列表。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
-                            <TextBlock Text="修改后自动保存，标题栏会显示 Provider + 模型名称。" Style="{StaticResource MutedTextStyle}" />
+                            <TextBlock Text="修改后自动保存，标题栏会显示 Provider + 模型名称。模型生成会等待服务端返回；可用性检测会单独检查 endpoint 和错误码。" Style="{StaticResource MutedTextStyle}" />
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -1317,6 +1317,8 @@
                                 </ComboBox>
                                 <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="挂载语言包" Click="MountLanguagePackButton_Click" VerticalAlignment="Bottom" />
                             </Grid>
+                            <CheckBox x:Name="AnimationEnabledBox" Content="启用界面动画" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
+                            <TextBlock Text="关闭后页面切换、聊天气泡和提示词输出会直接显示最终内容。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                             <TextBlock Text="全局置顶小窗口快捷键" Style="{StaticResource SectionTitleStyle}" />
                             <CheckBox x:Name="HotkeyEnabledBox" Content="启用全局快捷键呼出置顶小窗口" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
                             <StackPanel Orientation="Horizontal" Spacing="12">

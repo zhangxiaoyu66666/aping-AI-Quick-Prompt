@@ -10,6 +10,7 @@ var checks = new ReleaseCheck[]
     new("Skill matching inputs", () => CheckSkillMatchingInputs(repoRoot)),
     new("Provider validation", () => CheckProviderValidation(repoRoot)),
     new("Bilingual prompt generation protocol", () => CheckBilingualPromptGeneration(repoRoot)),
+    new("Conversation pending thinking bubble", () => CheckConversationPendingThinkingBubble(repoRoot)),
     new("Accessibility and layout coverage", () => CheckAccessibilityAndLayoutCoverage(repoRoot)),
     new("Public demo packaging policy", () => CheckPublicDemoPackagingPolicy(repoRoot))
 };
@@ -102,6 +103,8 @@ static void CheckProviderValidation(string repoRoot)
     using var settingsJson = JsonDocument.Parse(settings);
     var preferredProvider = settingsJson.RootElement.GetProperty("ocr").GetProperty("preferredProvider").GetString();
     AssertEqual("fire_eye_ocr", preferredProvider, "Fire Eye OCR must remain the default provider.");
+    var enableAnimations = settingsJson.RootElement.GetProperty("ui").GetProperty("enableAnimations").GetBoolean();
+    Assert(enableAnimations, "UI animations should be enabled by default.");
 
     var routerSource = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.App", "Services", "OcrProviderRouter.cs"));
     AssertContains(routerSource, "public const string Auto = \"auto_ocr\"", "Auto OCR provider id must stay stable.");
@@ -110,6 +113,15 @@ static void CheckProviderValidation(string repoRoot)
 
     var fireEyeSource = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.App", "Services", "FireEyeOcrProvider.cs"));
     AssertContains(fireEyeSource, "Utf8JsonReader", "Fire Eye worker parsing must tolerate trailing native logs after the JSON payload.");
+
+    var llmClientSource = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.Core", "Llm", "OpenAiCompatibleClient.cs"));
+    AssertContains(llmClientSource, "_httpClient.Timeout = Timeout.InfiniteTimeSpan", "Generation client must not use HttpClient's default 100-second timeout.");
+    AssertContains(llmClientSource, "SendAsync(httpRequest, cancellationToken)", "Chat completion calls should wait for the provider response instead of a fixed generation timeout.");
+    AssertNotContains(llmClientSource, "options.TimeoutSeconds", "Chat completion calls must not use the endpoint-probe timeout as a generation timeout.");
+    AssertContains(llmClientSource, "CompleteWithResultStreamingAsync", "Generation client should support streaming chat completions.");
+    AssertContains(llmClientSource, "HttpCompletionOption.ResponseHeadersRead", "Streaming chat completions should start processing before the full body is buffered.");
+    AssertContains(llmClientSource, "[\"stream\"] = stream", "Streaming support should toggle the OpenAI-compatible stream payload flag.");
+    AssertContains(llmClientSource, "TryReadStreamingUpdate", "Streaming support should parse SSE delta payloads.");
 
     var ocrReview = File.ReadAllText(Path.Combine(repoRoot, "docs", "ocr-model-license-review.md"));
     AssertContains(ocrReview, "PP-OCRv5_mobile_det", "OCR model review must cover the detection model.");
@@ -126,8 +138,28 @@ static void CheckBilingualPromptGeneration(string repoRoot)
     AssertContains(appCode, "var protocolEnglishPrompt = protocolResult.EnglishPrompt;", "Generation flow should read the protocol English prompt directly.");
     AssertContains(appCode, "模型未按协议返回英文提示词，已使用本地同步结构", "Missing protocol English should use local fallback instead of a second model translation.");
     AssertContains(appCode, "BuildEnglishTranslationStructureRule", "One-pass English generation should still preserve target-specific structure rules.");
+    AssertContains(appCode, "LooksLikeQuotaOrBillingError", "Provider quota and billing errors should be surfaced clearly.");
     AssertNotContains(appCode, "BuildSynchronizedEnglishPromptForGenerationAsync(", "Generation flow must not call the model a second time for translation.");
     AssertNotContains(appCode, "BuildEnglishTranslationPrompt(", "The old second-pass translation prompt must not be kept in the app code.");
+}
+
+static void CheckConversationPendingThinkingBubble(string repoRoot)
+{
+    var appCode = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.App", "CompactPromptWindow.xaml.cs"));
+
+    AssertContains(appCode, "var pendingThinkingMessage = AddPendingThinkingMessage(deepThinkingEnabled);", "Generation should add a transient pending-thinking bubble before waiting for the model.");
+    AssertContains(appCode, "RemoveTransientChatMessage(pendingThinkingMessage);", "Generation should remove the pending-thinking bubble before adding formal assistant content.");
+    AssertContains(appCode, "CompleteWithResultStreamingAsync", "Generation should use streaming completions so pending UI can update while the model responds.");
+    AssertContains(appCode, "new PendingThinkingProgress(pendingThinkingMessage)", "Streaming deltas should update pending-thinking counters without flooding the UI thread.");
+    AssertContains(appCode, "PeriodicTimer", "Pending-thinking bubble should refresh elapsed time while the request is running.");
+    AssertContains(appCode, "Stopwatch.StartNew()", "Elapsed thinking time should not depend on starved UI timer ticks.");
+    AssertContains(appCode, "Interlocked.Add", "Streaming token counters should be updated off the UI thread.");
+    AssertNotContains(appCode, "new Progress<LlmStreamUpdate>", "Streaming progress must not enqueue every token onto the WinUI dispatcher.");
+    AssertContains(appCode, "AreAnimationsEnabled()", "Conversation and output animations must honor the user animation setting.");
+    AssertContains(appCode, "已思考", "Pending-thinking bubble should show elapsed thinking seconds.");
+    AssertContains(appCode, "private sealed class TransientChatMessage", "Pending-thinking UI state should be represented separately from persisted conversation messages.");
+    AssertContains(appCode, "正在思考，等待模型返回", "Pending-thinking bubble should show a visible Chinese transition message.");
+    AssertContains(appCode, "new TransientChatMessage(elements, elapsedTexts, detailTexts", "Pending-thinking bubble should be transient UI, not conversation history.");
 }
 
 static void CheckAccessibilityAndLayoutCoverage(string repoRoot)
@@ -139,6 +171,9 @@ static void CheckAccessibilityAndLayoutCoverage(string repoRoot)
     AssertContains(appXaml, "KeyboardAccelerators", "Main window should expose keyboard shortcuts.");
     AssertContains(appXaml, "AccessKey", "Primary controls should expose access keys for keyboard navigation.");
     AssertContains(appXaml, "AutomationProperties.Name", "Important icon-only controls should have automation names.");
+    AssertContains(appXaml, "AnimationEnabledBox", "Settings page should expose an animation enable/disable toggle.");
+    AssertContains(appCode, "_settings.Ui.EnableAnimations = AnimationEnabledBox.IsChecked == true", "Animation setting must be persisted from the settings page.");
+    AssertContains(appCode, "AnimationEnabledBox.IsChecked = _settings.Ui.EnableAnimations", "Animation setting must be loaded into the settings page.");
     AssertContains(appCode, "SidebarFullCollapseWidth", "Layout code should cover narrow/compact widths.");
     var regionSelectionCode = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.App", "RegionSelectionWindow.xaml.cs"));
     AssertContains(regionSelectionCode, "PixelWidth / Math.Max(1, RootGrid.ActualWidth)", "Region selection should map UI coordinates back to screenshot pixels for high-DPI displays.");

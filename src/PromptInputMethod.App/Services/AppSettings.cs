@@ -47,6 +47,7 @@ public sealed class UiSettings
 {
     public string LanguageCode { get; set; } = "auto";
     public string MountedLanguagePackPath { get; set; } = string.Empty;
+    public bool EnableAnimations { get; set; } = true;
     public string SelectedMode { get; set; } = "通用 LLM";
     public string CustomMode { get; set; } = string.Empty;
     public bool SceneText { get; set; } = true;

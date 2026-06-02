@@ -29,4 +29,6 @@ public sealed record LlmReasoningOptions(
 
 public sealed record LlmCompletionResult(string Content, string? ReasoningContent);
 
+public sealed record LlmStreamUpdate(string? ContentDelta, string? ReasoningDelta);
+
 public sealed record LlmModelInfo(string Id, string? OwnedBy);

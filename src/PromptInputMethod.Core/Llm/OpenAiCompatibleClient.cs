@@ -14,6 +14,7 @@ public sealed class OpenAiCompatibleClient : ILlmClient
     public OpenAiCompatibleClient(HttpClient? httpClient = null)
     {
         _httpClient = httpClient ?? new HttpClient();
+        _httpClient.Timeout = Timeout.InfiniteTimeSpan;
     }
 
     public async Task<string> CompleteAsync(string prompt, LlmRequestOptions options, CancellationToken cancellationToken = default)
@@ -34,16 +35,110 @@ public sealed class OpenAiCompatibleClient : ILlmClient
             throw new InvalidOperationException("模型配置未启用或缺少 baseUrl/model/API key。");
         }
 
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeoutCts.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds)));
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, BuildChatCompletionsUri(options.BaseUrl));
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
+        httpRequest.Content = JsonContent.Create(BuildCompletionPayload(llmRequest, options, stream: false), options: JsonOptions);
+
+        using var response = await _httpClient.SendAsync(httpRequest, cancellationToken).ConfigureAwait(false);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"模型请求失败：{(int)response.StatusCode} {response.ReasonPhrase}\n{body}");
+        }
+
+        return ParseCompletionBody(body);
+    }
+
+    public async Task<LlmCompletionResult> CompleteWithResultStreamingAsync(LlmRequest llmRequest, LlmRequestOptions options, IProgress<LlmStreamUpdate>? progress = null, CancellationToken cancellationToken = default)
+    {
+        if (!options.IsConfigured)
+        {
+            throw new InvalidOperationException("模型配置未启用或缺少 baseUrl/model/API key。");
+        }
 
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, BuildChatCompletionsUri(options.BaseUrl));
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
+        httpRequest.Content = JsonContent.Create(BuildCompletionPayload(llmRequest, options, stream: true), options: JsonOptions);
+
+        using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            throw new HttpRequestException($"模型请求失败：{(int)response.StatusCode} {response.ReasonPhrase}\n{errorBody}");
+        }
+
+        var mediaType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+        if (!mediaType.Contains("event-stream", StringComparison.OrdinalIgnoreCase))
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var result = ParseCompletionBody(body);
+            progress?.Report(new LlmStreamUpdate(result.Content, result.ReasoningContent));
+            return result;
+        }
+
+        var contentBuilder = new System.Text.StringBuilder();
+        var reasoningBuilder = new System.Text.StringBuilder();
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        using var reader = new StreamReader(stream);
+
+        while (!reader.EndOfStream)
+        {
+            var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var data = line["data:".Length..].Trim();
+            if (data.Length == 0)
+            {
+                continue;
+            }
+
+            if (string.Equals(data, "[DONE]", StringComparison.OrdinalIgnoreCase))
+            {
+                break;
+            }
+
+            if (!TryReadStreamingUpdate(data, out var update))
+            {
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(update.ContentDelta))
+            {
+                contentBuilder.Append(update.ContentDelta);
+            }
+
+            if (!string.IsNullOrEmpty(update.ReasoningDelta))
+            {
+                reasoningBuilder.Append(update.ReasoningDelta);
+            }
+
+            if (!string.IsNullOrEmpty(update.ContentDelta) || !string.IsNullOrEmpty(update.ReasoningDelta))
+            {
+                progress?.Report(update);
+            }
+        }
+
+        var content = contentBuilder.ToString();
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            throw new InvalidOperationException("模型流式响应内容为空。");
+        }
+
+        var reasoning = reasoningBuilder.ToString();
+        return new LlmCompletionResult(content.Trim(), string.IsNullOrWhiteSpace(reasoning) ? null : reasoning.Trim());
+    }
+
+    private static IDictionary<string, object?> BuildCompletionPayload(LlmRequest llmRequest, LlmRequestOptions options, bool stream)
+    {
         var payload = new Dictionary<string, object?>
         {
             ["model"] = options.Model,
             ["temperature"] = 0.2,
-            ["stream"] = false,
+            ["stream"] = stream,
             ["messages"] = new[]
             {
                 new { role = "system", content = (object)"你是一个提示词结构化助手。保留用户原意，不编造事实，输出可直接复制给其他大模型的清晰 Prompt。" },
@@ -51,16 +146,11 @@ public sealed class OpenAiCompatibleClient : ILlmClient
             }
         };
         ApplyReasoningOptions(payload, llmRequest.Reasoning);
-        httpRequest.Content = JsonContent.Create(payload, options: JsonOptions);
+        return payload;
+    }
 
-        using var response = await _httpClient.SendAsync(httpRequest, timeoutCts.Token).ConfigureAwait(false);
-        var body = await response.Content.ReadAsStringAsync(timeoutCts.Token).ConfigureAwait(false);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException($"模型请求失败：{(int)response.StatusCode} {response.ReasonPhrase}\n{body}");
-        }
-
+    private static LlmCompletionResult ParseCompletionBody(string body)
+    {
         using var document = JsonDocument.Parse(body);
         var root = document.RootElement;
         var choices = root.GetProperty("choices");
@@ -78,6 +168,43 @@ public sealed class OpenAiCompatibleClient : ILlmClient
 
         var reasoningContent = ReadReasoningContent(message);
         return new LlmCompletionResult(content.Trim(), string.IsNullOrWhiteSpace(reasoningContent) ? null : reasoningContent.Trim());
+    }
+
+    private static bool TryReadStreamingUpdate(string data, out LlmStreamUpdate update)
+    {
+        update = new LlmStreamUpdate(null, null);
+        try
+        {
+            using var document = JsonDocument.Parse(data);
+            var root = document.RootElement;
+            if (!root.TryGetProperty("choices", out var choices)
+                || choices.ValueKind != JsonValueKind.Array
+                || choices.GetArrayLength() == 0)
+            {
+                return false;
+            }
+
+            var choice = choices[0];
+            if (choice.TryGetProperty("delta", out var delta))
+            {
+                update = new LlmStreamUpdate(
+                    ReadTextProperty(delta, "content"),
+                    ReadTextProperty(delta, "reasoning_content", "reasoning", "reasoning_text", "thinking"));
+                return true;
+            }
+
+            if (choice.TryGetProperty("message", out var message))
+            {
+                update = new LlmStreamUpdate(ReadMessageContent(message), ReadReasoningContent(message));
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        return false;
     }
 
     public async Task<IReadOnlyList<LlmModelInfo>> ListModelsAsync(string baseUrl, string? apiKey, int timeoutSeconds = 15, CancellationToken cancellationToken = default)
@@ -222,6 +349,20 @@ public sealed class OpenAiCompatibleClient : ILlmClient
         return null;
     }
 
+    private static string? ReadTextProperty(JsonElement item, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (item.TryGetProperty(name, out var property)
+                && TryReadVisibleText(property, out var value))
+            {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
     private static bool TryReadVisibleText(JsonElement property, out string? value)
     {
         value = null;
@@ -242,6 +383,19 @@ public sealed class OpenAiCompatibleClient : ILlmClient
                     value = child.GetString();
                     return true;
                 }
+            }
+        }
+
+        if (property.ValueKind == JsonValueKind.Array)
+        {
+            var parts = property.EnumerateArray()
+                .Select(ReadReasoningPartText)
+                .Where(HasVisibleText)
+                .ToArray();
+            if (parts.Length > 0)
+            {
+                value = string.Join(Environment.NewLine, parts);
+                return true;
             }
         }
 
