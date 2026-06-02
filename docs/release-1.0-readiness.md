@@ -15,6 +15,7 @@ This document closes the public-release checklist for AI Quick Prompt 1.0.
 | Accessibility, keyboard navigation, and high-DPI coverage | Complete for 1.0 gate | WinUI `AccessKey`, `KeyboardAccelerators`, `AutomationProperties.Name`, responsive width code, high-DPI capture handling, and screenshot checklist |
 | Screenshot-based UI regression checks for expanded, compact, narrow, and high-DPI layouts | Complete | `scripts/Invoke-UiScreenshotChecks.ps1` captures `expanded`, `compact`, `narrow`, and `high-DPI` screenshots plus a manifest |
 | Clean public demo package | Complete | `scripts/New-PublicDemoPackage.ps1` builds the app, packages notices, and includes reviewed OCR assets through `fire-eye-ocr-worker.exe` when native OCR is built |
+| MSIX sideload package | Complete | `scripts/New-MsixPackage.ps1` builds, packs, signs, and exports a `.cer` for side-loading |
 
 ## OCR Release Decision
 
@@ -46,6 +47,12 @@ Build the public demo package:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\New-PublicDemoPackage.ps1
+```
+
+Build the signed MSIX sideload package:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\New-MsixPackage.ps1
 ```
 
 ## Screenshot Layout Matrix

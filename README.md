@@ -203,6 +203,12 @@ Create a public demo package with notices and reviewed OCR assets:
 powershell -ExecutionPolicy Bypass -File scripts\New-PublicDemoPackage.ps1
 ```
 
+Create a signed MSIX sideload package:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\New-MsixPackage.ps1
+```
+
 The completed 1.0 checklist lives in [docs/release-1.0-readiness.md](docs/release-1.0-readiness.md).
 
 ## Contributing
