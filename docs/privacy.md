@@ -7,7 +7,7 @@ This document describes the intended data boundaries for Prompt Input Method. It
 - The compact window, scene detection, prompt structuring, clipboard import, and OCR context cleanup run locally.
 - API keys are stored in Windows Credential Manager under `PromptInputMethod/OpenAICompatibleApiKey`.
 - The bundled `appsettings.json` does not contain API keys.
-- Local settings are stored under `%APPDATA%\PromptInputMethod\appsettings.json`.
+- Local settings and user records are stored in `%APPDATA%\PromptInputMethod\aipin.db`.
 
 ## OCR
 
@@ -50,15 +50,21 @@ When sent, images are encoded as OpenAI-compatible `image_url` data URLs. The cu
 ## Logs And Diagnostics
 
 - The app should not log full prompts, API keys, OCR full text, or image bytes.
-- OCR scheduler diagnostics may be written to `%APPDATA%\PromptInputMethod\prompt_input_method.ocr.scheduler.v1.json` and contain provider attempt metadata, not full OCR text.
+- OCR scheduler diagnostics may be written to the local app database and contain provider attempt metadata, not full OCR text.
 - The settings panel includes `清除历史`, which removes OCR scheduler diagnostics and temporary OCR image files.
-- The settings panel includes `清除收藏`, which removes the local prompt favorites file.
+- The settings panel includes `清除收藏`, which removes local prompt favorites from the app database.
 
 ## Favorites
 
-- Prompt favorites are stored locally in `%APPDATA%\PromptInputMethod\prompt_input_method.prompt_favorites.v1.json`.
+- Prompt favorites are stored locally in `%APPDATA%\PromptInputMethod\aipin.db`.
 - Favorites are not synced and are not uploaded automatically.
 - Favorite contents may contain user business information, so users should review them before sharing logs or release bundles.
+
+## Cloud Sync
+
+The GitHub community edition does not include a OneDrive, WebDAV, or hosted cloud sync entry. It stores settings, history, templates, favorites, and OCR diagnostics locally.
+
+Cloud sync research and Microsoft Store branch architecture notes live in [docs/cloud-sync-architecture.md](cloud-sync-architecture.md). That document describes the intended store-only implementation boundary; it is not a statement that the GitHub community build ships cloud sync.
 
 ## External Services
 

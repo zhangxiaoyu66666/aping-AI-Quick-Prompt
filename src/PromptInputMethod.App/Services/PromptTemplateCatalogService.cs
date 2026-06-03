@@ -131,6 +131,111 @@ public sealed class PromptTemplateCatalogService
                 atmospheric background, soft natural light, detailed environment, coherent color palette, gentle depth, cinematic mood, beautiful sky, subtle environmental storytelling
                 """),
             new(
+                "builtin-sd-comfyui-node-fields",
+                "ComfyUI｜节点字段适配",
+                "ComfyUI / Stable Diffusion",
+                "ComfyUI",
+                """
+                把需求改写成 ComfyUI 可填字段。
+
+                Positive CLIP Text Encode:
+                {英文正向提示词：主体、场景、构图、镜头、光线、风格、质量；不要写解释}
+
+                Negative CLIP Text Encode:
+                {英文反向提示词：low quality, blurry, bad anatomy, extra limbs, text artifacts, watermark, logo artifacts, identity drift, underage, child, teenager, juvenile, loli, young-looking, age ambiguity}
+
+                KSampler:
+                checkpoint/model: {待补充}
+                width x height: {待补充}
+                steps: {待补充，常见 20-40}
+                cfg: {待补充，按模型调整}
+                sampler: {待补充}
+                scheduler: {待补充}
+                seed: {random / 指定 seed}
+                denoise: {txt2img=1.0；img2img/inpaint 待补充}
+
+                Optional nodes:
+                LoRA: {无 / <lora:name:weight> / 待补充}
+                embedding: {无 / embedding:name / 待补充}
+                ControlNet: {无 / 类型、预处理器、强度、起止步 / 待补充}
+                IP-Adapter: {无 / 参考图作用、权重、起止步 / 待补充}
+                VAE / upscale: {无 / 待补充}
+                """),
+            new(
+                "builtin-sd-webui-positive-negative",
+                "Stable Diffusion｜正负提示词",
+                "ComfyUI / Stable Diffusion",
+                "SD WebUI",
+                """
+                生成可粘贴到 Stable Diffusion WebUI / A1111 的字段。
+
+                Prompt:
+                {英文正向提示词，按主体、环境、动作、构图、镜头、光线、风格、质量组织；LoRA 标签只放在正向提示词里}
+
+                Negative prompt:
+                low quality, worst quality, blurry, bad anatomy, bad hands, extra fingers, extra limbs, deformed, distorted face, text artifacts, watermark, signature, logo artifacts, underage, child, teenager, juvenile, loli, young-looking, age ambiguity, nsfw if not requested
+
+                Parameters:
+                Steps: {待补充}
+                Sampler: {待补充}
+                CFG scale: {待补充}
+                Size: {待补充}
+                Seed: {random / 指定 seed}
+                Clip skip: {仅需要时填写}
+                Hires fix: {off / on，放大倍率与 denoising 待补充}
+                """),
+            new(
+                "builtin-sd-img2img-controlnet",
+                "Stable Diffusion｜图生图 / ControlNet",
+                "ComfyUI / Stable Diffusion",
+                "图生图",
+                """
+                生成适合 img2img、inpainting、ControlNet 或 IP-Adapter 的提示词字段。
+
+                Task:
+                {img2img / inpainting / ControlNet / IP-Adapter / reference-only}
+
+                Reference image:
+                {参考图作用：保留主体 / 保留姿势 / 保留构图 / 保留风格 / 保留产品外形}
+
+                Positive prompt:
+                {英文正向提示词：描述目标变化，但明确哪些特征必须保持}
+
+                Negative prompt:
+                low quality, blurry, deformation, identity drift, inconsistent face, product shape error, text artifacts, watermark, underage, child, teenager, juvenile, loli, age ambiguity
+
+                Parameters:
+                Denoising strength: {0.25-0.45 小改；0.45-0.65 中等改；0.65+ 大改，按用户需求待补充}
+                ControlNet type: {canny / depth / openpose / lineart / tile / scribble / 待补充}
+                Control weight: {待补充}
+                Start/end step: {待补充}
+                Resize mode: {待补充}
+                Seed: {random / 指定 seed}
+                """),
+            new(
+                "builtin-sd-lora-embedding",
+                "Stable Diffusion｜LoRA / Embedding",
+                "ComfyUI / Stable Diffusion",
+                "LoRA",
+                """
+                生成带 LoRA、embedding 或风格触发词的 Stable Diffusion 提示词。
+
+                Base model family:
+                {SD 1.5 / SDXL / SD3 / Flux / 待补充}
+
+                Prompt:
+                {主体、场景、构图、镜头、光线、风格、质量}
+                LoRA tags: {<lora:name:0.6-0.9>，仅在用户提供 LoRA 名称时写}
+                Trigger words: {用户提供的触发词；没有则待补充}
+                Embeddings: {embedding:name；没有则无}
+
+                Negative prompt:
+                low quality, worst quality, blurry, bad anatomy, extra limbs, text artifacts, watermark, identity drift, style conflict, underage, child, teenager, juvenile, loli, age ambiguity
+
+                Notes:
+                不要编造 LoRA 名称、模型族、触发词或 embedding 名称；缺失时列为待补充。
+                """),
+            new(
                 "builtin-veo3-single-shot",
                 "Veo 3｜电影单镜头",
                 "Veo 3",
@@ -249,6 +354,118 @@ public sealed class PromptTemplateCatalogService
                 字幕 / BGM：{如需填写}
                 格式要求：{时长、画幅比例}
                 负面约束：避免主体漂移、身份变化、画面闪烁、突然跳切、文字乱码、额外人物或物体。
+                """),
+            new(
+                "builtin-jimeng-director-storyboard",
+                "即梦｜导演分镜工作台",
+                "即梦 / Seedance",
+                "导演分镜",
+                """
+                把创意改写成即梦 / Seedance 可执行导演分镜提示词。
+
+                任务类型：{文生视频 / 图生视频 / 首尾帧 / 视频编辑}
+                生成目标：{一句话说明最终视频效果}
+                参考素材：{无 / @图片1 / @图片2 / @视频1 / @音频1，并说明每个素材作用}
+                主体与场景：{人物、产品、环境、道具、关键识别特征}
+                镜头语言：{景别、视角、焦段感、构图、对焦、景深}
+                运镜：{推近 / 拉远 / 横移 / 环绕 / 跟拍 / 手持感 / 稳定器 / 一镜到底}
+                时间轴：
+                0-2s：{开场画面、主体出现、镜头动作、声音}
+                2-5s：{主要动作、情绪或卖点、镜头推进}
+                5-8s：{变化、转场、视觉高潮或信息揭示}
+                8-10s：{收束画面、停留、字幕或品牌记忆点}
+                视觉风格：{光线、色彩、质感、画面密度、氛围}
+                声音与字幕：{BGM、环境声、音效、对白、字幕位置和语言}
+                平台参数：{时长、画幅比例、清晰度、是否保留参考主体一致性}
+                负面约束：避免闪烁、身份漂移、产品变形、额外肢体、文字乱码、水印、突然跳切、风格跑偏。
+                """),
+            new(
+                "builtin-jimeng-reference-control",
+                "即梦｜多模态引用控制",
+                "即梦 / Seedance",
+                "引用素材",
+                """
+                基于参考素材生成即梦 / Seedance 提示词，并明确每个素材的控制作用。
+
+                目标：{最终生成视频或图片的目标}
+                @图片1：{保留主体 / 构图 / 风格 / 色彩 / 产品外形 / 角色身份}
+                @图片2：{可选，说明承担的作用}
+                @视频1：{可选，参考动作 / 运镜 / 节奏 / 转场}
+                @音频1：{可选，参考音乐节奏 / 语气 / 环境声}
+                主体一致性：保持 {脸部、发型、服装、产品外形、颜色、材质、品牌元素} 不漂移。
+                允许变化：{背景 / 镜头角度 / 光线 / 动作 / 表情 / 转场}
+                禁止变化：{身份 / 产品结构 / 标志 / 核心颜色 / 关键道具}
+                镜头设计：{景别、视角、运动、对焦、节奏}
+                画面风格：{写实 / 电影感 / 商业 / 二次元 / 国风 / 科技感 / 其他}
+                输出参数：{时长、比例、清晰度、字幕、声音}
+                负面约束：避免参考主体变形、无关元素混入、五官漂移、产品结构错误、文字乱码、低清晰度。
+                """),
+            new(
+                "builtin-jimeng-short-drama",
+                "即梦｜短剧对白分镜",
+                "即梦 / Seedance",
+                "短剧对白",
+                """
+                生成一段适合即梦 / Seedance 的短剧或漫剧对白视频提示词。
+
+                剧情前提：{一句话说明冲突或事件}
+                角色 A：{身份、外观、情绪、服装、动作习惯}
+                角色 B：{身份、外观、情绪、服装、动作习惯}
+                场景：{地点、时间、环境、道具、氛围}
+                表演节奏：{停顿、眼神、转身、靠近、沉默、爆发或克制}
+                分镜：
+                0-2s：{建立场景和角色关系}
+                2-5s：{角色 A 动作或台词}
+                5-8s：{角色 B 反应或反转}
+                8-10s：{情绪落点、结尾画面、字幕}
+                对白：
+                A：“{台词，待补充}”
+                B：“{台词，待补充}”
+                镜头：{近景 / 中景 / 过肩 / 双人构图 / 推近 / 跟拍}
+                声音：{环境声、BGM、音效、对白语言}
+                字幕：{中文字幕 / 中英双语 / 无字幕，位置和样式}
+                负面约束：避免口型错位、角色身份变化、表情僵硬、额外人物、台词乱码、突兀跳切。
+                """),
+            new(
+                "builtin-jimeng-viral-promo",
+                "即梦｜短视频宣发模板",
+                "即梦 / Seedance",
+                "宣发",
+                """
+                生成一条产品、项目或内容宣发用的即梦 / Seedance 短视频提示词。
+
+                宣发对象：{产品 / 软件 / 游戏 / 内容 / 活动}
+                核心卖点：{1-3 个真实卖点，不夸大}
+                受众：{目标人群、使用场景、情绪需求}
+                开场钩子：{第一秒吸引注意的画面或动作}
+                展示方式：{产品特写、界面操作、场景使用、前后对比、人物反应}
+                镜头节奏：{快速剪辑 / 稳定推进 / 一镜到底 / 节拍卡点}
+                画面风格：{干净商业 / 科技感 / 生活方式 / 热梗轻喜剧 / 电影感}
+                字幕文案：{短句、少字、清晰，不要大段文字}
+                声音：{BGM、按钮声、提示音、环境声或旁白}
+                输出参数：{9:16 / 16:9 / 1:1，时长，清晰度}
+                合规约束：不要虚假承诺、不要夸大疗效或收益、不要冒充官方背书。
+                负面约束：避免廉价感、背景杂乱、产品变形、文字乱码、主体漂移、无关人物抢戏。
+                """),
+            new(
+                "builtin-jimeng-seedream-image",
+                "即梦｜Seedream 图片提示词",
+                "即梦 / Seedance",
+                "文生图",
+                """
+                生成适合即梦 Seedream 的图片提示词。
+
+                图片目标：{海报 / 商品图 / 角色图 / 场景概念 / 多图融合 / 组图分镜}
+                主体：{人物 / 产品 / 角色 / 建筑 / 物体}
+                关键识别特征：{脸部、发型、服装、产品外形、材质、颜色、标志、道具}
+                参考图：{无 / @图片1 / @图片2，并说明保留主体、风格、构图或色彩}
+                构图：{近景 / 半身 / 全身 / 俯拍 / 仰拍 / 居中 / 三分法 / 留白}
+                场景：{地点、时间、背景元素、空间层次}
+                光线：{自然光、棚拍光、逆光、柔光、霓虹、低调光、高调光}
+                风格：{写实摄影 / 商业海报 / 国风 / 二次元 / 3D / 平面设计 / UI 概念}
+                文字与版式：{是否需要文字、标题、Logo、排版位置；不需要时写“无文字”}
+                输出参数：{比例、清晰度、组图数量}
+                负面约束：避免脸部漂移、手部错误、产品结构错误、文字乱码、水印、低清晰度、无关元素。
                 """),
             new(
                 "builtin-ai-coding-golden",

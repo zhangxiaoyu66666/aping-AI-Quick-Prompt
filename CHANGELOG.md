@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3 - 2026-06-03
+
+- Added ComfyUI and Stable Diffusion prompt output adapters for positive prompts, negative prompts, sampling parameters, and workflow-ready fields.
+- Expanded the original clean-room Jimeng / Dreamina / Seedance target and documented candidate Skill repositories under review.
+- Reworked optimization target selection into a two-level category and target picker for text, image, video, Agent, and custom workflows.
+- Kept cloud sync code out of the GitHub community release and added release checks to prevent OneDrive/WebDAV implementation leakage.
+- Bumped app, core, public demo, and MSIX package version metadata to 1.0.3.
+
 ## 1.0.0 - 2026-06-02
 
 - Added open-source project governance files for public repository readiness.

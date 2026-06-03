@@ -17,6 +17,7 @@ using PromptInputMethod.Core.Prompt;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -60,6 +61,7 @@ public sealed partial class CompactPromptWindow : Window
         new("ChatGPT-Shortcut", "ChatGPT-Shortcut", "通用、写作、提示词工程"),
         new("prompts.chat", "prompts.chat", "开源角色提示词库"),
         new("SD-Anima-Prompt-Studio", "SD-Anima-Prompt-Studio", "文生图、角色、构图"),
+        new("ComfyUI / Stable Diffusion", "ComfyUI / Stable Diffusion", "正负提示词、采样参数、节点字段"),
         new("Veo 3", "Veo 3", "电影镜头、对白、分镜"),
         new("即梦 / Seedance", "即梦 / Seedance", "短视频、产品、首尾帧"),
         new("AI编程", "AI编程", "Codex、Claude Code、反重力")
@@ -121,7 +123,6 @@ public sealed partial class CompactPromptWindow : Window
     private bool _syncingModeSelection;
     private bool _syncingCommonPromptSelection;
     private bool _syncingCommonPromptSearch;
-    private bool _syncingOptimizationTargetSelection;
     private bool _syncingDeepThinkingSelection;
     private bool _loadingSettings;
     private bool _sidebarCollapsed;
@@ -145,9 +146,11 @@ public sealed partial class CompactPromptWindow : Window
     private bool _modelProbeDialogOpen;
     private bool _isGeneratingPrompt;
     private bool _isExiting;
+    private IReadOnlyList<OptimizationCategoryChoice> _optimizationCategoryChoices = [];
+    private IReadOnlyList<OptimizationModeChoice> _optimizationModeChoices = [];
+    private IReadOnlyList<OptimizationModeChoice> _visibleOptimizationModeChoices = [];
     private int _quickTemplatePageIndex;
     private int _mountedSkillPageIndex;
-    private int _optimizationTargetChoicePageIndex;
     private int _historyPageIndex;
     private int _userTemplatePageIndex;
     private int _skillManagementPageIndex;
@@ -172,6 +175,22 @@ public sealed partial class CompactPromptWindow : Window
         string Description);
 
     private sealed record TemplateSourceDefinition(string Source, string Title, string Description);
+
+    private sealed record OptimizationCategoryChoice(string Value, string Title, string Description)
+    {
+        public override string ToString()
+        {
+            return Title;
+        }
+    }
+
+    private sealed record OptimizationModeChoice(string Value, string Category, string Title, string Description)
+    {
+        public override string ToString()
+        {
+            return Title;
+        }
+    }
 
     private sealed record TemplateSourceChoice(string Value, string DisplayTitle, string DisplaySubtitle)
     {
@@ -1171,7 +1190,7 @@ public sealed partial class CompactPromptWindow : Window
                 CustomModeBox.Text = _conversationLockedCustomModeText;
             }
 
-            SetModeRadioState(_selectedMode);
+            SetModeSelectionState(_selectedMode);
             SyncCompactModeBox();
         }
         finally
@@ -2129,7 +2148,7 @@ Skill 文件：{skillPath}
         _syncingModeSelection = true;
         try
         {
-            SetModeRadioState(_selectedMode);
+            SetModeSelectionState(_selectedMode);
             SyncCompactModeBox();
         }
         finally
@@ -3518,6 +3537,7 @@ Skill 文件：{skillPath}
         _settings.Privacy.ModelExternalRequestsEnabled = ModelExternalRequestsEnabledBox.IsChecked == true;
         _settings.Privacy.ModelImageExternalRequestsEnabled = ModelImageExternalRequestsEnabledBox.IsChecked == true;
         _settings.Privacy.RedactBeforeModelSend = RedactBeforeModelSendBox.IsChecked == true;
+
         if (!_hotkeyService.RegisterHotkey(_settings.Hotkey))
         {
             if (showStatus)
@@ -3534,6 +3554,11 @@ Skill 文件：{skillPath}
         {
             SetStatus(_settings.Model.Enabled ? "设置已保存" : "设置已保存，模型关闭时使用本地结构化");
         }
+    }
+
+    private static string GetAppVersionString()
+    {
+        return typeof(CompactPromptWindow).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
     }
 
     private void ToggleSidebarButton_Click(object sender, RoutedEventArgs e)
@@ -4333,7 +4358,7 @@ Skill 文件：{skillPath}
                 }
 
                 _selectedMode = "通用 LLM";
-                SetModeRadioState(_selectedMode);
+                SetModeSelectionState(_selectedMode);
                 SaveUiSettings();
             }
 
@@ -4731,14 +4756,63 @@ Skill 文件：{skillPath}
         SaveUiSettings();
     }
 
-    private void OptimizationTargetChoiceList_ItemClick(object sender, ItemClickEventArgs e)
+    private void OptimizationCategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_uiReady || _syncingOptimizationTargetSelection || e.ClickedItem is not OptimizationTargetItem target)
+        ApplyOptimizationCategoryFromCombo(OptimizationCategoryBox);
+    }
+
+    private void CompactOptimizationCategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        ApplyOptimizationCategoryFromCombo(CompactOptimizationCategoryBox);
+    }
+
+    private void ApplyOptimizationCategoryFromCombo(ComboBox comboBox)
+    {
+        if (!_uiReady || _syncingModeSelection || comboBox.SelectedItem is not OptimizationCategoryChoice category)
         {
             return;
         }
 
-        var requestedMode = MakeOptimizationTargetMode(target.Id);
+        var nextMode = _optimizationModeChoices
+            .FirstOrDefault(choice => string.Equals(choice.Category, category.Value, StringComparison.OrdinalIgnoreCase))
+            ?.Value;
+        if (string.IsNullOrWhiteSpace(nextMode))
+        {
+            return;
+        }
+
+        if (!CanUseConversationMode(nextMode))
+        {
+            RejectConversationModeChange();
+            return;
+        }
+
+        _selectedMode = nextMode;
+        _syncingModeSelection = true;
+        SetModeSelectionState(_selectedMode);
+        _syncingModeSelection = false;
+
+        SelectTemplateSourceForMode(_selectedMode);
+        RefreshModelDisplayText();
+        RefreshScene();
+        RefreshTemplateViews();
+        SaveUiSettings();
+        SetStatus($"{L("已切换优化目标")}：{category.Title}");
+    }
+
+    private void OptimizationModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        ApplyModeChoiceFromCombo(OptimizationModeBox);
+    }
+
+    private void ApplyModeChoiceFromCombo(ComboBox comboBox)
+    {
+        if (!_uiReady || _syncingModeSelection || comboBox.SelectedItem is not OptimizationModeChoice choice)
+        {
+            return;
+        }
+
+        var requestedMode = choice.Value;
         if (!CanUseConversationMode(requestedMode))
         {
             RejectConversationModeChange();
@@ -4747,16 +4821,15 @@ Skill 文件：{skillPath}
 
         _selectedMode = requestedMode;
         _syncingModeSelection = true;
-        SetModeRadioState(_selectedMode);
+        SetModeSelectionState(_selectedMode);
         _syncingModeSelection = false;
 
-        SyncCompactModeBox();
         SelectTemplateSourceForMode(_selectedMode);
         RefreshModelDisplayText();
         RefreshScene();
         RefreshTemplateViews();
         SaveUiSettings();
-        SetStatus($"{L("已切换优化目标")}：{target.Title}");
+        SetStatus($"{L("已切换优化目标")}：{choice.Category} / {choice.Title}");
     }
 
     private void OptimizationTargetManagementList_ItemClick(object sender, ItemClickEventArgs e)
@@ -4765,18 +4838,6 @@ Skill 文件：{skillPath}
         {
             OptimizationTargetManagementList.SelectedItem = target;
         }
-    }
-
-    private void OptimizationTargetChoicePreviousPageButton_Click(object sender, RoutedEventArgs e)
-    {
-        MovePage(ref _optimizationTargetChoicePageIndex, -1);
-        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
-    }
-
-    private void OptimizationTargetChoiceNextPageButton_Click(object sender, RoutedEventArgs e)
-    {
-        MovePage(ref _optimizationTargetChoicePageIndex, 1);
-        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
     }
 
     private void OptimizationTargetPreviousPageButton_Click(object sender, RoutedEventArgs e)
@@ -4793,28 +4854,7 @@ Skill 文件：{skillPath}
 
     private void CompactModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_uiReady || _syncingModeSelection || CompactModeBox.SelectedItem is not ComboBoxItem item)
-        {
-            return;
-        }
-
-        var requestedMode = item.Tag?.ToString() ?? "通用 LLM";
-        if (!CanUseConversationMode(requestedMode))
-        {
-            RejectConversationModeChange();
-            return;
-        }
-
-        _selectedMode = requestedMode;
-        _syncingModeSelection = true;
-        SetModeRadioState(_selectedMode);
-        _syncingModeSelection = false;
-
-        SelectTemplateSourceForMode(_selectedMode);
-        RefreshModelDisplayText();
-        RefreshScene();
-        RefreshTemplateViews();
-        SaveUiSettings();
+        ApplyModeChoiceFromCombo(CompactModeBox);
     }
 
     private async void CompactTemplateBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -4860,8 +4900,10 @@ Skill 文件：{skillPath}
                 return;
             }
 
-            ModeCustomRadio.IsChecked = true;
             _selectedMode = "自定义";
+            _syncingModeSelection = true;
+            SetModeSelectionState(_selectedMode);
+            _syncingModeSelection = false;
         }
 
         SelectTemplateSourceForMode(GetEffectiveMode());
@@ -5657,113 +5699,227 @@ Skill 文件：{skillPath}
     {
         var targets = _optimizationTargetService.Load();
         var selectedId = selectedTargetId ?? GetOptimizationTargetId(_selectedMode);
+        RefreshOptimizationModeChoices(targets);
         RefreshOptimizationTargetLists(targets, selectedId, moveToSelected: true);
-        RefreshCompactOptimizationTargetItems(targets);
-        SyncCompactModeBox();
+        SyncModeSelectionBoxes(_selectedMode);
     }
 
     private void RefreshOptimizationTargetLists(IReadOnlyList<OptimizationTargetItem> targets, string? selectedId, bool moveToSelected)
     {
-        _syncingOptimizationTargetSelection = true;
+        if (moveToSelected)
+        {
+            MovePageToItem(targets, selectedId, ref _optimizationTargetManagementPageIndex, target => target.Id);
+        }
+
+        var managementPageItems = GetPageItems(targets, ref _optimizationTargetManagementPageIndex, out var managementTotalPages);
+        OptimizationTargetManagementList.ItemsSource = managementPageItems;
+
+        OptimizationTargetManagementList.SelectedItem = string.IsNullOrWhiteSpace(selectedId)
+            ? null
+            : managementPageItems.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+
+        UpdatePager(OptimizationTargetPreviousPageButton, OptimizationTargetPagerText, OptimizationTargetNextPageButton, _optimizationTargetManagementPageIndex, managementTotalPages, targets.Count);
+    }
+
+    private void RefreshOptimizationModeChoices(IReadOnlyList<OptimizationTargetItem> targets)
+    {
+        _optimizationModeChoices = BuildOptimizationModeChoices(targets);
+        _optimizationCategoryChoices = BuildOptimizationCategoryChoices(_optimizationModeChoices);
+
+        _syncingModeSelection = true;
         try
         {
-            if (moveToSelected)
-            {
-                MovePageToItem(targets, selectedId, ref _optimizationTargetChoicePageIndex, target => target.Id);
-                MovePageToItem(targets, selectedId, ref _optimizationTargetManagementPageIndex, target => target.Id);
-            }
-
-            var choicePageItems = GetPageItems(targets, ref _optimizationTargetChoicePageIndex, out var choiceTotalPages);
-            var managementPageItems = GetPageItems(targets, ref _optimizationTargetManagementPageIndex, out var managementTotalPages);
-            OptimizationTargetChoiceList.ItemsSource = choicePageItems;
-            OptimizationTargetManagementList.ItemsSource = managementPageItems;
-
-            OptimizationTargetChoiceList.SelectedItem = string.IsNullOrWhiteSpace(selectedId)
-                ? null
-                : choicePageItems.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.OrdinalIgnoreCase));
-            OptimizationTargetManagementList.SelectedItem = string.IsNullOrWhiteSpace(selectedId)
-                ? null
-                : managementPageItems.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.OrdinalIgnoreCase));
-
-            UpdatePager(OptimizationTargetChoicePreviousPageButton, OptimizationTargetChoicePagerText, OptimizationTargetChoiceNextPageButton, _optimizationTargetChoicePageIndex, choiceTotalPages, targets.Count);
-            UpdatePager(OptimizationTargetPreviousPageButton, OptimizationTargetPagerText, OptimizationTargetNextPageButton, _optimizationTargetManagementPageIndex, managementTotalPages, targets.Count);
+            OptimizationCategoryBox.ItemsSource = _optimizationCategoryChoices;
+            CompactOptimizationCategoryBox.ItemsSource = _optimizationCategoryChoices;
+            SyncModeSelectionBoxes(_selectedMode);
         }
         finally
         {
-            _syncingOptimizationTargetSelection = false;
+            _syncingModeSelection = false;
         }
     }
 
-    private void RefreshCompactOptimizationTargetItems(IReadOnlyList<OptimizationTargetItem> targets)
+    private IReadOnlyList<OptimizationModeChoice> BuildOptimizationModeChoices(IReadOnlyList<OptimizationTargetItem> targets)
     {
-        if (CompactModeBox is null)
+        var choices = new List<OptimizationModeChoice>
         {
-            return;
-        }
-
-        for (var i = CompactModeBox.Items.Count - 1; i >= 0; i--)
-        {
-            if (CompactModeBox.Items[i] is ComboBoxItem item
-                && IsOptimizationTargetMode(item.Tag?.ToString()))
-            {
-                CompactModeBox.Items.RemoveAt(i);
-            }
-        }
+            new("通用 LLM", "通用大模型", "通用 LLM", "聊天、总结、改写和普通提示词优化"),
+            new("论文去AI味", "通用大模型", "论文去AI味", "中文论文自然化、降模板腔"),
+            new("文生图", "文生图", "通用文生图", "主体、风格、镜头、光线和负面约束"),
+            new("即梦", "文生视频", "即梦 / Seedance", "短视频、产品、首尾帧和分镜"),
+            new("Veo 3", "文生视频", "Veo 3", "电影镜头、对白、音效和时间轴"),
+            new("AI编程", "Agent", "AI 编程", "Codex、Claude Code、反重力和仓库任务"),
+        };
 
         foreach (var target in targets)
         {
-            var item = new ComboBoxItem
+            if (string.Equals(target.Id, "builtin-academic-humanize-cn", StringComparison.OrdinalIgnoreCase))
             {
-                Tag = MakeOptimizationTargetMode(target.Id),
-                Content = target.Title
-            };
-            if (!string.IsNullOrWhiteSpace(target.Description))
-            {
-                ToolTipService.SetToolTip(item, target.Description);
+                continue;
             }
 
-            CompactModeBox.Items.Add(item);
+            choices.Add(new OptimizationModeChoice(
+                MakeOptimizationTargetMode(target.Id),
+                GetOptimizationModeCategory(target),
+                target.Title,
+                FallbackText(target.Description, target.Compatibility)));
         }
+
+        choices.Add(new OptimizationModeChoice("自定义", "自定义", "自定义平台", "手动填写模型、平台或目标名称"));
+        return choices
+            .GroupBy(choice => choice.Value, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToArray();
     }
 
-    private void SetModeRadioState(string mode)
+    private static IReadOnlyList<OptimizationCategoryChoice> BuildOptimizationCategoryChoices(IReadOnlyList<OptimizationModeChoice> modes)
     {
-        ModeGenericRadio.IsChecked = mode == "通用 LLM";
-        ModeAcademicHumanizeRadio.IsChecked = mode == "论文去AI味";
-        ModeTextImageRadio.IsChecked = mode == "文生图";
-        ModeJimengRadio.IsChecked = mode == "即梦";
-        ModeVeo3Radio.IsChecked = mode == "Veo 3";
-        ModeAiCodingRadio.IsChecked = mode == "AI编程";
-        ModeCustomRadio.IsChecked = mode == "自定义";
-        SelectOptimizationTargetChoice(mode);
+        var descriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["通用大模型"] = "普通聊天模型、论文润色和通用提示词",
+            ["文生图"] = "通用文生图、ComfyUI、Stable Diffusion 等图片模型",
+            ["文生视频"] = "即梦、Seedance、Veo 等视频模型",
+            ["Agent"] = "AI 编程、仓库任务和 Skill 工作流",
+            ["自定义"] = "手动填写平台或目标名称"
+        };
+
+        var ordered = new[] { "通用大模型", "文生图", "文生视频", "Agent", "自定义" };
+        return modes
+            .Select(mode => mode.Category)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(category =>
+            {
+                var index = Array.FindIndex(ordered, item => string.Equals(item, category, StringComparison.OrdinalIgnoreCase));
+                return index < 0 ? ordered.Length : index;
+            })
+            .ThenBy(category => category, StringComparer.OrdinalIgnoreCase)
+            .Select(category => new OptimizationCategoryChoice(
+                category,
+                category,
+                descriptions.TryGetValue(category, out var description) ? description : "用户导入的优化目标分类"))
+            .ToArray();
     }
 
-    private void SelectOptimizationTargetChoice(string mode)
+    private static string GetOptimizationModeCategory(OptimizationTargetItem target)
     {
-        var targetId = GetOptimizationTargetId(mode);
-        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), targetId, moveToSelected: true);
+        if (target.Category.Contains("视频", StringComparison.Ordinal)
+            || target.Compatibility.Contains("Veo", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("Seedance", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("Dreamina", StringComparison.OrdinalIgnoreCase))
+        {
+            return "文生视频";
+        }
+
+        if (target.Category.Contains("图", StringComparison.Ordinal)
+            || target.Compatibility.Contains("ComfyUI", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("Stable Diffusion", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("SDXL", StringComparison.OrdinalIgnoreCase))
+        {
+            return "文生图";
+        }
+
+        if (target.Category.Contains("编程", StringComparison.Ordinal)
+            || target.Compatibility.Contains("Codex", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("Claude Code", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Agent";
+        }
+
+        if (target.Category.Contains("论文", StringComparison.Ordinal)
+            || target.Title.Contains("论文", StringComparison.Ordinal))
+        {
+            return "通用大模型";
+        }
+
+        return string.IsNullOrWhiteSpace(target.Category) ? "自定义" : target.Category;
+    }
+
+    private void SetModeSelectionState(string mode)
+    {
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(mode), moveToSelected: true);
+        SyncModeSelectionBoxes(mode);
     }
 
     private void SyncCompactModeBox()
     {
-        if (CompactModeBox is null)
+        SyncModeSelectionBox(CompactModeBox, _selectedMode);
+    }
+
+    private void SyncModeSelectionBoxes(string mode)
+    {
+        var category = GetOptimizationCategoryForMode(mode);
+        RefreshVisibleOptimizationModeChoices(category);
+        SyncCategorySelectionBox(OptimizationCategoryBox, category);
+        SyncCategorySelectionBox(CompactOptimizationCategoryBox, category);
+        SyncModeSelectionBox(OptimizationModeBox, mode);
+        SyncModeSelectionBox(CompactModeBox, mode);
+        UpdateOptimizationModeDescription(mode);
+    }
+
+    private string GetOptimizationCategoryForMode(string mode)
+    {
+        var choice = _optimizationModeChoices.FirstOrDefault(item =>
+            string.Equals(item.Value, mode, StringComparison.OrdinalIgnoreCase));
+        return choice?.Category
+            ?? _optimizationCategoryChoices.FirstOrDefault()?.Value
+            ?? "通用大模型";
+    }
+
+    private void RefreshVisibleOptimizationModeChoices(string category)
+    {
+        _visibleOptimizationModeChoices = _optimizationModeChoices
+            .Where(choice => string.Equals(choice.Category, category, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        OptimizationModeBox.ItemsSource = _visibleOptimizationModeChoices;
+        CompactModeBox.ItemsSource = _visibleOptimizationModeChoices;
+    }
+
+    private void SyncCategorySelectionBox(ComboBox? comboBox, string category)
+    {
+        if (comboBox is null)
         {
             return;
         }
 
-        _syncingModeSelection = true;
-        foreach (var item in CompactModeBox.Items.OfType<ComboBoxItem>())
+        var choice = _optimizationCategoryChoices.FirstOrDefault(item =>
+            string.Equals(item.Value, category, StringComparison.OrdinalIgnoreCase));
+        if (choice is not null)
         {
-            if (string.Equals(item.Tag?.ToString(), _selectedMode, StringComparison.OrdinalIgnoreCase))
-            {
-                CompactModeBox.SelectedItem = item;
-                _syncingModeSelection = false;
-                return;
-            }
+            comboBox.SelectedItem = choice;
+            return;
         }
 
-        CompactModeBox.SelectedIndex = 0;
-        _syncingModeSelection = false;
+        comboBox.SelectedIndex = _optimizationCategoryChoices.Count > 0 ? 0 : -1;
+    }
+
+    private void SyncModeSelectionBox(ComboBox? comboBox, string mode)
+    {
+        if (comboBox is null)
+        {
+            return;
+        }
+
+        var choice = _visibleOptimizationModeChoices.FirstOrDefault(item =>
+            string.Equals(item.Value, mode, StringComparison.OrdinalIgnoreCase));
+        if (choice is not null)
+        {
+            comboBox.SelectedItem = choice;
+            return;
+        }
+
+        comboBox.SelectedIndex = _visibleOptimizationModeChoices.Count > 0 ? 0 : -1;
+    }
+
+    private void UpdateOptimizationModeDescription(string mode)
+    {
+        var choice = _optimizationModeChoices.FirstOrDefault(item =>
+            string.Equals(item.Value, mode, StringComparison.OrdinalIgnoreCase));
+        if (OptimizationModeDescriptionText is not null)
+        {
+            OptimizationModeDescriptionText.Text = choice is null
+                ? "按类别选择模型目标。"
+                : $"{choice.Category} / {choice.Title}：{choice.Description}";
+        }
     }
 
     private void SelectTemplateSourceForMode(string mode)
@@ -5830,7 +5986,7 @@ Skill 文件：{skillPath}
         _selectedMode = _settings.Ui.SelectedMode;
         RefreshOptimizationTargetPickers(GetOptimizationTargetId(_selectedMode));
         _syncingModeSelection = true;
-        SetModeRadioState(_selectedMode);
+        SetModeSelectionState(_selectedMode);
         _syncingModeSelection = false;
         SyncCompactModeBox();
         CustomModeBox.Text = _settings.Ui.CustomMode;
@@ -7325,37 +7481,46 @@ User requirement:
     private static string BuildJimengStructuredPrompt(string userRequest, string primaryLanguage)
     {
         return $$"""
-生成一段适合即梦 / Seedance 的短视频提示词。
+生成一份适合即梦 / Seedance / Dreamina / Seedream 的最终提示词。
 
-【1. 主题】
-{视频主题 / 核心意图}
+【任务类型】
+{文生视频 / 图生视频 / 首尾帧过渡 / 产品宣发 / 短剧对白 / Seedream 图片 / 视频编辑}
 
-【2. 风格】
-{短视频风格 / 写实 / 电影感 / 商业广告 / 二次元 / 其他}
+【生成目标】
+{一句话说明最终要生成什么画面或视频，以及用户真正想达成的效果}
 
-【3. 画面主体】
-{人物 / 产品 / 场景 / 事件 / 关键物体}
+【素材与引用】
+{无参考素材 / @图片1 / @图片2 / @视频1 / @音频1；说明每个素材用于控制主体、风格、动作、构图、音乐或转场}
 
-【4. 画面细节】
-{主体外观、环境、道具、色彩、构图}
+【主体与场景】
+{人物、产品、物体、环境、背景层次、关键识别特征、需要保持一致的身份或产品结构}
 
-【5. 动态效果】
-{主体动作、镜头运动、转场方式、节奏变化}
+【镜头设计】
+{景别、视角、焦段感、构图、对焦、景深、推近、拉远、横移、环绕、跟拍、手持感、稳定器或一镜到底}
 
-【6. 镜头与节奏】
-{景别、视角、镜头运动、节奏快慢、是否分镜}
+【时间轴 / 分镜】
+0-2s：{开场画面、主体出现、镜头动作、声音}
+2-5s：{主要动作、情绪或卖点、镜头推进}
+5-8s：{变化、转场、视觉高潮或信息揭示}
+8-10s：{收束画面、停留、字幕或品牌记忆点}
 
-【7. 字幕】
-{是否需要字幕、字幕内容、字幕位置、字幕样式}
+【动作与表演】
+{主体动作、表情、姿态、互动、转场；短剧任务补充对白、情绪变化、停顿和口型一致性}
 
-【8. BGM / 音效】
-{音乐氛围、环境声、关键音效}
+【视觉风格】
+{整体风格、光线来源、色彩、质感、画面密度、氛围；把电影感、商业感、二次元、国风、科技感等落实到镜头和材质}
 
-【9. 格式要求】
-{时长、画幅比例、平台、清晰度、首尾帧要求}
+【声音与字幕】
+{BGM、环境声、关键音效、对白、字幕内容、字幕位置、字幕语言；不需要声音时写无对白，保留环境氛围声}
 
-【10. 负面约束】
-避免画面闪烁、主体漂移、人物或产品变形、文字乱码、无关元素、风格跑偏、突然跳切、低清晰度。
+【平台参数】
+{时长、画幅比例、清晰度、输出语言、是否需要字幕、是否保留参考图主体一致性}
+
+【负面约束】
+避免画面闪烁、主体漂移、身份变化、产品变形、额外肢体、无关人物、文字乱码、水印、低清晰度、突然跳切、光线方向混乱、风格跑偏、危险或违规内容。
+
+【需要补充的信息】
+{只列真正影响生成质量的缺失项，最多 5 条}
 
 【用户需求补充】
 主输出语言：{{primaryLanguage}}
@@ -7392,11 +7557,13 @@ Local structure draft:
 硬性规则：
 1. 只输出最终提示词正文，不要输出解释、分析、推理过程、Markdown 代码块。
 2. 不要输出 TCREI，不要输出 Stable Diffusion 标签堆，不要默认写实人像模板。
-3. 必须按短视频生产结构输出：主题、风格、画面主体、画面细节、动态效果、镜头与节奏、字幕、BGM / 音效、格式要求、负面约束。
-4. 主输出语言必须是中文；英文区域会单独同步输出英文。
-5. 保留用户原意，把主题、平台、画幅、时长、人物 / 产品 / 场景、首尾帧、动作、镜头运动、字幕、BGM 等信息填入对应部分。
-6. 信息不足时使用“待补充/待确认”，不要替用户编造具体品牌、人物、时长、比例或卖点。
-7. 如果是首尾帧或图生视频，必须强调主体一致性、关键特征不变、转场运动、节奏和避免漂移。
+3. 必须先识别任务类型：文生视频、图生视频、首尾帧过渡、产品宣发、短剧对白、Seedream 图片或视频编辑。
+4. 必须按生产结构输出：任务类型、生成目标、素材与引用、主体与场景、镜头设计、时间轴/分镜、动作与表演、视觉风格、声音与字幕、平台参数、负面约束、需要补充的信息。
+5. 主输出语言必须是中文；英文区域会单独同步输出英文。
+6. 保留用户原意，把主题、平台、画幅、时长、人物 / 产品 / 场景、参考图、首尾帧、动作、镜头运动、字幕、BGM 等信息填入对应部分。
+7. 信息不足时使用“待补充/待确认”，不要替用户编造具体品牌、人物、时长、比例、素材、对白或卖点。
+8. 如果是首尾帧、图生视频或多图融合，必须强调主体一致性、关键特征不变、参考素材作用、转场运动、节奏和避免漂移。
+9. 如果是短剧或宣发，必须把台词、字幕、声音、卖点和镜头节奏写成可执行画面语言，不要写空泛营销词。
 
 用户原始需求：
 {FallbackText(userRequest, "请生成一份即梦 / Seedance 短视频提示词。")}
@@ -7523,14 +7690,14 @@ Local structure draft:
 
     private static string BuildEnglishTranslationStructureRule(bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget)
     {
-        return isVideoMode
+        return selectedTarget is not null && !string.IsNullOrWhiteSpace(selectedTarget.EnglishTranslationRule)
+            ? selectedTarget.EnglishTranslationRule
+            : isVideoMode
             ? "Preserve the exact video prompt structure, section order, placeholders, timeline beats, dialogue lines, audio details, and negative constraints."
             : isTextToImageMode
             ? "Preserve the exact text-to-image section order, numbered headings, placeholders, and negative constraints."
             : isAgenticMode
             ? "Preserve the exact agentic coding or skill-authoring structure, headings, placeholders, safety boundaries, verification commands, directory paths, and file names such as SKILL.md, AGENTS.md, CLAUDE.md, and Rules."
-            : selectedTarget is not null && !string.IsNullOrWhiteSpace(selectedTarget.EnglishTranslationRule)
-            ? selectedTarget.EnglishTranslationRule
             : isAcademicHumanizeMode
             ? "Preserve the academic rewriting prompt as an executable instruction. Keep the anti-AI-tone banned phrase list, no-listing rules, no-fabrication rules, and the final text-only output rule."
             : "Preserve the exact TCREI structure and order. Convert section labels to [Task], [Context], [References], [Evaluate], [Iterate].";
@@ -7648,7 +7815,11 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
     private static bool IsTextToImageMode(string selectedScenes, string effectiveMode)
     {
         return selectedScenes.Contains("文生图", StringComparison.Ordinal)
-            || string.Equals(effectiveMode, "文生图", StringComparison.OrdinalIgnoreCase);
+            || effectiveMode.Contains("文生图", StringComparison.Ordinal)
+            || effectiveMode.Contains("ComfyUI", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("Stable Diffusion", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SDXL", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SD3", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsVideoMode()

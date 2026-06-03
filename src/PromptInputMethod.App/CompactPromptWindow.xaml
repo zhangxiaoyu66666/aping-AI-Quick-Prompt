@@ -341,32 +341,14 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7C1;" FontSize="18" />
                             <TextBlock Text="优化目标" Style="{StaticResource SectionTitleStyle}" />
                         </StackPanel>
-                        <ComboBox x:Name="CompactModeBox" Grid.Row="1" Header="优化目标" HorizontalAlignment="Stretch" SelectionChanged="CompactModeBox_SelectionChanged">
-                            <ComboBoxItem Tag="通用 LLM" Content="通用 LLM" />
-                            <ComboBoxItem Tag="论文去AI味" Content="论文去AI味" />
-                            <ComboBoxItem Tag="文生图" Content="文生图" />
-                            <ComboBoxItem Tag="即梦" Content="即梦" />
-                            <ComboBoxItem Tag="Veo 3" Content="Veo 3" />
-                            <ComboBoxItem Tag="AI编程" Content="AI编程" />
-                            <ComboBoxItem Tag="自定义" Content="自定义平台" />
-                        </ComboBox>
-                        <ComboBox x:Name="CompactTemplateBox" Grid.Row="2" Header="模板" PlaceholderText="选择目标对应模板" HorizontalAlignment="Stretch" SelectionChanged="CompactTemplateBox_SelectionChanged">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Spacing="1">
-                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding Source}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <ComboBox x:Name="CompactSkillBox" Grid.Row="3" Header="Skill" PlaceholderText="选择 Skill（可选）" HorizontalAlignment="Stretch" SelectionChanged="CompactSkillBox_SelectionChanged">
+                        <ComboBox x:Name="CompactOptimizationCategoryBox" Grid.Row="1" Header="大类" HorizontalAlignment="Stretch" SelectionChanged="CompactOptimizationCategoryBox_SelectionChanged">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Spacing="1">
@@ -376,7 +358,37 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <StackPanel Grid.Row="4" Spacing="4" VerticalAlignment="Bottom">
+                        <ComboBox x:Name="CompactModeBox" Grid.Row="2" Header="目标" HorizontalAlignment="Stretch" SelectionChanged="CompactModeBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Spacing="1" MinWidth="220">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <ComboBox x:Name="CompactTemplateBox" Grid.Row="3" Header="模板" PlaceholderText="选择目标对应模板" HorizontalAlignment="Stretch" SelectionChanged="CompactTemplateBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Source}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <ComboBox x:Name="CompactSkillBox" Grid.Row="4" Header="Skill" PlaceholderText="选择 Skill（可选）" HorizontalAlignment="Stretch" SelectionChanged="CompactSkillBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Spacing="1">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <StackPanel Grid.Row="5" Spacing="4" VerticalAlignment="Bottom">
                             <TextBlock x:Name="SceneText" Text="优化目标：通用 LLM" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                             <TextBlock x:Name="StatusText" FontSize="12" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                         </StackPanel>
@@ -874,36 +886,28 @@
                                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE76B;" FontSize="15" />
                                     </Button>
                                 </Grid>
-                                <RadioButton x:Name="ModeGenericRadio" GroupName="Mode" Tag="通用 LLM" Content="通用 LLM" IsChecked="True" Checked="ModeRadio_Checked" />
-                                <RadioButton x:Name="ModeAcademicHumanizeRadio" GroupName="Mode" Tag="论文去AI味" Content="论文去AI味" Checked="ModeRadio_Checked" />
-                                <RadioButton x:Name="ModeTextImageRadio" GroupName="Mode" Tag="文生图" Content="文生图" Checked="ModeRadio_Checked" />
-                                <RadioButton x:Name="ModeJimengRadio" GroupName="Mode" Tag="即梦" Content="即梦" Checked="ModeRadio_Checked" />
-                                <RadioButton x:Name="ModeVeo3Radio" GroupName="Mode" Tag="Veo 3" Content="Veo 3" Checked="ModeRadio_Checked" />
-                                <RadioButton x:Name="ModeAiCodingRadio" GroupName="Mode" Tag="AI编程" Content="AI编程" Checked="ModeRadio_Checked" />
-                                <StackPanel x:Name="OptimizationTargetChoicePanel" Spacing="8">
-                                    <TextBlock Text="已挂载优化目标" Style="{StaticResource MutedTextStyle}" />
-                                    <ListView x:Name="OptimizationTargetChoiceList" MaxHeight="180" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OptimizationTargetChoiceList_ItemClick" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                        <ListView.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Padding="8,6" RowSpacing="2">
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
-                                                    </Grid.RowDefinitions>
-                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Grid.Row="1" Text="{Binding Category}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListView.ItemTemplate>
-                                    </ListView>
-                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                                        <Button x:Name="OptimizationTargetChoicePreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" MinHeight="32" Padding="10,4" Click="OptimizationTargetChoicePreviousPageButton_Click" />
-                                        <TextBlock x:Name="OptimizationTargetChoicePagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
-                                        <Button x:Name="OptimizationTargetChoiceNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" MinHeight="32" Padding="10,4" Click="OptimizationTargetChoiceNextPageButton_Click" />
-                                    </StackPanel>
-                                </StackPanel>
-                                <RadioButton x:Name="ModeCustomRadio" GroupName="Mode" Tag="自定义" Content="自定义平台" Checked="ModeRadio_Checked" />
-                                <TextBox x:Name="CustomModeBox" PlaceholderText="例如：豆包 / Midjourney / GPT-4o / 本地模型" TextChanged="CustomModeBox_TextChanged" />
+                                <ComboBox x:Name="OptimizationCategoryBox" Header="大类" PlaceholderText="选择大类" HorizontalAlignment="Stretch" SelectionChanged="OptimizationCategoryBox_SelectionChanged">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Spacing="1" MinWidth="260">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <ComboBox x:Name="OptimizationModeBox" Header="目标" PlaceholderText="选择目标" HorizontalAlignment="Stretch" SelectionChanged="OptimizationModeBox_SelectionChanged">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Spacing="1" MinWidth="260">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock x:Name="OptimizationModeDescriptionText" Text="按类别选择模型目标。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
+                                <TextBox x:Name="CustomModeBox" Header="自定义平台" PlaceholderText="例如：豆包 / Midjourney / GPT-4o / 本地模型" TextChanged="CustomModeBox_TextChanged" />
                                 <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8" />
                                 <TextBlock Text="快速提示词模板" Style="{StaticResource SectionTitleStyle}" />
                                 <Grid ColumnSpacing="8">
