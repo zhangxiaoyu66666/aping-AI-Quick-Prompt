@@ -36,7 +36,7 @@ try {
     }
 
     $packageRoot = Join-Path $repoRoot $OutputRoot
-    $staging = Join-Path $packageRoot "AI-Quick-Prompt-1.0.0-$Platform"
+    $staging = Join-Path $packageRoot "AI-Quick-Prompt-1.0.4-$Platform"
     if (Test-Path $staging) {
         Remove-Item -LiteralPath $staging -Recurse -Force
     }

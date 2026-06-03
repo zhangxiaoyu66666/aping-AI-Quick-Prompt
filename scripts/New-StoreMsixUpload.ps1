@@ -2,7 +2,7 @@ param(
     [string]$Configuration = "Release",
     [ValidateSet("x64", "Win32")]
     [string]$Platform = "x64",
-    [string]$Version = "1.0.0.0",
+    [string]$Version = "1.0.4.0",
     [string]$PackageName = "XiaYuStudio.AIQuickPrompt",
     [string]$Publisher = "CN=XiaYu Studio",
     [string]$PublisherDisplayName = "XiaYu Studio",

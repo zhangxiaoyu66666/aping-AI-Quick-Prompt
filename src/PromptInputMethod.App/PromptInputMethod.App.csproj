@@ -14,10 +14,10 @@
     <Authors>XiaYu Studio</Authors>
     <Copyright>Copyright (C) 2026 XiaYu Studio</Copyright>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <Version>1.0.4</Version>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
+    <InformationalVersion>1.0.4</InformationalVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <MakePriExe Condition="'$(MakePriExe)' == '' And Exists('$(WindowsSdkBinPath)x64\makepri.exe')">$(WindowsSdkBinPath)x64\makepri.exe</MakePriExe>

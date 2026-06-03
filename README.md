@@ -10,7 +10,7 @@ It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. 
 
 - **Chat-style requirement refinement**: iterate from a rough request into a more precise prompt, with follow-up questions when the request is incomplete.
 - **Chinese + English output panes**: keep the primary localized prompt and English prompt visible side by side.
-- **Optimization targets**: general LLM, text-to-image, Jimeng / Seedance style video prompts, Veo 3, AI coding, Skill systems, and custom targets.
+- **Optimization targets**: general LLM, text-to-image, ComfyUI / Stable Diffusion field adapters, Jimeng / Seedance style video prompts, Veo 3, AI coding, Skill systems, and custom targets.
 - **Skill mounting**: mount a folder containing `SKILL.md`, let AI Quick Prompt match it to the current request, then inject the Skill as high-priority workflow context for direct execution.
 - **Template library**: built-in template groups inspired by `ChatGPT-Shortcut`, `prompts.chat`, and `SD-Anima-Prompt-Studio`, plus the bundled `Female Portrait Prompt Director Skill` and user templates with categories.
 - **Quick prompts**: user-managed common prompts with left-click copy and right-click edit/delete.
@@ -93,6 +93,8 @@ AI Quick Prompt includes built-in template groups inspired by open-source prompt
 
 The original project names are intentionally preserved in source labels for attribution. AI Quick Prompt does not include unrelated website, account, community, membership, or paid-feature logic from those projects. Bundled Skill packages retain their original LICENSE and NOTICE files under `src/PromptInputMethod.App/Data/skills/`.
 The copied upstream source trees are not tracked in the public repo; only generated template data and source labels are kept.
+
+Jimeng / Dreamina / Seedance related Skill candidates are tracked in [docs/skill-source-candidates.md](docs/skill-source-candidates.md). The built-in `即梦导演 Skill` and Jimeng template entries are original clean-room project content and do not copy candidate repository code, prompt text, or Skill files. Candidate repositories become third-party built-in templates or Skill packages only after license scope, import scope, platform terms, and privacy impact are reviewed.
 
 ## Privacy Model
 

@@ -5,6 +5,8 @@ namespace PromptInputMethod.App.Services;
 public sealed class PromptFavoriteService
 {
     private readonly AppDatabaseService _database = new();
+    private readonly object _cacheGate = new();
+    private IReadOnlyList<PromptFavorite>? _cachedItems;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -13,16 +15,28 @@ public sealed class PromptFavoriteService
 
     public IReadOnlyList<PromptFavorite> Load()
     {
+        lock (_cacheGate)
+        {
+            if (_cachedItems is not null)
+            {
+                return _cachedItems;
+            }
+        }
+
         var databaseItems = _database.LoadRecords<PromptFavorite>(AppDatabaseService.KindFavorite, 500);
         if (databaseItems.Count > 0)
         {
-            return databaseItems
+            var orderedItems = databaseItems
                 .Where(item => !string.IsNullOrWhiteSpace(item.Text))
                 .OrderByDescending(item => item.UpdatedAt)
                 .ToArray();
+            SetCachedItems(orderedItems);
+            return orderedItems;
         }
 
-        return Array.Empty<PromptFavorite>();
+        var empty = Array.Empty<PromptFavorite>();
+        SetCachedItems(empty);
+        return empty;
     }
 
     public PromptFavorite Save(string text, string? scene, string? source, string? category = null, string? title = null)
@@ -55,6 +69,7 @@ public sealed class PromptFavoriteService
             };
             items.Insert(0, existing);
             SaveRecords(items);
+            SetCachedItems(items);
             return existing;
         }
 
@@ -68,7 +83,9 @@ public sealed class PromptFavoriteService
             now,
             NormalizeCategory(category, "未分类"));
         items.Insert(0, favorite);
-        SaveRecords(items.Take(100).ToArray());
+        var savedItems = items.Take(100).ToArray();
+        SaveRecords(savedItems);
+        SetCachedItems(savedItems);
         return favorite;
     }
 
@@ -79,6 +96,7 @@ public sealed class PromptFavoriteService
         if (removed > 0)
         {
             SaveRecords(items);
+            SetCachedItems(items);
         }
 
         return removed > 0;
@@ -121,7 +139,9 @@ public sealed class PromptFavoriteService
             changed++;
         }
 
-        SaveRecords(items.Take(500).ToArray());
+        var savedItems = items.Take(500).ToArray();
+        SaveRecords(savedItems);
+        SetCachedItems(savedItems);
         return changed;
     }
 
@@ -198,6 +218,17 @@ public sealed class PromptFavoriteService
                 item.CreatedAt,
                 item.UpdatedAt)),
             updateSearchIndex: false);
+    }
+
+    private void SetCachedItems(IReadOnlyList<PromptFavorite> items)
+    {
+        lock (_cacheGate)
+        {
+            _cachedItems = items
+                .Where(item => !string.IsNullOrWhiteSpace(item.Text))
+                .OrderByDescending(item => item.UpdatedAt)
+                .ToArray();
+        }
     }
 
     private static string BuildTitle(string text)

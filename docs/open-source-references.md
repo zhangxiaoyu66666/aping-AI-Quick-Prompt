@@ -35,6 +35,19 @@
   - 本项目将其作为内置 Skill 包复制到 `src/PromptInputMethod.App/Data/skills/female-portrait-director/`，随包保留原 `LICENSE`、`NOTICE.md`、`README.md` 与 `SKILL.md`；运行时仅作为文本工作流上下文使用，不执行外部脚本。
   - 啊拼的提示词输出框会适配为纯文本输出，去除 Markdown 代码块包装，但保留原 Skill 的提示词结构、负面约束与安全边界要求。
 
+## 候选 Skill 研究清单
+
+即梦 / Dreamina / Seedance 相关候选 Skill 统一记录在 `docs/skill-source-candidates.md`。这些仓库目前仅作为研究对象，不是内置模板来源，也不是当前发布包的第三方依赖。
+
+当前内置的 `即梦导演 Skill` 优化目标和即梦模板为啊拼原创干净房间实现，不包含候选仓库的代码、README、提示词正文、Skill 文件、脚本或平台 API 调用实现。
+
+导入原则：
+
+- 优先研究 MIT、MIT-0、Apache-2.0 等宽松许可证项目。
+- 对 GitHub API 未识别许可证或没有仓库 LICENSE 的项目，只能学习架构，不能复制正文、代码、提示词或 Skill 文件。
+- GPL API/CLI/Skill 项目只能本地学习，不进入啊拼内置包、微软商店分支或商业分发链路。
+- 涉及浏览器自动化、账号登录、平台 CLI 或平台 API 调用的项目，需要另行审查服务条款、隐私影响和用户授权路径。
+
 ## 运行时与框架
 
 - Microsoft Windows App SDK / WinUI 3

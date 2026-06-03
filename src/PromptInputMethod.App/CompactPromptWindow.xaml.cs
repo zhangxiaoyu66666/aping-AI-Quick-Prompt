@@ -14,8 +14,10 @@ using PromptInputMethod.App.Services;
 using PromptInputMethod.Core.Llm;
 using PromptInputMethod.Core.Ocr;
 using PromptInputMethod.Core.Prompt;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -44,8 +46,11 @@ public sealed partial class CompactPromptWindow : Window
     private const double RightPanelExpandWidth = 840;
     private const double OutputStackWidth = 940;
     private const double OutputUnstackWidth = 1020;
-    private const int TypewriterFrameDelayMs = 12;
-    private const int TypewriterMaxFrames = 140;
+    private const int TypewriterFrameDelayMs = 18;
+    private const int TypewriterMinDurationMs = 700;
+    private const int TypewriterMaxDurationMs = 5200;
+    private const int TypewriterBoundaryLookahead = 8;
+    private const int ListPageSize = 10;
     private const string SkillTemplateSource = "Skill";
     private static readonly nint HwndTopmost = new(-1);
     private static readonly nint HwndNotTopmost = new(-2);
@@ -56,6 +61,7 @@ public sealed partial class CompactPromptWindow : Window
         new("ChatGPT-Shortcut", "ChatGPT-Shortcut", "通用、写作、提示词工程"),
         new("prompts.chat", "prompts.chat", "开源角色提示词库"),
         new("SD-Anima-Prompt-Studio", "SD-Anima-Prompt-Studio", "文生图、角色、构图"),
+        new("ComfyUI / Stable Diffusion", "ComfyUI / Stable Diffusion", "正负提示词、采样参数、节点字段"),
         new("Veo 3", "Veo 3", "电影镜头、对白、分镜"),
         new("即梦 / Seedance", "即梦 / Seedance", "短视频、产品、首尾帧"),
         new("AI编程", "AI编程", "Codex、Claude Code、反重力")
@@ -95,6 +101,11 @@ public sealed partial class CompactPromptWindow : Window
     private readonly LocalizationService _localizationService = new();
     private readonly AppDatabaseService _databaseService = new();
     private readonly OpenAiCompatibleClient _llmClient = new();
+    private readonly OneDriveLocalFolderService _oneDriveLocalFolderService = new();
+    private readonly OneDriveHistorySyncService _oneDriveHistorySyncService = new();
+    private readonly OneDriveClientLauncherService _oneDriveClientLauncherService = new();
+    private readonly OneDriveVaultCacheService _oneDriveVaultCacheService = new();
+    private readonly WebDavHistorySyncService _webDavHistorySyncService = new();
     private readonly Dictionary<string, string> _originalLocalizedValues = new();
     private readonly DispatcherTimer _modelProbeTimer = new();
     private TrayIconService? _trayIconService;
@@ -117,7 +128,6 @@ public sealed partial class CompactPromptWindow : Window
     private bool _syncingModeSelection;
     private bool _syncingCommonPromptSelection;
     private bool _syncingCommonPromptSearch;
-    private bool _syncingOptimizationTargetSelection;
     private bool _syncingDeepThinkingSelection;
     private bool _loadingSettings;
     private bool _sidebarCollapsed;
@@ -135,9 +145,25 @@ public sealed partial class CompactPromptWindow : Window
     private bool _outputsStacked;
     private bool _responsiveLayoutQueued;
     private bool _applyingResponsiveLayout;
+    private bool _templateSearchRefreshQueued;
+    private bool _historySearchRefreshQueued;
+    private bool _commonPromptSearchRefreshQueued;
+    private bool _oneDriveSyncInProgress;
+    private bool _webDavSyncInProgress;
     private bool _modelProbeDialogOpen;
     private bool _isGeneratingPrompt;
     private bool _isExiting;
+    private IReadOnlyList<OptimizationCategoryChoice> _optimizationCategoryChoices = [];
+    private IReadOnlyList<OptimizationModeChoice> _optimizationModeChoices = [];
+    private IReadOnlyList<OptimizationModeChoice> _visibleOptimizationModeChoices = [];
+    private int _quickTemplatePageIndex;
+    private int _mountedSkillPageIndex;
+    private int _historyPageIndex;
+    private int _userTemplatePageIndex;
+    private int _skillManagementPageIndex;
+    private int _optimizationTargetManagementPageIndex;
+    private int _commonPromptPageIndex;
+    private int _compactCommonPromptPageIndex;
     private CancellationTokenSource? _outputTypewriterCts;
     private string? _pendingDiffBasePrompt;
     private string? _pendingUserReply;
@@ -156,6 +182,38 @@ public sealed partial class CompactPromptWindow : Window
         string Description);
 
     private sealed record TemplateSourceDefinition(string Source, string Title, string Description);
+
+    private sealed record OptimizationCategoryChoice(string Value, string Title, string Description)
+    {
+        public override string ToString()
+        {
+            return Title;
+        }
+    }
+
+    private sealed record OptimizationModeChoice(string Value, string Category, string Title, string Description)
+    {
+        public override string ToString()
+        {
+            return Title;
+        }
+    }
+
+    private readonly record struct OptimizationTargetSuggestion(string Mode, string DisplayName, string Reason);
+
+    private enum PromptFieldCopyKind
+    {
+        Primary,
+        Constraint,
+        Parameter
+    }
+
+    private sealed record PromptFieldCopyPlan(
+        string ButtonText,
+        string Label,
+        bool PreferEnglishOutput,
+        IReadOnlyList<string> StartLabels,
+        IReadOnlyList<string> StopLabels);
 
     private sealed record TemplateSourceChoice(string Value, string DisplayTitle, string DisplaySubtitle)
     {
@@ -234,6 +292,7 @@ public sealed partial class CompactPromptWindow : Window
         RefreshTemplateViews();
         RefreshAboutUi();
         _uiReady = true;
+        QueueOneDriveStartupSnapshotProbe();
         QueueRefreshSearchIndex();
         RefreshScene();
         RefreshModelDisplayText();
@@ -548,7 +607,12 @@ public sealed partial class CompactPromptWindow : Window
         yield return HelpPage;
     }
 
-    private static void AnimateElementIn(FrameworkElement? element, double verticalOffset, int durationMs)
+    private bool AreAnimationsEnabled()
+    {
+        return _settings.Ui.EnableAnimations;
+    }
+
+    private void AnimateElementIn(FrameworkElement? element, double verticalOffset, int durationMs)
     {
         if (element is null)
         {
@@ -559,6 +623,12 @@ public sealed partial class CompactPromptWindow : Window
         {
             transform = new TranslateTransform();
             element.RenderTransform = transform;
+        }
+
+        if (!AreAnimationsEnabled())
+        {
+            transform.Y = 0;
+            return;
         }
 
         transform.Y = verticalOffset;
@@ -610,6 +680,32 @@ public sealed partial class CompactPromptWindow : Window
         SceneText.Text = $"{L("优化目标：")}{target}";
         BottomSceneText.Text = $"{L("优化目标：")}{target}";
         BottomLanguageText.Text = L("输出语言：中英双语");
+        RefreshFieldCopyButtons();
+    }
+
+    private void RefreshFieldCopyButtons()
+    {
+        var primary = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Primary);
+        var constraint = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Constraint);
+        var parameter = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Parameter);
+
+        ApplyFieldCopyButton(CompactFieldCopyPrimaryButton, primary);
+        ApplyFieldCopyButton(ExpandedFieldCopyPrimaryButton, primary);
+        ApplyFieldCopyButton(CompactFieldCopyConstraintButton, constraint);
+        ApplyFieldCopyButton(ExpandedFieldCopyConstraintButton, constraint);
+        ApplyFieldCopyButton(CompactFieldCopyParameterButton, parameter);
+        ApplyFieldCopyButton(ExpandedFieldCopyParameterButton, parameter);
+    }
+
+    private void ApplyFieldCopyButton(Button? button, PromptFieldCopyPlan plan)
+    {
+        if (button is null)
+        {
+            return;
+        }
+
+        button.Content = L(plan.ButtonText);
+        ToolTipService.SetToolTip(button, $"{L("复制")}{L(plan.Label)}");
     }
 
     private async void OptimizeButton_Click(object sender, RoutedEventArgs e)
@@ -650,6 +746,11 @@ public sealed partial class CompactPromptWindow : Window
         var context = GetTargetWindowContext();
         var scene = _sceneDetector.Detect(context);
         var userRequest = string.IsNullOrWhiteSpace(overrideUserRequest) ? GetUserInput() : overrideUserRequest.Trim();
+        if (overrideUserRequest is null)
+        {
+            TryApplySuggestedOptimizationTarget(userRequest);
+        }
+
         LockConversationTargetIfNeeded();
         if (overrideUserRequest is null)
         {
@@ -682,10 +783,11 @@ public sealed partial class CompactPromptWindow : Window
         var selectedOptimizationTarget = GetSelectedOptimizationTarget();
         var finalPrompt = localPrompt;
         var fallbackQuestionSource = matchedSkill is null ? localPrompt : baseLocalPrompt;
-        PromptProtocolResult protocolResult = new(localPrompt, BuildLocalFollowUpQuestion(fallbackQuestionSource), BuildLocalMissingItems(fallbackQuestionSource), false, null);
+        PromptProtocolResult protocolResult = new(localPrompt, null, BuildLocalFollowUpQuestion(fallbackQuestionSource), BuildLocalMissingItems(fallbackQuestionSource), false, null);
         LlmRequestOptions? llmOptions = null;
         var canSyncEnglishWithModel = false;
         var deepThinkingEnabled = IsDeepThinkingEnabled();
+        var pendingThinkingMessage = AddPendingThinkingMessage(deepThinkingEnabled);
 
         SceneText.Text = FormatSceneText(scene);
 
@@ -708,7 +810,8 @@ public sealed partial class CompactPromptWindow : Window
                 var providerName = DetectProviderName(llmOptions.BaseUrl, llmOptions.Model);
                 try
                 {
-                    var modelResult = await _llmClient.CompleteWithResultAsync(new LlmRequest(promptToSend, imagesToSend, reasoningOptions), llmOptions);
+                    var streamProgress = new PendingThinkingProgress(pendingThinkingMessage);
+                    var modelResult = await _llmClient.CompleteWithResultStreamingAsync(new LlmRequest(promptToSend, imagesToSend, reasoningOptions), llmOptions, streamProgress);
                     await Task.Run(() => _modelSendAuditService.Save(
                         providerName,
                         llmOptions.Model,
@@ -732,7 +835,8 @@ public sealed partial class CompactPromptWindow : Window
                         }
 
                         var cleanedPrompt = StripPromptMarkdown(parsed.Prompt);
-                        return (Protocol: parsed with { Prompt = cleanedPrompt }, Prompt: cleanedPrompt);
+                        var cleanedEnglishPrompt = StripPromptMarkdown(parsed.EnglishPrompt ?? string.Empty);
+                        return (Protocol: parsed with { Prompt = cleanedPrompt, EnglishPrompt = cleanedEnglishPrompt }, Prompt: cleanedPrompt);
                     });
 
                     protocolResult = normalized.Protocol;
@@ -765,21 +869,35 @@ public sealed partial class CompactPromptWindow : Window
         }
         catch (Exception ex)
         {
-            SetStatus($"{L("模型调用失败，已使用本地结构化：")}{ex.Message}");
+            SetStatus($"{L("模型调用失败，已使用本地结构化：")}{NormalizeModelGenerationError(ex)}");
         }
 
         var cleaned = await Task.Run(() =>
         {
             var cleanedPrompt = StripPromptMarkdown(finalPrompt);
-            return (Protocol: protocolResult with { Prompt = cleanedPrompt }, Prompt: cleanedPrompt);
+            var cleanedEnglishPrompt = StripPromptMarkdown(protocolResult.EnglishPrompt ?? string.Empty);
+            return (Protocol: protocolResult with { Prompt = cleanedPrompt, EnglishPrompt = cleanedEnglishPrompt }, Prompt: cleanedPrompt);
         });
         protocolResult = cleaned.Protocol;
         finalPrompt = cleaned.Prompt;
 
+        RemoveTransientChatMessage(pendingThinkingMessage);
         AddProtocolAssistantMessage(protocolResult, animate: true);
         var outputToken = ResetOutputTypewriter();
         var chineseAnimation = SetChineseOutputWithTypewriterAsync(finalPrompt, outputToken);
-        var englishResultTask = BuildSynchronizedEnglishPromptForGenerationAsync(finalPrompt, llmOptions, canSyncEnglishWithModel, isTextToImageMode, isVideoMode, isAiCodingMode, isAcademicHumanizeMode, selectedOptimizationTarget, _settings);
+        var protocolEnglishPrompt = protocolResult.EnglishPrompt;
+        var englishResultTask = Task.Run(() =>
+        {
+            if (!string.IsNullOrWhiteSpace(protocolEnglishPrompt))
+            {
+                return new EnglishPromptResult(protocolEnglishPrompt, null);
+            }
+
+            var status = canSyncEnglishWithModel
+                ? "模型未按协议返回英文提示词，已使用本地同步结构"
+                : null;
+            return new EnglishPromptResult(BuildLocalEnglishMirror(finalPrompt), status);
+        });
         await UpdatePromptDiffAsync(diffBasePrompt, finalPrompt);
         var englishResult = await englishResultTask;
         var englishPrompt = await Task.Run(() => StripPromptMarkdown(englishResult.Text));
@@ -996,6 +1114,46 @@ public sealed partial class CompactPromptWindow : Window
         return string.Join(L("，"), parts);
     }
 
+    private static string NormalizeModelGenerationError(Exception ex)
+    {
+        if (ex is OperationCanceledException)
+        {
+            return "模型请求被取消。请检查网络连接、代理或提供商是否中断连接。";
+        }
+
+        if (ex is HttpRequestException)
+        {
+            var message = ex.Message.Trim();
+            if (LooksLikeQuotaOrBillingError(message))
+            {
+                return $"模型服务返回余额或额度不足：{TrimStatusMessage(message)}";
+            }
+
+            return TrimStatusMessage(message);
+        }
+
+        return TrimStatusMessage(ex.Message);
+    }
+
+    private static bool LooksLikeQuotaOrBillingError(string message)
+    {
+        return message.Contains("insufficient_quota", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("quota", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("billing", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("balance", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("credit", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("余额", StringComparison.Ordinal)
+            || message.Contains("额度", StringComparison.Ordinal)
+            || message.Contains("欠费", StringComparison.Ordinal)
+            || message.Contains("402", StringComparison.Ordinal);
+    }
+
+    private static string TrimStatusMessage(string message)
+    {
+        var normalized = string.IsNullOrWhiteSpace(message) ? "未知错误" : message.Trim();
+        return normalized.Length > 900 ? $"{normalized[..900]}..." : normalized;
+    }
+
     private async void RefineFromOutputButton_Click(object sender, RoutedEventArgs e)
     {
         var currentPrompt = GetChineseOutput();
@@ -1087,7 +1245,7 @@ public sealed partial class CompactPromptWindow : Window
                 CustomModeBox.Text = _conversationLockedCustomModeText;
             }
 
-            SetModeRadioState(_selectedMode);
+            SetModeSelectionState(_selectedMode);
             SyncCompactModeBox();
         }
         finally
@@ -1122,6 +1280,252 @@ public sealed partial class CompactPromptWindow : Window
         }
 
         SetStatus(_clipboardContextService.TrySetClipboardText(EnglishOutputBox.Text) ? "已复制英文提示词" : "剪贴板暂时被占用，请再点一次复制");
+    }
+
+    private void CopyComfyPositiveButton_Click(object sender, RoutedEventArgs e)
+    {
+        CopyPromptField(PromptFieldCopyKind.Primary);
+    }
+
+    private void CopyComfyNegativeButton_Click(object sender, RoutedEventArgs e)
+    {
+        CopyPromptField(PromptFieldCopyKind.Constraint);
+    }
+
+    private void CopyComfyParametersButton_Click(object sender, RoutedEventArgs e)
+    {
+        CopyPromptField(PromptFieldCopyKind.Parameter);
+    }
+
+    private void CopyPromptField(PromptFieldCopyKind kind)
+    {
+        var plan = BuildPromptFieldCopyPlan(kind);
+        var primarySource = plan.PreferEnglishOutput
+            ? EnglishOutputBox.Text
+            : GetChineseOutput();
+        var secondarySource = plan.PreferEnglishOutput
+            ? GetChineseOutput()
+            : EnglishOutputBox.Text;
+        var field = ExtractPromptField(primarySource, plan.StartLabels, plan.StopLabels)
+            ?? ExtractPromptField(secondarySource, plan.StartLabels, plan.StopLabels);
+        if (string.IsNullOrWhiteSpace(field))
+        {
+            SetStatus($"没有找到可复制的{plan.Label}；请先生成当前优化目标的结构化输出");
+            return;
+        }
+
+        SetStatus(_clipboardContextService.TrySetClipboardText(field)
+            ? $"已复制{plan.Label}"
+            : "剪贴板暂时被占用，请再点一次复制");
+    }
+
+    private PromptFieldCopyPlan BuildPromptFieldCopyPlan(PromptFieldCopyKind kind)
+    {
+        var selectedScenes = FormatSelectedScenes();
+        var effectiveMode = GetEffectiveMode();
+        if (IsComfyStableDiffusionMode(effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("正向", "正向提示词字段", true,
+                    ["Positive CLIP Text Encode", "正向 CLIP 文本编码", "Positive prompt", "正向提示词", "Prompt"],
+                    ["Negative CLIP Text Encode", "反向 CLIP 文本编码", "Negative prompt", "反向提示词", "KSampler", "KSampler 参数", "Parameters", "生成参数", "diffusers 参数", "需要补充的信息"]),
+                PromptFieldCopyKind.Constraint => new("反向", "反向提示词字段", true,
+                    ["Negative CLIP Text Encode", "反向 CLIP 文本编码", "Negative prompt", "反向提示词"],
+                    ["KSampler", "KSampler 参数", "Optional nodes", "可选节点", "Stable Diffusion WebUI", "Parameters", "生成参数", "diffusers 参数", "需要补充的信息"]),
+                _ => new("参数", "参数字段", true,
+                    ["KSampler 参数", "KSampler", "Parameters", "生成参数"],
+                    ["Optional nodes", "可选节点", "Stable Diffusion WebUI", "diffusers 参数", "需要补充的信息"])
+            };
+        }
+
+        if (IsVeoMode(selectedScenes, effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("镜头", "镜头字段", true,
+                    ["Shot / structure", "Shot", "镜头结构", "镜头"],
+                    ["Subject", "Location and time", "Action", "Camera", "Camera movement", "Lighting and color", "Visual style", "Dialogue", "Sound", "Duration and aspect ratio", "Continuity and constraints", "User requirement"]),
+                PromptFieldCopyKind.Constraint => new("约束", "连续性与约束字段", true,
+                    ["Continuity and constraints", "Constraints", "连续性与约束", "约束"],
+                    ["User requirement", "用户需求", "需要补充的信息"]),
+                _ => new("时长", "时长与比例字段", true,
+                    ["Duration and aspect ratio", "Duration", "Aspect ratio", "时长与画幅", "平台参数"],
+                    ["Continuity and constraints", "Constraints", "User requirement", "用户需求", "需要补充的信息"])
+            };
+        }
+
+        if (IsJimengMode(selectedScenes, effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("分镜", "时间轴 / 分镜字段", false,
+                    ["时间轴 / 分镜", "时间轴", "分镜", "Timeline / storyboard", "Timeline", "Storyboard"],
+                    ["动作与表演", "视觉风格", "声音与字幕", "平台参数", "负面约束", "需要补充的信息", "用户需求补充"]),
+                PromptFieldCopyKind.Constraint => new("约束", "负面约束字段", false,
+                    ["负面约束", "Negative constraints", "Constraints"],
+                    ["需要补充的信息", "用户需求补充", "User requirement"]),
+                _ => new("参数", "平台参数字段", false,
+                    ["平台参数", "输出参数", "Platform parameters", "Duration and aspect ratio"],
+                    ["负面约束", "Negative constraints", "需要补充的信息", "用户需求补充"])
+            };
+        }
+
+        if (IsAiCodingMode(selectedScenes, effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("任务", "任务字段", false,
+                    ["我的需求", "需求", "问题现象", "Bug 描述", "功能目标", "目标页面 / 组件", "Task", "Requirement"],
+                    ["执行规则", "限制", "技术限制", "实现要求", "验证规则", "验收", "输出", "最终输出"]),
+                PromptFieldCopyKind.Constraint => new("约束", "执行约束字段", false,
+                    ["执行规则", "限制", "技术限制", "禁止事项", "边界", "Hard rules", "Constraints"],
+                    ["验证规则", "验证", "验收", "输出", "最终输出", "产物"]),
+                _ => new("验证", "验证字段", false,
+                    ["验证规则", "验证", "验收", "Verification", "Acceptance"],
+                    ["最终回复格式", "最终输出", "输出格式", "输出"])
+            };
+        }
+
+        if (IsAcademicHumanizeMode(selectedScenes, effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("原文", "待处理文本字段", false,
+                    ["需要处理的文本如下", "待处理文本", "原文", "Text"],
+                    ["改写要求", "反 AI 腔禁用词库", "禁止事项", "输出规则"]),
+                PromptFieldCopyKind.Constraint => new("禁用", "禁用约束字段", false,
+                    ["反 AI 腔禁用词库", "禁止事项", "禁用词", "Banned phrases"],
+                    ["需要处理的文本如下", "待处理文本", "输出规则"]),
+                _ => new("规则", "输出规则字段", false,
+                    ["输出规则", "改写要求", "要求", "Rules"],
+                    ["需要处理的文本如下", "待处理文本"])
+            };
+        }
+
+        return kind switch
+        {
+            PromptFieldCopyKind.Primary => new("要点", "核心要点字段", false,
+                ["任务", "生成目标", "主体身份", "我的需求", "Task", "Goal"],
+                ["约束", "负面约束", "参数", "需要补充的信息", "Context", "Constraints"]),
+            PromptFieldCopyKind.Constraint => new("约束", "约束字段", false,
+                ["约束", "负面约束", "Constraints", "Negative constraints"],
+                ["参数", "需要补充的信息", "输出", "Output"]),
+            _ => new("参数", "参数字段", false,
+                ["参数", "平台参数", "生成参数", "Parameters"],
+                ["需要补充的信息", "输出", "Output"])
+        };
+    }
+
+    private static string? ExtractPromptField(string source, IReadOnlyList<string> startLabels, IReadOnlyList<string> stopLabels)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return null;
+        }
+
+        var lines = source.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var collecting = false;
+        var builder = new StringBuilder();
+
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.TrimEnd('\r');
+            var trimmed = line.Trim();
+            if (!collecting)
+            {
+                if (TryConsumePromptFieldLabel(trimmed, startLabels, out var inlineContent))
+                {
+                    collecting = true;
+                    if (!string.IsNullOrWhiteSpace(inlineContent))
+                    {
+                        builder.AppendLine(inlineContent);
+                    }
+                }
+
+                continue;
+            }
+
+            if (TryConsumePromptFieldLabel(trimmed, stopLabels, out _))
+            {
+                break;
+            }
+
+            builder.AppendLine(line);
+        }
+
+        var value = builder.ToString().Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static bool TryConsumePromptFieldLabel(string line, IReadOnlyList<string> labels, out string inlineContent)
+    {
+        inlineContent = string.Empty;
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return false;
+        }
+
+        var normalizedLine = NormalizePromptFieldHeading(line);
+        foreach (var label in labels)
+        {
+            if (!line.StartsWith(label, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!normalizedLine.StartsWith(label, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                inlineContent = StripPromptLabelPrefix(normalizedLine[label.Length..]);
+                return true;
+            }
+
+            inlineContent = StripPromptLabelPrefix(line[label.Length..]);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string NormalizePromptFieldHeading(string line)
+    {
+        var value = line.Trim();
+        if (value.StartsWith("【", StringComparison.Ordinal) && value.Contains('】'))
+        {
+            var end = value.IndexOf('】');
+            value = $"{value[1..end]} {value[(end + 1)..]}";
+        }
+        else if (value.StartsWith("[", StringComparison.Ordinal) && value.Contains(']'))
+        {
+            var end = value.IndexOf(']');
+            value = $"{value[1..end]} {value[(end + 1)..]}";
+        }
+
+        return value.Trim().TrimStart('#', '*').Trim();
+    }
+
+    private static string StripPromptLabelPrefix(string text)
+    {
+        var value = text.TrimStart();
+        while (value.Length > 0 && (value[0] == '(' || value[0] == '（'))
+        {
+            var end = value[0] == '('
+                ? value.IndexOf(')')
+                : value.IndexOf('）');
+            if (end < 0)
+            {
+                break;
+            }
+
+            value = value[(end + 1)..].TrimStart();
+        }
+
+        if (value.Length > 0 && (value[0] == ':' || value[0] == '：' || value[0] == '='))
+        {
+            value = value[1..].TrimStart();
+        }
+
+        return value;
     }
 
     private void FavoriteChinesePromptButton_Click(object sender, RoutedEventArgs e)
@@ -1162,7 +1566,7 @@ public sealed partial class CompactPromptWindow : Window
 
     private async void ExpandEnglishOutputButton_Click(object sender, RoutedEventArgs e)
     {
-        await ShowLargeOutputDialogAsync("英文翻译提示词", EnglishOutputBox.Text, SetEnglishOutput);
+        await ShowLargeOutputDialogAsync("英文提示词", EnglishOutputBox.Text, SetEnglishOutput);
     }
 
     private async Task ShowLargeOutputDialogAsync(string title, string text, Action<string> applyText)
@@ -2045,7 +2449,7 @@ Skill 文件：{skillPath}
         _syncingModeSelection = true;
         try
         {
-            SetModeRadioState(_selectedMode);
+            SetModeSelectionState(_selectedMode);
             SyncCompactModeBox();
         }
         finally
@@ -2771,6 +3175,26 @@ Skill 文件：{skillPath}
         PersistSettingsFromUi(showStatus: false);
     }
 
+    private void OneDriveFolderPathBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_uiReady || _loadingSettings)
+        {
+            return;
+        }
+
+        UpdateOneDriveSyncUiState();
+    }
+
+    private void WebDavSettingsBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_uiReady || _loadingSettings)
+        {
+            return;
+        }
+
+        UpdateWebDavSyncUiState();
+    }
+
     private void SettingsControl_LostFocus(object sender, RoutedEventArgs e)
     {
         if (!_uiReady || _loadingSettings)
@@ -3413,6 +3837,7 @@ Skill 文件：{skillPath}
         _settings.Model.TimeoutSeconds = 30;
         _settings.Ocr.PreferredProvider = (OcrProviderBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? OcrProviderIds.FireEye;
         _settings.Ocr.TimeoutSeconds = 15;
+        _settings.Ui.EnableAnimations = AnimationEnabledBox.IsChecked == true;
         _settings.Ui.DeepThinking = IsDeepThinkingEnabled();
         var selectedLanguageItem = LanguageBox.SelectedItem as ComboBoxItem;
         _settings.Ui.LanguageCode = selectedLanguageItem?.Tag?.ToString() ?? "auto";
@@ -3433,6 +3858,8 @@ Skill 文件：{skillPath}
         _settings.Privacy.ModelExternalRequestsEnabled = ModelExternalRequestsEnabledBox.IsChecked == true;
         _settings.Privacy.ModelImageExternalRequestsEnabled = ModelImageExternalRequestsEnabledBox.IsChecked == true;
         _settings.Privacy.RedactBeforeModelSend = RedactBeforeModelSendBox.IsChecked == true;
+        UpdateOneDriveSyncSettingsFromUi();
+        UpdateWebDavSyncSettingsFromUi();
 
         if (!_hotkeyService.RegisterHotkey(_settings.Hotkey))
         {
@@ -3445,11 +3872,705 @@ Skill 文件：{skillPath}
         }
 
         _settingsService.SaveUserSettings(_settings, ApiKeyBox.Password);
+        SaveWebDavPasswordFromUi();
         RefreshModelDisplayText();
+        UpdateOneDriveSyncUiState();
+        UpdateWebDavSyncUiState();
         if (showStatus)
         {
             SetStatus(_settings.Model.Enabled ? "设置已保存" : "设置已保存，模型关闭时使用本地结构化");
         }
+    }
+
+    private void UpdateOneDriveSyncSettingsFromUi()
+    {
+        if (OneDriveEnabledBox is null || OneDriveHistoryEnabledBox is null || OneDriveRememberVaultBox is null || OneDriveFolderPathBox is null)
+        {
+            return;
+        }
+
+        _settings.OneDriveSync.OneDriveEnabled = OneDriveEnabledBox.IsChecked == true;
+        _settings.OneDriveSync.HistorySyncEnabled = OneDriveHistoryEnabledBox.IsChecked == true;
+        _settings.OneDriveSync.RememberVaultOnThisDevice = OneDriveRememberVaultBox.IsChecked == true;
+        _settings.OneDriveSync.LocalFolderPath = OneDriveFolderPathBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(_settings.OneDriveSync.DeviceId))
+        {
+            _settings.OneDriveSync.DeviceId = Guid.NewGuid().ToString("N");
+        }
+    }
+
+    private void UpdateWebDavSyncSettingsFromUi()
+    {
+        if (WebDavEnabledBox is null || WebDavHistoryEnabledBox is null || WebDavRememberVaultBox is null || WebDavServerUrlBox is null || WebDavRemoteRootBox is null || WebDavUsernameBox is null)
+        {
+            return;
+        }
+
+        _settings.WebDavSync.WebDavEnabled = WebDavEnabledBox.IsChecked == true;
+        _settings.WebDavSync.HistorySyncEnabled = WebDavHistoryEnabledBox.IsChecked == true;
+        _settings.WebDavSync.RememberVaultOnThisDevice = WebDavRememberVaultBox.IsChecked == true;
+        _settings.WebDavSync.ServerUrl = WebDavServerUrlBox.Text.Trim();
+        _settings.WebDavSync.RemoteRootPath = string.IsNullOrWhiteSpace(WebDavRemoteRootBox.Text) ? "啊拼" : WebDavRemoteRootBox.Text.Trim();
+        _settings.WebDavSync.Username = WebDavUsernameBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(_settings.WebDavSync.CredentialTargetName))
+        {
+            _settings.WebDavSync.CredentialTargetName = "PromptInputMethod/WebDavPassword";
+        }
+
+        if (string.IsNullOrWhiteSpace(_settings.WebDavSync.DeviceId))
+        {
+            _settings.WebDavSync.DeviceId = Guid.NewGuid().ToString("N");
+        }
+    }
+
+    private void SaveWebDavPasswordFromUi()
+    {
+        if (WebDavPasswordBox is null || string.IsNullOrWhiteSpace(WebDavPasswordBox.Password))
+        {
+            return;
+        }
+
+        _credentialService.WriteSecret(_settings.WebDavSync.CredentialTargetName, WebDavPasswordBox.Password);
+    }
+
+    private void QueueOneDriveStartupSnapshotProbe()
+    {
+        if (!_settings.OneDriveSync.OneDriveEnabled || string.IsNullOrWhiteSpace(_settings.OneDriveSync.LocalFolderPath))
+        {
+            return;
+        }
+
+        _ = ProbeOneDriveSnapshotOnStartupAsync(_settings.OneDriveSync.LocalFolderPath, _settings.OneDriveSync.LastSyncAt);
+    }
+
+    private async Task ProbeOneDriveSnapshotOnStartupAsync(string syncRootPath, DateTimeOffset? lastSyncAt)
+    {
+        try
+        {
+            await Task.Delay(900).ConfigureAwait(false);
+            var manifest = await _oneDriveLocalFolderService.ReadJsonAsync<OneDriveSyncManifest>(
+                syncRootPath,
+                OneDriveSyncPaths.Manifest).ConfigureAwait(false);
+            if (manifest is null || (lastSyncAt is not null && manifest.UpdatedAt <= lastSyncAt.Value))
+            {
+                return;
+            }
+
+            DispatcherQueue.TryEnqueue(async () => await ShowOneDriveSnapshotDetectedDialogAsync(syncRootPath, manifest.UpdatedAt));
+        }
+        catch
+        {
+            // Startup probing is advisory only; manual sync remains available in Settings.
+        }
+    }
+
+    private async Task ShowOneDriveSnapshotDetectedDialogAsync(string syncRootPath, DateTimeOffset updatedAt)
+    {
+        if (!_uiReady || Content.XamlRoot is null)
+        {
+            return;
+        }
+
+        var localTime = updatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = L("检测到 OneDrive 同步快照更新"),
+            Content = $"{L("同步目录有较新的加密历史快照：")}{localTime}\n{syncRootPath}\n{L("打开设置后输入同步口令，再点击“导入同步快照”。")}",
+            PrimaryButtonText = L("打开设置"),
+            CloseButtonText = L("稍后"),
+            DefaultButton = ContentDialogButton.Primary
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            ShowPage("Settings");
+            SetOneDriveStatus("检测到较新的 OneDrive 同步快照。输入同步口令后点击“导入同步快照”。");
+        }
+    }
+
+    private void OneDriveDetectFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        var detected = _oneDriveLocalFolderService.DetectDefaultSyncFolder();
+        if (string.IsNullOrWhiteSpace(detected))
+        {
+            SetOneDriveStatus("未检测到本机 OneDrive 文件夹，请手动选择同步目录。");
+            return;
+        }
+
+        OneDriveFolderPathBox.Text = detected;
+        UpdateOneDriveSyncSettingsFromUi();
+        _settingsService.SaveUserSettings(_settings, null);
+        UpdateOneDriveSyncUiState();
+        SetOneDriveStatus($"已检测到建议路径：{detected}。确认后可手动同步。");
+    }
+
+    private async void OneDriveChooseFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var picker = new FolderPicker();
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+            picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            picker.FileTypeFilter.Add("*");
+            var folder = await picker.PickSingleFolderAsync();
+            if (folder is null)
+            {
+                SetOneDriveStatus("已取消选择 OneDrive 同步文件夹。");
+                return;
+            }
+
+            OneDriveFolderPathBox.Text = folder.Path;
+            UpdateOneDriveSyncSettingsFromUi();
+            _settingsService.SaveUserSettings(_settings, null);
+            UpdateOneDriveSyncUiState();
+            SetOneDriveStatus($"已选择同步文件夹：{folder.Path}。只有手动同步时才会写入加密快照。");
+        }
+        catch (Exception ex)
+        {
+            SetOneDriveStatus($"选择同步文件夹失败：{NormalizeOneDriveSyncError(ex)}");
+        }
+    }
+
+    private async void OneDrivePushButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RunOneDriveOperationAsync("正在同步 OneDrive 文件夹历史快照...", async cancellationToken =>
+        {
+            EnsureOneDriveHistorySyncEnabled();
+            var syncRootPath = GetSelectedOneDriveSyncFolderPath();
+            var passphrase = OneDrivePassphraseBox.Password;
+            var pullResult = await _oneDriveHistorySyncService.PullEncryptedHistoryAsync(
+                syncRootPath,
+                passphrase,
+                _settings.OneDriveSync.RememberVaultOnThisDevice,
+                cancellationToken);
+            if (pullResult.ImportedHistoryCount > 0)
+            {
+                RefreshHistoryUi();
+            }
+
+            var pushResult = await _oneDriveHistorySyncService.PushEncryptedHistoryAsync(
+                syncRootPath,
+                passphrase,
+                GetAppVersionString(),
+                _settings.OneDriveSync.DeviceId,
+                _settings.OneDriveSync.RememberVaultOnThisDevice,
+                cancellationToken);
+            SaveOneDriveSyncState(pushResult);
+            OneDrivePassphraseBox.Password = string.Empty;
+            var launchResult = _oneDriveClientLauncherService.TryLaunchClient();
+            SetOneDriveStatus($"OneDrive 文件夹同步完成：导入 {pullResult.ImportedHistoryCount} 条，导出 {pushResult.UploadedHistoryCount} 条加密历史。{launchResult.Message}");
+            return pushResult;
+        });
+    }
+
+    private async void OneDrivePullButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RunOneDriveOperationAsync("正在导入 OneDrive 同步快照...", async cancellationToken =>
+        {
+            EnsureOneDriveHistorySyncEnabled();
+            var syncRootPath = GetSelectedOneDriveSyncFolderPath();
+            var result = await _oneDriveHistorySyncService.PullEncryptedHistoryAsync(
+                syncRootPath,
+                OneDrivePassphraseBox.Password,
+                _settings.OneDriveSync.RememberVaultOnThisDevice,
+                cancellationToken);
+            SaveOneDriveSyncState(result);
+            OneDrivePassphraseBox.Password = string.Empty;
+            if (result.ImportedHistoryCount > 0)
+            {
+                RefreshHistoryUi();
+            }
+
+            SetOneDriveStatus(result.ImportedHistoryCount > 0
+                ? $"已导入 OneDrive 同步快照：{result.ImportedHistoryCount} 条。"
+                : "同步目录中没有可导入的新历史快照。");
+            return result;
+        });
+    }
+
+    private void OneDriveDisableButton_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateOneDriveSyncSettingsFromUi();
+        if (!string.IsNullOrWhiteSpace(_settings.OneDriveSync.LocalFolderPath) && !string.IsNullOrWhiteSpace(_settings.OneDriveSync.VaultKeyId))
+        {
+            _oneDriveVaultCacheService.DeleteVaultKey(_settings.OneDriveSync.LocalFolderPath, _settings.OneDriveSync.VaultKeyId);
+        }
+
+        _settings.OneDriveSync.OneDriveEnabled = false;
+        _settings.OneDriveSync.VaultKeyId = string.Empty;
+        _settings.OneDriveSync.LastSyncAt = null;
+        _settingsService.SaveUserSettings(_settings, null);
+        LoadSettingsIntoUi();
+        SetOneDriveStatus("OneDrive 文件夹同步已关闭。本地历史记录和同步目录文件都不会删除。");
+    }
+
+    private async Task RunOneDriveOperationAsync(string busyStatus, Func<CancellationToken, Task<OneDriveHistorySyncResult?>> operation)
+    {
+        if (_oneDriveSyncInProgress)
+        {
+            SetOneDriveStatus("OneDrive 文件夹同步正在进行中，请稍等。");
+            return;
+        }
+
+        _oneDriveSyncInProgress = true;
+        UpdateOneDriveSyncUiState();
+        SetOneDriveStatus(busyStatus);
+        using var cts = new CancellationTokenSource();
+        try
+        {
+            _settings = _settingsService.Load();
+            UpdateOneDriveSyncSettingsFromUi();
+            _settingsService.SaveUserSettings(_settings, null);
+            await operation(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            SetOneDriveStatus($"OneDrive 文件夹同步失败：{NormalizeOneDriveSyncError(ex)}");
+        }
+        finally
+        {
+            _oneDriveSyncInProgress = false;
+            UpdateOneDriveSyncUiState();
+        }
+    }
+
+    private void EnsureOneDriveHistorySyncEnabled()
+    {
+        if (!_settings.OneDriveSync.OneDriveEnabled)
+        {
+            throw new InvalidOperationException("请先启用 OneDrive 文件夹同步。");
+        }
+
+        if (!_settings.OneDriveSync.HistorySyncEnabled)
+        {
+            throw new InvalidOperationException("请先启用历史记录同步。");
+        }
+
+        if (string.IsNullOrWhiteSpace(GetSelectedOneDriveSyncFolderPath()))
+        {
+            throw new InvalidOperationException("请先选择 OneDrive 本地同步文件夹。");
+        }
+    }
+
+    private void SaveOneDriveSyncState(OneDriveHistorySyncResult result)
+    {
+        _settings.OneDriveSync.OneDriveEnabled = true;
+        _settings.OneDriveSync.LocalFolderPath = result.SyncRootPath;
+        if (!string.IsNullOrWhiteSpace(result.KeyId))
+        {
+            _settings.OneDriveSync.VaultKeyId = result.KeyId;
+        }
+
+        _settings.OneDriveSync.LastSyncAt = result.SyncedAt;
+        _settingsService.SaveUserSettings(_settings, null);
+    }
+
+    private void UpdateOneDriveSyncUiState()
+    {
+        if (OneDriveEnabledBox is null)
+        {
+            return;
+        }
+
+        var enabled = OneDriveEnabledBox.IsChecked == true;
+        var hasFolder = !string.IsNullOrWhiteSpace(OneDriveFolderPathBox?.Text);
+        var canOperate = enabled && hasFolder && !_oneDriveSyncInProgress;
+        if (OneDriveHistoryEnabledBox is not null)
+        {
+            OneDriveHistoryEnabledBox.IsEnabled = enabled && !_oneDriveSyncInProgress;
+        }
+
+        if (OneDriveRememberVaultBox is not null)
+        {
+            OneDriveRememberVaultBox.IsEnabled = enabled && !_oneDriveSyncInProgress;
+        }
+
+        if (OneDriveFolderPathBox is not null)
+        {
+            OneDriveFolderPathBox.IsEnabled = !_oneDriveSyncInProgress;
+        }
+
+        if (OneDrivePassphraseBox is not null)
+        {
+            OneDrivePassphraseBox.IsEnabled = canOperate;
+        }
+
+        if (OneDriveDetectFolderButton is not null)
+        {
+            OneDriveDetectFolderButton.IsEnabled = !_oneDriveSyncInProgress;
+        }
+
+        if (OneDriveChooseFolderButton is not null)
+        {
+            OneDriveChooseFolderButton.IsEnabled = !_oneDriveSyncInProgress;
+        }
+
+        if (OneDrivePushButton is not null)
+        {
+            OneDrivePushButton.IsEnabled = canOperate && OneDriveHistoryEnabledBox?.IsChecked == true;
+        }
+
+        if (OneDrivePullButton is not null)
+        {
+            OneDrivePullButton.IsEnabled = canOperate && OneDriveHistoryEnabledBox?.IsChecked == true;
+        }
+
+        if (OneDriveDisableButton is not null)
+        {
+            OneDriveDisableButton.IsEnabled = !_oneDriveSyncInProgress
+                && (enabled || !string.IsNullOrWhiteSpace(_settings.OneDriveSync.LocalFolderPath));
+        }
+
+        if (OneDriveSyncStatusText is not null && !_oneDriveSyncInProgress)
+        {
+            OneDriveSyncStatusText.Text = BuildOneDriveStatusText(enabled, hasFolder);
+        }
+    }
+
+    private string BuildOneDriveStatusText(bool enabled, bool hasFolder)
+    {
+        if (!enabled)
+        {
+            return L("OneDrive 文件夹同步未启用，当前使用本机默认数据目录。");
+        }
+
+        if (!hasFolder)
+        {
+            return L("请先检测或选择 OneDrive 本地同步文件夹。");
+        }
+
+        var folder = OneDriveFolderPathBox?.Text.Trim();
+        var syncedAt = _settings.OneDriveSync.LastSyncAt is null
+            ? L("尚未同步")
+            : _settings.OneDriveSync.LastSyncAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
+        return $"{L("同步目录：")}{folder}{L("；最后同步：")}{syncedAt}{L("。OneDrive 客户端负责跨设备同步。")}";
+    }
+
+    private void SetOneDriveStatus(string text)
+    {
+        var localized = L(text);
+        if (OneDriveSyncStatusText is not null)
+        {
+            OneDriveSyncStatusText.Text = localized;
+        }
+
+        SetStatus(localized);
+    }
+
+    private string GetSelectedOneDriveSyncFolderPath()
+    {
+        var path = OneDriveFolderPathBox?.Text.Trim();
+        return string.IsNullOrWhiteSpace(path) ? _settings.OneDriveSync.LocalFolderPath : path;
+    }
+
+    private static string GetAppVersionString()
+    {
+        return typeof(CompactPromptWindow).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+    }
+
+    private static string NormalizeOneDriveSyncError(Exception ex)
+    {
+        return ex switch
+        {
+            OperationCanceledException => "操作已取消。",
+            InvalidDataException invalidData => invalidData.Message,
+            ArgumentException argument => argument.Message,
+            InvalidOperationException invalidOperation => invalidOperation.Message,
+            _ => TrimStatusMessage(ex.Message)
+        };
+    }
+
+    private async void WebDavTestButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RunWebDavOperationAsync("正在测试 WebDAV 连接...", async cancellationToken =>
+        {
+            var connection = BuildSelectedWebDavConnection();
+            await _webDavHistorySyncService.TestConnectionAsync(connection, cancellationToken);
+            SetWebDavStatus($"WebDAV 连接成功：{WebDavHistorySyncService.BuildRemoteScope(connection)}");
+            return null;
+        });
+    }
+
+    private async void WebDavPushButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RunWebDavOperationAsync("正在同步 WebDAV 加密历史快照...", async cancellationToken =>
+        {
+            EnsureWebDavHistorySyncEnabled();
+            var connection = BuildSelectedWebDavConnection();
+            var passphrase = GetWebDavSyncPassphrase();
+            var pullResult = await _webDavHistorySyncService.PullEncryptedHistoryAsync(
+                connection,
+                passphrase,
+                _settings.WebDavSync.RememberVaultOnThisDevice,
+                cancellationToken);
+            if (pullResult.ImportedHistoryCount > 0)
+            {
+                RefreshHistoryUi();
+            }
+
+            var pushResult = await _webDavHistorySyncService.PushEncryptedHistoryAsync(
+                connection,
+                passphrase,
+                GetAppVersionString(),
+                _settings.WebDavSync.DeviceId,
+                _settings.WebDavSync.RememberVaultOnThisDevice,
+                cancellationToken);
+            SaveWebDavSyncState(pushResult);
+            WebDavPasswordBox.Password = string.Empty;
+            WebDavPassphraseBox.Password = string.Empty;
+            SetWebDavStatus($"WebDAV 同步完成：导入 {pullResult.ImportedHistoryCount} 条，导出 {pushResult.UploadedHistoryCount} 条加密历史。");
+            return pushResult;
+        });
+    }
+
+    private async void WebDavPullButton_Click(object sender, RoutedEventArgs e)
+    {
+        await RunWebDavOperationAsync("正在导入 WebDAV 加密历史快照...", async cancellationToken =>
+        {
+            EnsureWebDavHistorySyncEnabled();
+            var connection = BuildSelectedWebDavConnection();
+            var result = await _webDavHistorySyncService.PullEncryptedHistoryAsync(
+                connection,
+                GetWebDavSyncPassphrase(),
+                _settings.WebDavSync.RememberVaultOnThisDevice,
+                cancellationToken);
+            SaveWebDavSyncState(result);
+            WebDavPasswordBox.Password = string.Empty;
+            WebDavPassphraseBox.Password = string.Empty;
+            if (result.ImportedHistoryCount > 0)
+            {
+                RefreshHistoryUi();
+            }
+
+            SetWebDavStatus(result.ImportedHistoryCount > 0
+                ? $"已导入 WebDAV 同步快照：{result.ImportedHistoryCount} 条。"
+                : "WebDAV 远端没有可导入的新历史快照。");
+            return result;
+        });
+    }
+
+    private void WebDavDisableButton_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateWebDavSyncSettingsFromUi();
+        var connection = BuildSelectedWebDavConnection(allowMissingPassword: true);
+        if (!string.IsNullOrWhiteSpace(_settings.WebDavSync.VaultKeyId))
+        {
+            _oneDriveVaultCacheService.DeleteVaultKey(WebDavHistorySyncService.BuildVaultCacheScope(connection), _settings.WebDavSync.VaultKeyId);
+        }
+
+        _credentialService.DeleteSecret(_settings.WebDavSync.CredentialTargetName);
+        _settings.WebDavSync.WebDavEnabled = false;
+        _settings.WebDavSync.VaultKeyId = string.Empty;
+        _settings.WebDavSync.LastSyncAt = null;
+        _settingsService.SaveUserSettings(_settings, null);
+        LoadSettingsIntoUi();
+        SetWebDavStatus("WebDAV 同步已关闭。本地历史记录和远端加密快照都不会删除。");
+    }
+
+    private async Task RunWebDavOperationAsync(string busyStatus, Func<CancellationToken, Task<WebDavHistorySyncResult?>> operation)
+    {
+        if (_webDavSyncInProgress)
+        {
+            SetWebDavStatus("WebDAV 同步正在进行中，请稍等。");
+            return;
+        }
+
+        _webDavSyncInProgress = true;
+        UpdateWebDavSyncUiState();
+        SetWebDavStatus(busyStatus);
+        using var cts = new CancellationTokenSource();
+        try
+        {
+            _settings = _settingsService.Load();
+            UpdateWebDavSyncSettingsFromUi();
+            _settingsService.SaveUserSettings(_settings, null);
+            SaveWebDavPasswordFromUi();
+            await operation(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            SetWebDavStatus($"WebDAV 同步失败：{NormalizeWebDavSyncError(ex)}");
+        }
+        finally
+        {
+            _webDavSyncInProgress = false;
+            UpdateWebDavSyncUiState();
+        }
+    }
+
+    private void EnsureWebDavHistorySyncEnabled()
+    {
+        if (!_settings.WebDavSync.WebDavEnabled)
+        {
+            throw new InvalidOperationException("请先启用 WebDAV 同步。");
+        }
+
+        if (!_settings.WebDavSync.HistorySyncEnabled)
+        {
+            throw new InvalidOperationException("请先启用历史记录同步。");
+        }
+    }
+
+    private void SaveWebDavSyncState(WebDavHistorySyncResult result)
+    {
+        _settings.WebDavSync.WebDavEnabled = true;
+        if (!string.IsNullOrWhiteSpace(result.KeyId))
+        {
+            _settings.WebDavSync.VaultKeyId = result.KeyId;
+        }
+
+        _settings.WebDavSync.LastSyncAt = result.SyncedAt;
+        _settingsService.SaveUserSettings(_settings, null);
+    }
+
+    private void UpdateWebDavSyncUiState()
+    {
+        if (WebDavEnabledBox is null)
+        {
+            return;
+        }
+
+        var enabled = WebDavEnabledBox.IsChecked == true;
+        var hasServer = !string.IsNullOrWhiteSpace(WebDavServerUrlBox?.Text);
+        var hasUsername = !string.IsNullOrWhiteSpace(WebDavUsernameBox?.Text);
+        var canOperate = enabled && hasServer && hasUsername && !_webDavSyncInProgress;
+        if (WebDavHistoryEnabledBox is not null)
+        {
+            WebDavHistoryEnabledBox.IsEnabled = enabled && !_webDavSyncInProgress;
+        }
+
+        if (WebDavRememberVaultBox is not null)
+        {
+            WebDavRememberVaultBox.IsEnabled = enabled && !_webDavSyncInProgress;
+        }
+
+        if (WebDavServerUrlBox is not null)
+        {
+            WebDavServerUrlBox.IsEnabled = !_webDavSyncInProgress;
+        }
+
+        if (WebDavRemoteRootBox is not null)
+        {
+            WebDavRemoteRootBox.IsEnabled = !_webDavSyncInProgress;
+        }
+
+        if (WebDavUsernameBox is not null)
+        {
+            WebDavUsernameBox.IsEnabled = !_webDavSyncInProgress;
+        }
+
+        if (WebDavPasswordBox is not null)
+        {
+            WebDavPasswordBox.IsEnabled = canOperate;
+        }
+
+        if (WebDavPassphraseBox is not null)
+        {
+            WebDavPassphraseBox.IsEnabled = canOperate;
+        }
+
+        if (WebDavTestButton is not null)
+        {
+            WebDavTestButton.IsEnabled = canOperate;
+        }
+
+        if (WebDavPushButton is not null)
+        {
+            WebDavPushButton.IsEnabled = canOperate && WebDavHistoryEnabledBox?.IsChecked == true;
+        }
+
+        if (WebDavPullButton is not null)
+        {
+            WebDavPullButton.IsEnabled = canOperate && WebDavHistoryEnabledBox?.IsChecked == true;
+        }
+
+        if (WebDavDisableButton is not null)
+        {
+            WebDavDisableButton.IsEnabled = !_webDavSyncInProgress
+                && (enabled || !string.IsNullOrWhiteSpace(_settings.WebDavSync.ServerUrl));
+        }
+
+        if (WebDavSyncStatusText is not null && !_webDavSyncInProgress)
+        {
+            WebDavSyncStatusText.Text = BuildWebDavStatusText(enabled, hasServer, hasUsername);
+        }
+    }
+
+    private string BuildWebDavStatusText(bool enabled, bool hasServer, bool hasUsername)
+    {
+        if (!enabled)
+        {
+            return L("WebDAV 同步未启用，当前使用本机默认数据目录。");
+        }
+
+        if (!hasServer || !hasUsername)
+        {
+            return L("请先填写 WebDAV 服务器地址和用户名。");
+        }
+
+        var syncedAt = _settings.WebDavSync.LastSyncAt is null
+            ? L("尚未同步")
+            : _settings.WebDavSync.LastSyncAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
+        var remote = $"{WebDavServerUrlBox?.Text.Trim().TrimEnd('/')}/{(WebDavRemoteRootBox?.Text.Trim() ?? "啊拼").Trim('/')}";
+        return $"{L("远端目录：")}{remote}{L("；最后同步：")}{syncedAt}{L("。WebDAV 远端保存端到端加密快照。")}";
+    }
+
+    private void SetWebDavStatus(string text)
+    {
+        var localized = L(text);
+        if (WebDavSyncStatusText is not null)
+        {
+            WebDavSyncStatusText.Text = localized;
+        }
+
+        SetStatus(localized);
+    }
+
+    private WebDavConnectionSettings BuildSelectedWebDavConnection(bool allowMissingPassword = false)
+    {
+        var password = WebDavPasswordBox?.Password;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            password = _credentialService.ReadSecret(_settings.WebDavSync.CredentialTargetName);
+        }
+
+        if (string.IsNullOrWhiteSpace(password) && !allowMissingPassword)
+        {
+            throw new InvalidOperationException("请填写 WebDAV 应用密码。");
+        }
+
+        return new WebDavConnectionSettings(
+            WebDavServerUrlBox?.Text.Trim() ?? _settings.WebDavSync.ServerUrl,
+            string.IsNullOrWhiteSpace(WebDavRemoteRootBox?.Text) ? _settings.WebDavSync.RemoteRootPath : WebDavRemoteRootBox.Text.Trim(),
+            WebDavUsernameBox?.Text.Trim() ?? _settings.WebDavSync.Username,
+            password ?? string.Empty);
+    }
+
+    private string GetWebDavSyncPassphrase()
+    {
+        var passphrase = WebDavPassphraseBox?.Password;
+        if (!string.IsNullOrWhiteSpace(passphrase))
+        {
+            return passphrase;
+        }
+
+        return string.Empty;
+    }
+
+    private static string NormalizeWebDavSyncError(Exception ex)
+    {
+        return ex switch
+        {
+            OperationCanceledException => "操作已取消。",
+            InvalidDataException invalidData => invalidData.Message,
+            CryptographicException cryptographic => cryptographic.Message,
+            ArgumentException argument => argument.Message,
+            InvalidOperationException invalidOperation => invalidOperation.Message,
+            HttpRequestException http => TrimStatusMessage(http.Message),
+            _ => TrimStatusMessage(ex.Message)
+        };
     }
 
     private void ToggleSidebarButton_Click(object sender, RoutedEventArgs e)
@@ -4034,6 +5155,8 @@ Skill 文件：{skillPath}
             _selectedCommonPromptCategory = "全部";
         }
 
+        _commonPromptPageIndex = 0;
+        _compactCommonPromptPageIndex = 0;
         RefreshCommonPromptsUi();
     }
 
@@ -4050,6 +5173,8 @@ Skill 文件：{skillPath}
             _selectedCommonPromptCategory = "全部";
         }
 
+        _commonPromptPageIndex = 0;
+        _compactCommonPromptPageIndex = 0;
         RefreshCommonPromptsUi();
     }
 
@@ -4062,6 +5187,32 @@ Skill 文件：{skillPath}
 
         _commonPromptSearchText = (sender as TextBox)?.Text.Trim() ?? string.Empty;
         SyncCommonPromptSearchBoxes(sender as TextBox);
+        _commonPromptPageIndex = 0;
+        _compactCommonPromptPageIndex = 0;
+        QueueCommonPromptSearchRefresh();
+    }
+
+    private void CommonPromptPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _commonPromptPageIndex, -1);
+        RefreshCommonPromptsUi();
+    }
+
+    private void CommonPromptNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _commonPromptPageIndex, 1);
+        RefreshCommonPromptsUi();
+    }
+
+    private void CompactCommonPromptPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _compactCommonPromptPageIndex, -1);
+        RefreshCommonPromptsUi();
+    }
+
+    private void CompactCommonPromptNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _compactCommonPromptPageIndex, 1);
         RefreshCommonPromptsUi();
     }
 
@@ -4219,7 +5370,7 @@ Skill 文件：{skillPath}
                 }
 
                 _selectedMode = "通用 LLM";
-                SetModeRadioState(_selectedMode);
+                SetModeSelectionState(_selectedMode);
                 SaveUiSettings();
             }
 
@@ -4271,6 +5422,7 @@ Skill 文件：{skillPath}
         source = NormalizeTemplateSource(source);
         _selectedTemplateSource = source;
         _selectedTemplateCategory = "全部";
+        _quickTemplatePageIndex = 0;
         SetTemplateTabState(skillSelected: false);
         if (string.Equals(source, "prompts.chat", StringComparison.OrdinalIgnoreCase))
         {
@@ -4375,7 +5527,9 @@ Skill 文件：{skillPath}
         {
             _selectedTemplateCategory = "全部";
         }
-        RefreshTemplateViews();
+
+        _quickTemplatePageIndex = 0;
+        QueueTemplateSearchRefresh();
     }
 
     private void TemplateSearchBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -4385,6 +5539,19 @@ Skill 文件：{skillPath}
             return;
         }
 
+        _quickTemplatePageIndex = 0;
+        RefreshTemplateViews();
+    }
+
+    private void QuickTemplatePreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _quickTemplatePageIndex, -1);
+        RefreshTemplateViews();
+    }
+
+    private void QuickTemplateNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _quickTemplatePageIndex, 1);
         RefreshTemplateViews();
     }
 
@@ -4409,8 +5576,20 @@ Skill 文件：{skillPath}
         MountedSkillQuickList.SelectedItem = template;
         SelectCompactSkill(template.Id);
 
-        RefreshMountedSkillStatus(MountedSkillQuickList.ItemsSource as IReadOnlyList<PromptTemplateCatalogItem> ?? GetMountedSkillTemplates());
+        RefreshMountedSkillStatus(GetMountedSkillTemplates(), template);
         SetStatus($"已挂载到当前优化目标：{template.Title}");
+    }
+
+    private void MountedSkillPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _mountedSkillPageIndex, -1);
+        RefreshMountedSkillQuickList(moveToSelected: false);
+    }
+
+    private void MountedSkillNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _mountedSkillPageIndex, 1);
+        RefreshMountedSkillQuickList(moveToSelected: false);
     }
 
     private void TemplateFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -4420,6 +5599,7 @@ Skill 文件：{skillPath}
             return;
         }
 
+        _userTemplatePageIndex = 0;
         RefreshUserTemplateList();
     }
 
@@ -4430,6 +5610,31 @@ Skill 文件：{skillPath}
             return;
         }
 
+        _skillManagementPageIndex = 0;
+        RefreshSkillManagementUi();
+    }
+
+    private void FavoritesPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _userTemplatePageIndex, -1);
+        RefreshUserTemplateList();
+    }
+
+    private void FavoritesNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _userTemplatePageIndex, 1);
+        RefreshUserTemplateList();
+    }
+
+    private void SkillPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _skillManagementPageIndex, -1);
+        RefreshSkillManagementUi();
+    }
+
+    private void SkillNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _skillManagementPageIndex, 1);
         RefreshSkillManagementUi();
     }
 
@@ -4563,14 +5768,63 @@ Skill 文件：{skillPath}
         SaveUiSettings();
     }
 
-    private void OptimizationTargetChoiceList_ItemClick(object sender, ItemClickEventArgs e)
+    private void OptimizationCategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_uiReady || _syncingOptimizationTargetSelection || e.ClickedItem is not OptimizationTargetItem target)
+        ApplyOptimizationCategoryFromCombo(OptimizationCategoryBox);
+    }
+
+    private void CompactOptimizationCategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        ApplyOptimizationCategoryFromCombo(CompactOptimizationCategoryBox);
+    }
+
+    private void ApplyOptimizationCategoryFromCombo(ComboBox comboBox)
+    {
+        if (!_uiReady || _syncingModeSelection || comboBox.SelectedItem is not OptimizationCategoryChoice category)
         {
             return;
         }
 
-        var requestedMode = MakeOptimizationTargetMode(target.Id);
+        var nextMode = _optimizationModeChoices
+            .FirstOrDefault(choice => string.Equals(choice.Category, category.Value, StringComparison.OrdinalIgnoreCase))
+            ?.Value;
+        if (string.IsNullOrWhiteSpace(nextMode))
+        {
+            return;
+        }
+
+        if (!CanUseConversationMode(nextMode))
+        {
+            RejectConversationModeChange();
+            return;
+        }
+
+        _selectedMode = nextMode;
+        _syncingModeSelection = true;
+        SetModeSelectionState(_selectedMode);
+        _syncingModeSelection = false;
+
+        SelectTemplateSourceForMode(_selectedMode);
+        RefreshModelDisplayText();
+        RefreshScene();
+        RefreshTemplateViews();
+        SaveUiSettings();
+        SetStatus($"{L("已切换优化目标")}：{category.Title}");
+    }
+
+    private void OptimizationModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        ApplyModeChoiceFromCombo(OptimizationModeBox);
+    }
+
+    private void ApplyModeChoiceFromCombo(ComboBox comboBox)
+    {
+        if (!_uiReady || _syncingModeSelection || comboBox.SelectedItem is not OptimizationModeChoice choice)
+        {
+            return;
+        }
+
+        var requestedMode = choice.Value;
         if (!CanUseConversationMode(requestedMode))
         {
             RejectConversationModeChange();
@@ -4579,16 +5833,100 @@ Skill 文件：{skillPath}
 
         _selectedMode = requestedMode;
         _syncingModeSelection = true;
-        SetModeRadioState(_selectedMode);
+        SetModeSelectionState(_selectedMode);
         _syncingModeSelection = false;
 
-        SyncCompactModeBox();
         SelectTemplateSourceForMode(_selectedMode);
         RefreshModelDisplayText();
         RefreshScene();
         RefreshTemplateViews();
         SaveUiSettings();
-        SetStatus($"{L("已切换优化目标")}：{target.Title}");
+        SetStatus($"{L("已切换优化目标")}：{choice.Category} / {choice.Title}");
+    }
+
+    private bool TryApplySuggestedOptimizationTarget(string userRequest)
+    {
+        if (string.IsNullOrWhiteSpace(userRequest)
+            || _conversationLockedMode is not null
+            || !string.Equals(_selectedMode, "通用 LLM", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var suggestion = SuggestOptimizationTarget(userRequest);
+        if (suggestion is null || string.Equals(suggestion.Value.Mode, _selectedMode, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        _selectedMode = suggestion.Value.Mode;
+        _syncingModeSelection = true;
+        try
+        {
+            SetModeSelectionState(_selectedMode);
+            SyncCompactModeBox();
+        }
+        finally
+        {
+            _syncingModeSelection = false;
+        }
+
+        SelectTemplateSourceForMode(_selectedMode);
+        RefreshModelDisplayText();
+        RefreshScene();
+        RefreshTemplateViews();
+        SaveUiSettings();
+        SetStatus($"{L("已根据需求建议优化目标")}：{suggestion.Value.DisplayName}（{suggestion.Value.Reason}）");
+        return true;
+    }
+
+    private OptimizationTargetSuggestion? SuggestOptimizationTarget(string userRequest)
+    {
+        var text = userRequest.Trim();
+        var lower = text.ToLowerInvariant();
+
+        if (ContainsAny(lower, "veo", "veo3", "veo 3"))
+        {
+            return new("Veo 3", "Veo 3", "命中 Veo 视频模型关键词");
+        }
+
+        if (ContainsAny(text, "即梦", "剪映", "豆包视频", "首尾帧", "图生视频", "短视频", "分镜", "口播", "产品宣发")
+            || ContainsAny(lower, "seedance", "dreamina", "seedream"))
+        {
+            return new("即梦", "即梦 / Seedance", "命中短视频或即梦/Seedance 关键词");
+        }
+
+        if (ContainsAny(lower, "comfyui", "stable diffusion", "sdxl", "sd3", "a1111", "webui", "ksampler", "checkpoint", "lora", "controlnet")
+            || ContainsAny(text, "正向提示词", "反向提示词", "负面词", "采样器", "出图", "生图", "文生图", "图生图", "生成图片", "图片", "配图", "美图", "画一张", "画个", "海报", "人像", "写真"))
+        {
+            return new(FindOptimizationTargetMode("builtin-comfyui-stable-diffusion") ?? "文生图", "ComfyUI / Stable Diffusion", "命中文生图或 SD 工作流关键词");
+        }
+
+        if (ContainsAny(text, "论文", "降AI", "去AI", "去 AI", "AI味", "AI 味", "查重", "学术润色", "自然改写", "人话")
+            || ContainsAny(lower, "aigc", "academic humanize"))
+        {
+            return new(FindOptimizationTargetMode("builtin-academic-humanize-cn") ?? "论文去AI味", "论文去AI味", "命中论文自然化关键词");
+        }
+
+        if (ContainsAny(text, "代码", "报错", "修 bug", "修复 bug", "根因", "仓库", "提交", "拉取请求", "新增功能", "重构", "单元测试", "构建失败")
+            || ContainsAny(lower, "bug", "stack trace", "github", "pull request", "pr", "commit", "codex", "claude code", "cursor", "antigravity"))
+        {
+            return new("AI编程", "AI 编程", "命中代码/仓库任务关键词");
+        }
+
+        return null;
+    }
+
+    private string? FindOptimizationTargetMode(string targetId)
+    {
+        return _optimizationTargetService.Load().Any(target => string.Equals(target.Id, targetId, StringComparison.OrdinalIgnoreCase))
+            ? MakeOptimizationTargetMode(targetId)
+            : null;
+    }
+
+    private static bool ContainsAny(string text, params string[] keywords)
+    {
+        return keywords.Any(keyword => text.Contains(keyword, StringComparison.OrdinalIgnoreCase));
     }
 
     private void OptimizationTargetManagementList_ItemClick(object sender, ItemClickEventArgs e)
@@ -4599,30 +5937,21 @@ Skill 文件：{skillPath}
         }
     }
 
+    private void OptimizationTargetPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _optimizationTargetManagementPageIndex, -1);
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
+    }
+
+    private void OptimizationTargetNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _optimizationTargetManagementPageIndex, 1);
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
+    }
+
     private void CompactModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_uiReady || _syncingModeSelection || CompactModeBox.SelectedItem is not ComboBoxItem item)
-        {
-            return;
-        }
-
-        var requestedMode = item.Tag?.ToString() ?? "通用 LLM";
-        if (!CanUseConversationMode(requestedMode))
-        {
-            RejectConversationModeChange();
-            return;
-        }
-
-        _selectedMode = requestedMode;
-        _syncingModeSelection = true;
-        SetModeRadioState(_selectedMode);
-        _syncingModeSelection = false;
-
-        SelectTemplateSourceForMode(_selectedMode);
-        RefreshModelDisplayText();
-        RefreshScene();
-        RefreshTemplateViews();
-        SaveUiSettings();
+        ApplyModeChoiceFromCombo(CompactModeBox);
     }
 
     private async void CompactTemplateBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -4668,8 +5997,10 @@ Skill 文件：{skillPath}
                 return;
             }
 
-            ModeCustomRadio.IsChecked = true;
             _selectedMode = "自定义";
+            _syncingModeSelection = true;
+            SetModeSelectionState(_selectedMode);
+            _syncingModeSelection = false;
         }
 
         SelectTemplateSourceForMode(GetEffectiveMode());
@@ -4777,11 +6108,27 @@ Skill 文件：{skillPath}
         HotkeyAltBox.IsChecked = _settings.Hotkey.Alt;
         HotkeyWinBox.IsChecked = _settings.Hotkey.Win;
         SelectHotkeyMainKey(_settings.Hotkey.Key);
+        AnimationEnabledBox.IsChecked = _settings.Ui.EnableAnimations;
         OcrEnabledBox.IsChecked = _settings.Privacy.OcrEnabled;
         SelectOcrProvider(_settings.Ocr.PreferredProvider);
+        OneDriveEnabledBox.IsChecked = _settings.OneDriveSync.OneDriveEnabled;
+        OneDriveHistoryEnabledBox.IsChecked = _settings.OneDriveSync.HistorySyncEnabled;
+        OneDriveRememberVaultBox.IsChecked = _settings.OneDriveSync.RememberVaultOnThisDevice;
+        OneDriveFolderPathBox.Text = _settings.OneDriveSync.LocalFolderPath;
+        OneDrivePassphraseBox.Password = string.Empty;
+        WebDavEnabledBox.IsChecked = _settings.WebDavSync.WebDavEnabled;
+        WebDavHistoryEnabledBox.IsChecked = _settings.WebDavSync.HistorySyncEnabled;
+        WebDavRememberVaultBox.IsChecked = _settings.WebDavSync.RememberVaultOnThisDevice;
+        WebDavServerUrlBox.Text = _settings.WebDavSync.ServerUrl;
+        WebDavRemoteRootBox.Text = string.IsNullOrWhiteSpace(_settings.WebDavSync.RemoteRootPath) ? "啊拼" : _settings.WebDavSync.RemoteRootPath;
+        WebDavUsernameBox.Text = _settings.WebDavSync.Username;
+        WebDavPasswordBox.Password = string.Empty;
+        WebDavPassphraseBox.Password = string.Empty;
         var languagePack = _localizationService.Load(_settings.Ui.LanguageCode, _settings.Ui.MountedLanguagePackPath);
         SelectLanguage(_settings.Ui.LanguageCode, languagePack.DisplayName, languagePack.SourcePath);
         ApplyUiSettings();
+        UpdateOneDriveSyncUiState();
+        UpdateWebDavSyncUiState();
         _loadingSettings = false;
         if (_uiReady)
         {
@@ -4789,17 +6136,109 @@ Skill 文件：{skillPath}
         }
     }
 
+    private static IReadOnlyList<T> GetPageItems<T>(IReadOnlyList<T> items, ref int pageIndex, out int totalPages)
+    {
+        totalPages = Math.Max(1, (items.Count + ListPageSize - 1) / ListPageSize);
+        pageIndex = Math.Clamp(pageIndex, 0, totalPages - 1);
+        return items
+            .Skip(pageIndex * ListPageSize)
+            .Take(ListPageSize)
+            .ToArray();
+    }
+
+    private static void MovePageToItem<T>(
+        IReadOnlyList<T> items,
+        string? selectedId,
+        ref int pageIndex,
+        Func<T, string?> getId)
+    {
+        if (string.IsNullOrWhiteSpace(selectedId))
+        {
+            return;
+        }
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (string.Equals(getId(items[i]), selectedId, StringComparison.OrdinalIgnoreCase))
+            {
+                pageIndex = i / ListPageSize;
+                return;
+            }
+        }
+    }
+
+    private static void UpdatePager(Button previousButton, TextBlock pagerText, Button nextButton, int pageIndex, int totalPages, int totalCount)
+    {
+        previousButton.IsEnabled = totalCount > 0 && pageIndex > 0;
+        nextButton.IsEnabled = totalCount > 0 && pageIndex + 1 < totalPages;
+        pagerText.Text = totalCount == 0
+            ? "0 条"
+            : $"{pageIndex + 1} / {totalPages} · {totalCount} 条";
+    }
+
+    private static void MovePage(ref int pageIndex, int delta)
+    {
+        pageIndex = Math.Max(0, pageIndex + delta);
+    }
+
+    private void QueueTemplateSearchRefresh()
+    {
+        if (_templateSearchRefreshQueued)
+        {
+            return;
+        }
+
+        _templateSearchRefreshQueued = true;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _templateSearchRefreshQueued = false;
+            if (_uiReady)
+            {
+                RefreshTemplateViews();
+            }
+        });
+    }
+
+    private void QueueHistorySearchRefresh()
+    {
+        if (_historySearchRefreshQueued)
+        {
+            return;
+        }
+
+        _historySearchRefreshQueued = true;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _historySearchRefreshQueued = false;
+            if (_uiReady)
+            {
+                RefreshHistoryUi();
+            }
+        });
+    }
+
+    private void QueueCommonPromptSearchRefresh()
+    {
+        if (_commonPromptSearchRefreshQueued)
+        {
+            return;
+        }
+
+        _commonPromptSearchRefreshQueued = true;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _commonPromptSearchRefreshQueued = false;
+            if (_uiReady)
+            {
+                RefreshCommonPromptsUi();
+            }
+        });
+    }
+
     private void RefreshFavoritesUi(string? selectedId = null)
     {
         RefreshTemplateViews();
-        RefreshUserTemplateList();
-        var templates = GetUserTemplateCatalog().ToArray();
-
-        var selectedTemplate = selectedId is null
-            ? templates.FirstOrDefault()
-            : templates.FirstOrDefault(template => string.Equals(template.Id, selectedId, StringComparison.OrdinalIgnoreCase));
-
-        FavoritesBox.SelectedItem = selectedTemplate;
+        RefreshUserTemplateList(selectedId);
     }
 
     private IReadOnlyList<PromptTemplateCatalogItem> GetTemplateCatalog()
@@ -4858,10 +6297,12 @@ Skill 文件：{skillPath}
                 || template.Category.Contains(search, StringComparison.OrdinalIgnoreCase)
                 || template.Text.Contains(search, StringComparison.OrdinalIgnoreCase))
             .ToArray();
+        var pageItems = GetPageItems(visibleTemplates, ref _quickTemplatePageIndex, out var totalPages);
 
         _syncingTemplateSelection = true;
         SetLocalizedListItemsKeepingSelection(TemplateCategoryList, categories, _selectedTemplateCategory);
-        QuickTemplateList.ItemsSource = visibleTemplates;
+        QuickTemplateList.ItemsSource = pageItems;
+        UpdatePager(QuickTemplatePreviousPageButton, QuickTemplatePagerText, QuickTemplateNextPageButton, _quickTemplatePageIndex, totalPages, visibleTemplates.Length);
         _syncingTemplateSelection = false;
         RefreshMountedSkillQuickList();
         RefreshCompactTemplatePicker();
@@ -4927,7 +6368,7 @@ Skill 文件：{skillPath}
             .FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
     }
 
-    private void RefreshMountedSkillQuickList()
+    private void RefreshMountedSkillQuickList(bool moveToSelected = true)
     {
         if (MountedSkillQuickList is null)
         {
@@ -4935,16 +6376,25 @@ Skill 文件：{skillPath}
         }
 
         var mountedSkills = GetMountedSkillTemplates();
-        MountedSkillQuickList.ItemsSource = mountedSkills;
+        if (moveToSelected)
+        {
+            MovePageToItem(mountedSkills, _selectedMountedSkillId, ref _mountedSkillPageIndex, template => template.Id);
+        }
+        var pageItems = GetPageItems(mountedSkills, ref _mountedSkillPageIndex, out var totalPages);
+        MountedSkillQuickList.ItemsSource = pageItems;
         PromptTemplateCatalogItem? selected = null;
         if (!string.IsNullOrWhiteSpace(_selectedMountedSkillId))
         {
             selected = mountedSkills
                 .FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
-            MountedSkillQuickList.SelectedItem = selected;
-            if (MountedSkillQuickList.SelectedItem is null)
+            if (selected is null)
             {
                 _selectedMountedSkillId = null;
+                MountedSkillQuickList.SelectedItem = null;
+            }
+            else
+            {
+                MountedSkillQuickList.SelectedItem = pageItems.FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
             }
         }
         else
@@ -4952,6 +6402,7 @@ Skill 文件：{skillPath}
             MountedSkillQuickList.SelectedItem = null;
         }
 
+        UpdatePager(MountedSkillPreviousPageButton, MountedSkillPagerText, MountedSkillNextPageButton, _mountedSkillPageIndex, totalPages, mountedSkills.Count);
         RefreshCompactSkillPicker(mountedSkills);
 
         if (MountedSkillEmptyText is not null)
@@ -5053,7 +6504,7 @@ Skill 文件：{skillPath}
         _syncingTemplateSelection = false;
     }
 
-    private void RefreshUserTemplateList()
+    private void RefreshUserTemplateList(string? selectedId = null)
     {
         var userTemplates = GetUserTemplateCatalog();
         var userCategories = userTemplates
@@ -5068,9 +6519,17 @@ Skill 文件：{skillPath}
         _syncingTemplateSelection = false;
 
         var userCategory = GetChoiceValue(TemplateCategoryFilterBox.SelectedItem);
-        FavoritesBox.ItemsSource = userTemplates
+        var visibleTemplates = userTemplates
             .Where(template => string.IsNullOrWhiteSpace(userCategory) || userCategory == "全部" || string.Equals(template.Category, userCategory, StringComparison.OrdinalIgnoreCase))
             .ToArray();
+        MovePageToItem(visibleTemplates, selectedId, ref _userTemplatePageIndex, template => template.Id);
+        var pageItems = GetPageItems(visibleTemplates, ref _userTemplatePageIndex, out var totalPages);
+
+        FavoritesBox.ItemsSource = pageItems;
+        FavoritesBox.SelectedItem = selectedId is null
+            ? pageItems.FirstOrDefault()
+            : pageItems.FirstOrDefault(template => string.Equals(template.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        UpdatePager(FavoritesPreviousPageButton, FavoritesPagerText, FavoritesNextPageButton, _userTemplatePageIndex, totalPages, visibleTemplates.Length);
     }
 
     private void RefreshSkillManagementUi(string? selectedId = null)
@@ -5093,10 +6552,14 @@ Skill 文件：{skillPath}
                 || selectedCategory == "全部"
                 || string.Equals(template.Category, selectedCategory, StringComparison.OrdinalIgnoreCase))
             .ToArray();
-        SkillList.ItemsSource = visibleTemplates;
+        MovePageToItem(visibleTemplates, selectedId, ref _skillManagementPageIndex, template => template.Id);
+        var pageItems = GetPageItems(visibleTemplates, ref _skillManagementPageIndex, out var totalPages);
+
+        SkillList.ItemsSource = pageItems;
         SkillList.SelectedItem = selectedId is null
-            ? visibleTemplates.FirstOrDefault()
-            : visibleTemplates.FirstOrDefault(template => string.Equals(template.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+            ? pageItems.FirstOrDefault()
+            : pageItems.FirstOrDefault(template => string.Equals(template.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        UpdatePager(SkillPreviousPageButton, SkillPagerText, SkillNextPageButton, _skillManagementPageIndex, totalPages, visibleTemplates.Length);
     }
 
     private void SetComboItemsKeepingSelection(ComboBox comboBox, IReadOnlyList<string> items)
@@ -5157,9 +6620,12 @@ Skill 文件：{skillPath}
     private void RefreshHistoryUi()
     {
         var query = HistorySearchBox?.Text.Trim() ?? string.Empty;
-        HistoryList.ItemsSource = string.IsNullOrWhiteSpace(query)
+        var items = string.IsNullOrWhiteSpace(query)
             ? _historyService.Load().Take(100).ToArray()
             : _historyService.Search(query, 100).ToArray();
+        var pageItems = GetPageItems(items, ref _historyPageIndex, out var totalPages);
+        HistoryList.ItemsSource = pageItems;
+        UpdatePager(HistoryPreviousPageButton, HistoryPagerText, HistoryNextPageButton, _historyPageIndex, totalPages, items.Length);
     }
 
     private void RefreshSearchIndex()
@@ -5200,6 +6666,19 @@ Skill 文件：{skillPath}
             return;
         }
 
+        _historyPageIndex = 0;
+        QueueHistorySearchRefresh();
+    }
+
+    private void HistoryPreviousPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _historyPageIndex, -1);
+        RefreshHistoryUi();
+    }
+
+    private void HistoryNextPageButton_Click(object sender, RoutedEventArgs e)
+    {
+        MovePage(ref _historyPageIndex, 1);
         RefreshHistoryUi();
     }
 
@@ -5232,14 +6711,22 @@ Skill 文件：{skillPath}
                 || selectedCategory == "全部"
                 || string.Equals(item.Category, selectedCategory, StringComparison.OrdinalIgnoreCase))
             .ToArray();
-        CommonPromptList.ItemsSource = visibleItems;
+        MovePageToItem(visibleItems, selectedId, ref _commonPromptPageIndex, item => item.Id);
+        MovePageToItem(visibleItems, selectedId, ref _compactCommonPromptPageIndex, item => item.Id);
+        var commonPageItems = GetPageItems(visibleItems, ref _commonPromptPageIndex, out var commonTotalPages);
+        var compactPageItems = GetPageItems(visibleItems, ref _compactCommonPromptPageIndex, out var compactTotalPages);
+
+        CommonPromptList.ItemsSource = commonPageItems;
         CommonPromptList.SelectedItem = selectedId is null
             ? null
-            : visibleItems.FirstOrDefault(item => string.Equals(item.Id, selectedId, StringComparison.OrdinalIgnoreCase));
-        CompactCommonPromptList.ItemsSource = visibleItems;
+            : commonPageItems.FirstOrDefault(item => string.Equals(item.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        UpdatePager(CommonPromptPreviousPageButton, CommonPromptPagerText, CommonPromptNextPageButton, _commonPromptPageIndex, commonTotalPages, visibleItems.Length);
+
+        CompactCommonPromptList.ItemsSource = compactPageItems;
         CompactCommonPromptList.SelectedItem = selectedId is null
             ? null
-            : visibleItems.FirstOrDefault(item => string.Equals(item.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+            : compactPageItems.FirstOrDefault(item => string.Equals(item.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+        UpdatePager(CompactCommonPromptPreviousPageButton, CompactCommonPromptPagerText, CompactCommonPromptNextPageButton, _compactCommonPromptPageIndex, compactTotalPages, visibleItems.Length);
         _syncingCommonPromptSelection = false;
     }
 
@@ -5324,118 +6811,265 @@ Skill 文件：{skillPath}
     {
         var targets = _optimizationTargetService.Load();
         var selectedId = selectedTargetId ?? GetOptimizationTargetId(_selectedMode);
-        _syncingOptimizationTargetSelection = true;
+        RefreshOptimizationModeChoices(targets);
+        RefreshOptimizationTargetLists(targets, selectedId, moveToSelected: true);
+        SyncModeSelectionBoxes(_selectedMode);
+    }
+
+    private void RefreshOptimizationTargetLists(IReadOnlyList<OptimizationTargetItem> targets, string? selectedId, bool moveToSelected)
+    {
+        if (moveToSelected)
+        {
+            MovePageToItem(targets, selectedId, ref _optimizationTargetManagementPageIndex, target => target.Id);
+        }
+
+        var managementPageItems = GetPageItems(targets, ref _optimizationTargetManagementPageIndex, out var managementTotalPages);
+        OptimizationTargetManagementList.ItemsSource = managementPageItems;
+
+        OptimizationTargetManagementList.SelectedItem = string.IsNullOrWhiteSpace(selectedId)
+            ? null
+            : managementPageItems.FirstOrDefault(target => string.Equals(target.Id, selectedId, StringComparison.OrdinalIgnoreCase));
+
+        UpdatePager(OptimizationTargetPreviousPageButton, OptimizationTargetPagerText, OptimizationTargetNextPageButton, _optimizationTargetManagementPageIndex, managementTotalPages, targets.Count);
+    }
+
+    private void RefreshOptimizationModeChoices(IReadOnlyList<OptimizationTargetItem> targets)
+    {
+        _optimizationModeChoices = BuildOptimizationModeChoices(targets);
+        _optimizationCategoryChoices = BuildOptimizationCategoryChoices(_optimizationModeChoices);
+
+        _syncingModeSelection = true;
         try
         {
-            OptimizationTargetChoiceList.Items.Clear();
-            OptimizationTargetManagementList.Items.Clear();
-            OptimizationTargetItem? selectedTarget = null;
-            foreach (var target in targets)
-            {
-                OptimizationTargetChoiceList.Items.Add(target);
-                OptimizationTargetManagementList.Items.Add(target);
-                if (string.Equals(target.Id, selectedId, StringComparison.OrdinalIgnoreCase))
-                {
-                    selectedTarget = target;
-                }
-            }
-
-            OptimizationTargetChoiceList.SelectedItem = selectedTarget;
-            OptimizationTargetManagementList.SelectedItem = selectedTarget;
+            OptimizationCategoryBox.ItemsSource = _optimizationCategoryChoices;
+            CompactOptimizationCategoryBox.ItemsSource = _optimizationCategoryChoices;
+            SyncModeSelectionBoxes(_selectedMode);
         }
         finally
         {
-            _syncingOptimizationTargetSelection = false;
+            _syncingModeSelection = false;
         }
-
-        RefreshCompactOptimizationTargetItems(targets);
-        SyncCompactModeBox();
     }
 
-    private void RefreshCompactOptimizationTargetItems(IReadOnlyList<OptimizationTargetItem> targets)
+    private IReadOnlyList<OptimizationModeChoice> BuildOptimizationModeChoices(IReadOnlyList<OptimizationTargetItem> targets)
     {
-        if (CompactModeBox is null)
+        var choices = new List<OptimizationModeChoice>
         {
-            return;
-        }
-
-        for (var i = CompactModeBox.Items.Count - 1; i >= 0; i--)
-        {
-            if (CompactModeBox.Items[i] is ComboBoxItem item
-                && IsOptimizationTargetMode(item.Tag?.ToString()))
-            {
-                CompactModeBox.Items.RemoveAt(i);
-            }
-        }
+            new("通用 LLM", "通用大模型", "通用 LLM", "聊天、总结、改写和普通提示词优化"),
+            new("论文去AI味", "通用大模型", "论文去AI味", "中文论文自然化、降模板腔"),
+            new("文生图", "文生图", "通用文生图", "主体、风格、镜头、光线和负面约束"),
+            new("即梦", "文生视频", "即梦 / Seedance", "短视频、产品、首尾帧和分镜"),
+            new("Veo 3", "文生视频", "Veo 3", "电影镜头、对白、音效和时间轴"),
+            new("AI编程", "Agent", "AI 编程", "Codex、Claude Code、反重力和仓库任务"),
+        };
 
         foreach (var target in targets)
         {
-            var item = new ComboBoxItem
+            if (string.Equals(target.Id, "builtin-academic-humanize-cn", StringComparison.OrdinalIgnoreCase))
             {
-                Tag = MakeOptimizationTargetMode(target.Id),
-                Content = target.Title
-            };
-            if (!string.IsNullOrWhiteSpace(target.Description))
-            {
-                ToolTipService.SetToolTip(item, target.Description);
+                continue;
             }
 
-            CompactModeBox.Items.Add(item);
+            choices.Add(new OptimizationModeChoice(
+                MakeOptimizationTargetMode(target.Id),
+                GetOptimizationModeCategory(target),
+                target.Title,
+                FallbackText(target.Description, target.Compatibility)));
         }
+
+        choices.Add(new OptimizationModeChoice("自定义", "自定义", "自定义平台", "手动填写模型、平台或目标名称"));
+        return choices
+            .GroupBy(choice => choice.Value, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToArray();
     }
 
-    private void SetModeRadioState(string mode)
+    private static IReadOnlyList<OptimizationCategoryChoice> BuildOptimizationCategoryChoices(IReadOnlyList<OptimizationModeChoice> modes)
     {
-        ModeGenericRadio.IsChecked = mode == "通用 LLM";
-        ModeAcademicHumanizeRadio.IsChecked = mode == "论文去AI味";
-        ModeTextImageRadio.IsChecked = mode == "文生图";
-        ModeJimengRadio.IsChecked = mode == "即梦";
-        ModeVeo3Radio.IsChecked = mode == "Veo 3";
-        ModeAiCodingRadio.IsChecked = mode == "AI编程";
-        ModeCustomRadio.IsChecked = mode == "自定义";
-        SelectOptimizationTargetChoice(mode);
+        var descriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["通用大模型"] = "普通聊天模型、论文润色和通用提示词",
+            ["文生图"] = "通用文生图、ComfyUI、Stable Diffusion 等图片模型",
+            ["文生视频"] = "即梦、Seedance、Veo 等视频模型",
+            ["Agent"] = "AI 编程、仓库任务和 Skill 工作流",
+            ["自定义"] = "手动填写平台或目标名称"
+        };
+
+        var ordered = new[] { "通用大模型", "文生图", "文生视频", "Agent", "自定义" };
+        return modes
+            .Select(mode => mode.Category)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(category =>
+            {
+                var index = Array.FindIndex(ordered, item => string.Equals(item, category, StringComparison.OrdinalIgnoreCase));
+                return index < 0 ? ordered.Length : index;
+            })
+            .ThenBy(category => category, StringComparer.OrdinalIgnoreCase)
+            .Select(category => new OptimizationCategoryChoice(
+                category,
+                category,
+                descriptions.TryGetValue(category, out var description) ? description : "用户导入的优化目标分类"))
+            .ToArray();
     }
 
-    private void SelectOptimizationTargetChoice(string mode)
+    private static string GetOptimizationModeCategory(OptimizationTargetItem target)
     {
-        var targetId = GetOptimizationTargetId(mode);
-        _syncingOptimizationTargetSelection = true;
-        try
+        if (target.Category.Contains("视频", StringComparison.Ordinal)
+            || target.Compatibility.Contains("Veo", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("Seedance", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("Dreamina", StringComparison.OrdinalIgnoreCase))
         {
-            var selectedTarget = string.IsNullOrWhiteSpace(targetId)
-                ? null
-                : OptimizationTargetChoiceList.Items
-                    .OfType<OptimizationTargetItem>()
-                    .FirstOrDefault(target => string.Equals(target.Id, targetId, StringComparison.OrdinalIgnoreCase));
-            OptimizationTargetChoiceList.SelectedItem = selectedTarget;
-            OptimizationTargetManagementList.SelectedItem = selectedTarget;
+            return "文生视频";
         }
-        finally
+
+        if (target.Category.Contains("图", StringComparison.Ordinal)
+            || target.Compatibility.Contains("ComfyUI", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("Stable Diffusion", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("SDXL", StringComparison.OrdinalIgnoreCase))
         {
-            _syncingOptimizationTargetSelection = false;
+            return "文生图";
         }
+
+        if (target.Category.Contains("编程", StringComparison.Ordinal)
+            || target.Compatibility.Contains("Codex", StringComparison.OrdinalIgnoreCase)
+            || target.Compatibility.Contains("Claude Code", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Agent";
+        }
+
+        if (target.Category.Contains("论文", StringComparison.Ordinal)
+            || target.Title.Contains("论文", StringComparison.Ordinal))
+        {
+            return "通用大模型";
+        }
+
+        return string.IsNullOrWhiteSpace(target.Category) ? "自定义" : target.Category;
+    }
+
+    private void SetModeSelectionState(string mode)
+    {
+        RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(mode), moveToSelected: true);
+        SyncModeSelectionBoxes(mode);
     }
 
     private void SyncCompactModeBox()
     {
-        if (CompactModeBox is null)
+        SyncModeSelectionBox(CompactModeBox, _selectedMode);
+    }
+
+    private void SyncModeSelectionBoxes(string mode)
+    {
+        var category = GetOptimizationCategoryForMode(mode);
+        RefreshVisibleOptimizationModeChoices(category);
+        SyncCategorySelectionBox(OptimizationCategoryBox, category);
+        SyncCategorySelectionBox(CompactOptimizationCategoryBox, category);
+        SyncModeSelectionBox(OptimizationModeBox, mode);
+        SyncModeSelectionBox(CompactModeBox, mode);
+        UpdateOptimizationModeDescription(mode);
+    }
+
+    private string GetOptimizationCategoryForMode(string mode)
+    {
+        var choice = _optimizationModeChoices.FirstOrDefault(item =>
+            string.Equals(item.Value, mode, StringComparison.OrdinalIgnoreCase));
+        return choice?.Category
+            ?? _optimizationCategoryChoices.FirstOrDefault()?.Value
+            ?? "通用大模型";
+    }
+
+    private void RefreshVisibleOptimizationModeChoices(string category)
+    {
+        _visibleOptimizationModeChoices = _optimizationModeChoices
+            .Where(choice => string.Equals(choice.Category, category, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        OptimizationModeBox.ItemsSource = _visibleOptimizationModeChoices;
+        CompactModeBox.ItemsSource = _visibleOptimizationModeChoices;
+    }
+
+    private void SyncCategorySelectionBox(ComboBox? comboBox, string category)
+    {
+        if (comboBox is null)
         {
             return;
         }
 
-        _syncingModeSelection = true;
-        foreach (var item in CompactModeBox.Items.OfType<ComboBoxItem>())
+        var choice = _optimizationCategoryChoices.FirstOrDefault(item =>
+            string.Equals(item.Value, category, StringComparison.OrdinalIgnoreCase));
+        if (choice is not null)
         {
-            if (string.Equals(item.Tag?.ToString(), _selectedMode, StringComparison.OrdinalIgnoreCase))
-            {
-                CompactModeBox.SelectedItem = item;
-                _syncingModeSelection = false;
-                return;
-            }
+            comboBox.SelectedItem = choice;
+            return;
         }
 
-        CompactModeBox.SelectedIndex = 0;
-        _syncingModeSelection = false;
+        comboBox.SelectedIndex = _optimizationCategoryChoices.Count > 0 ? 0 : -1;
+    }
+
+    private void SyncModeSelectionBox(ComboBox? comboBox, string mode)
+    {
+        if (comboBox is null)
+        {
+            return;
+        }
+
+        var choice = _visibleOptimizationModeChoices.FirstOrDefault(item =>
+            string.Equals(item.Value, mode, StringComparison.OrdinalIgnoreCase));
+        if (choice is not null)
+        {
+            comboBox.SelectedItem = choice;
+            return;
+        }
+
+        comboBox.SelectedIndex = _visibleOptimizationModeChoices.Count > 0 ? 0 : -1;
+    }
+
+    private void UpdateOptimizationModeDescription(string mode)
+    {
+        var choice = _optimizationModeChoices.FirstOrDefault(item =>
+            string.Equals(item.Value, mode, StringComparison.OrdinalIgnoreCase));
+        if (OptimizationModeDescriptionText is not null)
+        {
+            var capabilityText = BuildOptimizationModeCapabilityText(mode);
+            OptimizationModeDescriptionText.Text = choice is null
+                ? "按类别选择模型目标。"
+                : $"{choice.Category} / {choice.Title}：{choice.Description}{Environment.NewLine}{capabilityText}";
+        }
+    }
+
+    private string BuildOptimizationModeCapabilityText(string mode)
+    {
+        var effectiveMode = GetSelectedOptimizationTarget(mode)?.Title
+            ?? (string.Equals(mode, "自定义", StringComparison.OrdinalIgnoreCase) ? CustomModeBox.Text.Trim() : mode);
+        if (IsComfyStableDiffusionMode(effectiveMode))
+        {
+            return "能力标签：中文输入、英文同步、正向/反向/参数复制、适合 ComfyUI / SD WebUI；未接入 workflow API。";
+        }
+
+        if (IsVeoMode(string.Empty, effectiveMode))
+        {
+            return "能力标签：英文导演提示词、镜头/约束/时长复制、适合 Veo；未自动提交到视频平台。";
+        }
+
+        if (IsJimengMode(string.Empty, effectiveMode))
+        {
+            return "能力标签：中文短视频结构、分镜/约束/参数复制、适合即梦 / Seedance；未自动上传平台。";
+        }
+
+        if (IsAiCodingMode(string.Empty, effectiveMode))
+        {
+            return "能力标签：任务/约束/验证复制、适合 Codex / Claude Code / Cursor；不自动读取仓库上下文。";
+        }
+
+        if (IsAcademicHumanizeMode(string.Empty, effectiveMode))
+        {
+            return "能力标签：中文论文自然化、禁用词/输出规则复制；不自动导入 Word / PDF。";
+        }
+
+        if (effectiveMode.Contains("文生图", StringComparison.Ordinal))
+        {
+            return "能力标签：中文结构化、英文同步、负面约束；建议具体平台优先选择 ComfyUI / Stable Diffusion。";
+        }
+
+        return "能力标签：中文主输出、英文同步、聊天式补充、常用提示词收藏。";
     }
 
     private void SelectTemplateSourceForMode(string mode)
@@ -5502,7 +7136,7 @@ Skill 文件：{skillPath}
         _selectedMode = _settings.Ui.SelectedMode;
         RefreshOptimizationTargetPickers(GetOptimizationTargetId(_selectedMode));
         _syncingModeSelection = true;
-        SetModeRadioState(_selectedMode);
+        SetModeSelectionState(_selectedMode);
         _syncingModeSelection = false;
         SyncCompactModeBox();
         CustomModeBox.Text = _settings.Ui.CustomMode;
@@ -5748,6 +7382,9 @@ Skill 文件：{skillPath}
             tags.Add("深度思考：提示词摘要");
         }
 
+        tags.Add("流式输出");
+        tags.Add(IsVisionCapableModel(capability.ProviderId, model) ? "图片输入：可能支持" : "图片输入：未标记");
+        tags.Add(GetModelLanguageFitTag(capability.ProviderId, model));
         return tags;
     }
 
@@ -5760,7 +7397,11 @@ Skill 文件：{skillPath}
 
         var tags = BuildModelTagList(providerId, model)
             .Skip(1)
-            .Where(tag => !string.Equals(tag, "深度思考：提示词摘要", StringComparison.Ordinal))
+            .Where(tag => !string.Equals(tag, "深度思考：提示词摘要", StringComparison.Ordinal)
+                && !string.Equals(tag, "流式输出", StringComparison.Ordinal)
+                && !tag.StartsWith("中文", StringComparison.Ordinal)
+                && !tag.StartsWith("英文", StringComparison.Ordinal)
+                && !string.Equals(tag, "图片输入：未标记", StringComparison.Ordinal))
             .ToArray();
         return tags.Length == 0 ? model : $"{model}  [{string.Join(" · ", tags)}]";
     }
@@ -5768,8 +7409,48 @@ Skill 文件：{skillPath}
     private string BuildModelCapabilityTooltip(string providerId, string model, string? ownedBy = null)
     {
         var capability = ResolveReasoningCapability(providerId, string.Empty, model);
+        var tags = string.Join(" · ", BuildModelTagList(providerId, model).Select(L));
         var owner = string.IsNullOrWhiteSpace(ownedBy) ? string.Empty : $"{Environment.NewLine}{L("所属：")}{ownedBy}";
-        return $"{model}{Environment.NewLine}{L(capability.Description)}{owner}";
+        return $"{model}{Environment.NewLine}{L("能力标签：")}{tags}{Environment.NewLine}{L(capability.Description)}{owner}";
+    }
+
+    private static bool IsVisionCapableModel(string providerId, string model)
+    {
+        var lowerModel = model.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(lowerModel))
+        {
+            return false;
+        }
+
+        return lowerModel.Contains("vision", StringComparison.Ordinal)
+            || lowerModel.Contains("vl", StringComparison.Ordinal)
+            || lowerModel.Contains("qwen-vl", StringComparison.Ordinal)
+            || lowerModel.Contains("4o", StringComparison.Ordinal)
+            || lowerModel.Contains("gpt-5", StringComparison.Ordinal)
+            || lowerModel.Contains("gemini", StringComparison.Ordinal)
+            || lowerModel.Contains("claude", StringComparison.Ordinal)
+            || lowerModel.Contains("pixtral", StringComparison.Ordinal)
+            || lowerModel.Contains("multimodal", StringComparison.Ordinal)
+            || string.Equals(providerId, "gemini", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "claude", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetModelLanguageFitTag(string providerId, string model)
+    {
+        var lowerModel = model.Trim().ToLowerInvariant();
+        if (string.Equals(providerId, "deepseek", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "glm", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "doubao", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "kimi", StringComparison.OrdinalIgnoreCase)
+            || lowerModel.Contains("qwen", StringComparison.Ordinal)
+            || lowerModel.Contains("deepseek", StringComparison.Ordinal)
+            || lowerModel.Contains("glm", StringComparison.Ordinal)
+            || lowerModel.Contains("kimi", StringComparison.Ordinal))
+        {
+            return "中文友好";
+        }
+
+        return "英文友好";
     }
 
     private static string GetProviderLabelById(string providerId)
@@ -6205,7 +7886,7 @@ Skill 文件：{skillPath}
 目标平台 / 优化模式：{effectiveMode}
 场景选择：{selectedScenes}
 主输出语言：{primaryLanguage}
-英文翻译提示词区域会单独同步输出英文；如果当前界面语言是英文，主输出语言仍保持中文。
+英文提示词区域会单独同步输出英文；如果当前界面语言是英文，主输出语言仍保持中文。
 上下文来源：{FallbackText(_contextSource, "手动输入")}
 额外上下文：{FallbackText(ContextBox.Text, "暂无")}
 输出方向：{sceneLine}
@@ -6404,6 +8085,7 @@ Skill 文件：{skillPath}
             : isTextToImageMode
             ? BuildTextToImageModelOptimizationPrompt(userRequest, localPrompt)
             : BuildModelOptimizationPrompt(userRequest, localPrompt);
+        var englishStructureRule = BuildEnglishTranslationStructureRule(isTextToImageMode, isVideoMode, IsAiCodingMode(), IsAcademicHumanizeMode(), selectedTarget);
         var thinkingProtocol = deepThinkingEnabled
             ? $"""
 <AIPIN_THINKING>
@@ -6413,9 +8095,9 @@ Skill 文件：{skillPath}
             : string.Empty;
         var thinkingRule = deepThinkingEnabled
             ? $"""
-7. 深度思考已开启。当前内置标签：{reasoningCapability.ProviderTag} / {reasoningCapability.ModelTag}。如果 Provider 返回原生 reasoning_content，客户端会优先显示它；同时你仍需填写 AIPIN_THINKING 作为可展示摘要或 fallback。
+8. 深度思考已开启。当前内置标签：{reasoningCapability.ProviderTag} / {reasoningCapability.ModelTag}。如果 Provider 返回原生 reasoning_content，客户端会优先显示它；同时你仍需填写 AIPIN_THINKING 作为可展示摘要或 fallback。
 """
-            : "7. 深度思考未开启，不要输出 AIPIN_THINKING 标签。";
+            : "8. 深度思考未开启，不要输出 AIPIN_THINKING 标签。";
 
         return $"""
 你是 啊拼 的对话式提示词优化器。你必须使用客户端协议输出，客户端只会读取协议标签内的内容。
@@ -6428,6 +8110,9 @@ Skill 文件：{skillPath}
 <AIPIN_PROMPT>
 {(matchedSkill is not null ? "按已挂载 Skill 直接生成的最终提示词或最终结果。必须可直接复制使用，不要再包装成 Skill 调用请求。" : "更新后的完整提示词。必须可直接复制给目标模型使用。")}
 </AIPIN_PROMPT>
+<AIPIN_ENGLISH_PROMPT>
+与 AIPIN_PROMPT 对应的完整英文提示词。必须在本轮一次性生成，不能写“见中文版本”、不能留空、不能只翻译标题。
+</AIPIN_ENGLISH_PROMPT>
 <AIPIN_MISSING>
 仍可能缺失的需求点，用简短条目列出；如果没有明显缺失，写“暂无明显缺失。”
 </AIPIN_MISSING>
@@ -6436,10 +8121,11 @@ Skill 文件：{skillPath}
 协议规则：
 1. 协议标签外不要输出任何正文、解释、Markdown 分隔线或代码块。
 2. 每一轮都必须基于“上一版提示词”和“用户本轮补充”更新 AIPIN_PROMPT；如果已选择或命中挂载 Skill，则把 Skill 当作当前生成规则直接执行，不要输出“请调用/激活 Skill”的中间提示词。
-3. 不要把追问写进 AIPIN_PROMPT 正文；追问只放 AIPIN_QUESTION。
-4. AIPIN_MISSING 必须指出可能还缺什么，例如技术栈、平台、画幅、风格、约束、输出格式、验收标准等。
-5. 如果用户本轮只是回答某个缺失项，比如“Java”，要把它合并进提示词，并继续追问下一个最重要缺失项。
-6. AIPIN_PROMPT 必须是纯文本最终提示词，不要使用 Markdown：不要用 # 标题、-/* 列表符号、**粗体**、`行内代码`、```代码围栏、Markdown 链接或 Markdown 分隔线。需要分段时使用中文括号标题如【任务】或普通换行。
+3. 同一轮必须同步生成 AIPIN_ENGLISH_PROMPT：它是 AIPIN_PROMPT 的英文可执行版本，而不是后续翻译任务。{englishStructureRule}
+4. 不要把追问写进 AIPIN_PROMPT 或 AIPIN_ENGLISH_PROMPT 正文；追问只放 AIPIN_QUESTION。
+5. AIPIN_MISSING 必须指出可能还缺什么，例如技术栈、平台、画幅、风格、约束、输出格式、验收标准等。
+6. 如果用户本轮只是回答某个缺失项，比如“Java”，要把它合并进提示词，并继续追问下一个最重要缺失项。
+7. AIPIN_PROMPT 和 AIPIN_ENGLISH_PROMPT 都必须是纯文本最终提示词，不要使用 Markdown：不要用 # 标题、-/* 列表符号、**粗体**、`行内代码`、```代码围栏、Markdown 链接或 Markdown 分隔线。需要分段时中文使用【任务】这类括号标题，英文使用 [Task] 这类方括号标题或普通换行。
 {thinkingRule}
 
 上一版提示词：
@@ -6459,6 +8145,7 @@ Skill 文件：{skillPath}
     private static PromptProtocolResult ParsePromptProtocol(string rawResponse, string fallbackPrompt)
     {
         var prompt = ExtractProtocolTag(rawResponse, "AIPIN_PROMPT");
+        var englishPrompt = ExtractProtocolTag(rawResponse, "AIPIN_ENGLISH_PROMPT");
         var question = ExtractProtocolTag(rawResponse, "AIPIN_QUESTION");
         var missing = ExtractProtocolTag(rawResponse, "AIPIN_MISSING");
         var doneText = ExtractProtocolTag(rawResponse, "AIPIN_DONE");
@@ -6472,7 +8159,7 @@ Skill 文件：{skillPath}
         }
 
         var done = bool.TryParse(doneText, out var parsedDone) && parsedDone;
-        return new PromptProtocolResult(prompt.Trim(), question?.Trim(), missing?.Trim(), done, thinking?.Trim());
+        return new PromptProtocolResult(prompt.Trim(), englishPrompt?.Trim(), question?.Trim(), missing?.Trim(), done, thinking?.Trim());
     }
 
     private static string? ExtractProtocolTag(string text, string tag)
@@ -6556,11 +8243,87 @@ Skill 文件：{skillPath}
         AddChatMessage(string.Join(Environment.NewLine, parts), isUser: false, animate: animate);
     }
 
-    private readonly record struct PromptProtocolResult(string Prompt, string? Question, string? Missing, bool Done, string? Thinking);
+    private readonly record struct PromptProtocolResult(string Prompt, string? EnglishPrompt, string? Question, string? Missing, bool Done, string? Thinking);
 
     private readonly record struct SkillMatch(PromptTemplateCatalogItem Template, int Score, string Description);
 
     private readonly record struct EnglishPromptResult(string Text, string? Status);
+
+    private sealed class TransientChatMessage
+    {
+        private int _contentCharacters;
+        private int _reasoningCharacters;
+        private int _tickerStopped;
+
+        public TransientChatMessage(IReadOnlyList<UIElement> elements, IReadOnlyList<TextBlock> elapsedTexts, IReadOnlyList<TextBlock> detailTexts, DateTimeOffset startedAt, CancellationTokenSource tickerCts)
+        {
+            Elements = elements;
+            ElapsedTexts = elapsedTexts;
+            DetailTexts = detailTexts;
+            StartedAt = startedAt;
+            TickerCts = tickerCts;
+            Stopwatch = Stopwatch.StartNew();
+        }
+
+        public IReadOnlyList<UIElement> Elements { get; }
+
+        public IReadOnlyList<TextBlock> ElapsedTexts { get; }
+
+        public IReadOnlyList<TextBlock> DetailTexts { get; }
+
+        public DateTimeOffset StartedAt { get; }
+
+        public CancellationTokenSource TickerCts { get; }
+
+        public Stopwatch Stopwatch { get; }
+
+        public int ContentCharacters => Volatile.Read(ref _contentCharacters);
+
+        public int ReasoningCharacters => Volatile.Read(ref _reasoningCharacters);
+
+        public void AddStreamUpdate(LlmStreamUpdate update)
+        {
+            if (!string.IsNullOrEmpty(update.ContentDelta))
+            {
+                Interlocked.Add(ref _contentCharacters, update.ContentDelta.Length);
+            }
+
+            if (!string.IsNullOrEmpty(update.ReasoningDelta))
+            {
+                Interlocked.Add(ref _reasoningCharacters, update.ReasoningDelta.Length);
+            }
+        }
+
+        public void StopTicker()
+        {
+            if (Interlocked.Exchange(ref _tickerStopped, 1) != 0)
+            {
+                return;
+            }
+
+            if (!TickerCts.IsCancellationRequested)
+            {
+                TickerCts.Cancel();
+            }
+
+            TickerCts.Dispose();
+        }
+    }
+
+    private sealed class PendingThinkingProgress : IProgress<LlmStreamUpdate>
+    {
+        private readonly TransientChatMessage? _message;
+
+        public PendingThinkingProgress(TransientChatMessage? message)
+        {
+            _message = message;
+        }
+
+        public void Report(LlmStreamUpdate value)
+        {
+            _message?.AddStreamUpdate(value);
+        }
+    }
 
     private string BuildMountedSkillExecutionPrompt(string userRequest, PromptTemplateCatalogItem skill, string baseLocalPrompt)
     {
@@ -6915,37 +8678,46 @@ User requirement:
     private static string BuildJimengStructuredPrompt(string userRequest, string primaryLanguage)
     {
         return $$"""
-生成一段适合即梦 / Seedance 的短视频提示词。
+生成一份适合即梦 / Seedance / Dreamina / Seedream 的最终提示词。
 
-【1. 主题】
-{视频主题 / 核心意图}
+【任务类型】
+{文生视频 / 图生视频 / 首尾帧过渡 / 产品宣发 / 短剧对白 / Seedream 图片 / 视频编辑}
 
-【2. 风格】
-{短视频风格 / 写实 / 电影感 / 商业广告 / 二次元 / 其他}
+【生成目标】
+{一句话说明最终要生成什么画面或视频，以及用户真正想达成的效果}
 
-【3. 画面主体】
-{人物 / 产品 / 场景 / 事件 / 关键物体}
+【素材与引用】
+{无参考素材 / @图片1 / @图片2 / @视频1 / @音频1；说明每个素材用于控制主体、风格、动作、构图、音乐或转场}
 
-【4. 画面细节】
-{主体外观、环境、道具、色彩、构图}
+【主体与场景】
+{人物、产品、物体、环境、背景层次、关键识别特征、需要保持一致的身份或产品结构}
 
-【5. 动态效果】
-{主体动作、镜头运动、转场方式、节奏变化}
+【镜头设计】
+{景别、视角、焦段感、构图、对焦、景深、推近、拉远、横移、环绕、跟拍、手持感、稳定器或一镜到底}
 
-【6. 镜头与节奏】
-{景别、视角、镜头运动、节奏快慢、是否分镜}
+【时间轴 / 分镜】
+0-2s：{开场画面、主体出现、镜头动作、声音}
+2-5s：{主要动作、情绪或卖点、镜头推进}
+5-8s：{变化、转场、视觉高潮或信息揭示}
+8-10s：{收束画面、停留、字幕或品牌记忆点}
 
-【7. 字幕】
-{是否需要字幕、字幕内容、字幕位置、字幕样式}
+【动作与表演】
+{主体动作、表情、姿态、互动、转场；短剧任务补充对白、情绪变化、停顿和口型一致性}
 
-【8. BGM / 音效】
-{音乐氛围、环境声、关键音效}
+【视觉风格】
+{整体风格、光线来源、色彩、质感、画面密度、氛围；把电影感、商业感、二次元、国风、科技感等落实到镜头和材质}
 
-【9. 格式要求】
-{时长、画幅比例、平台、清晰度、首尾帧要求}
+【声音与字幕】
+{BGM、环境声、关键音效、对白、字幕内容、字幕位置、字幕语言；不需要声音时写无对白，保留环境氛围声}
 
-【10. 负面约束】
-避免画面闪烁、主体漂移、人物或产品变形、文字乱码、无关元素、风格跑偏、突然跳切、低清晰度。
+【平台参数】
+{时长、画幅比例、清晰度、输出语言、是否需要字幕、是否保留参考图主体一致性}
+
+【负面约束】
+避免画面闪烁、主体漂移、身份变化、产品变形、额外肢体、无关人物、文字乱码、水印、低清晰度、突然跳切、光线方向混乱、风格跑偏、危险或违规内容。
+
+【需要补充的信息】
+{只列真正影响生成质量的缺失项，最多 5 条}
 
 【用户需求补充】
 主输出语言：{{primaryLanguage}}
@@ -6982,11 +8754,13 @@ Local structure draft:
 硬性规则：
 1. 只输出最终提示词正文，不要输出解释、分析、推理过程、Markdown 代码块。
 2. 不要输出 TCREI，不要输出 Stable Diffusion 标签堆，不要默认写实人像模板。
-3. 必须按短视频生产结构输出：主题、风格、画面主体、画面细节、动态效果、镜头与节奏、字幕、BGM / 音效、格式要求、负面约束。
-4. 主输出语言必须是中文；英文区域会单独同步输出英文。
-5. 保留用户原意，把主题、平台、画幅、时长、人物 / 产品 / 场景、首尾帧、动作、镜头运动、字幕、BGM 等信息填入对应部分。
-6. 信息不足时使用“待补充/待确认”，不要替用户编造具体品牌、人物、时长、比例或卖点。
-7. 如果是首尾帧或图生视频，必须强调主体一致性、关键特征不变、转场运动、节奏和避免漂移。
+3. 必须先识别任务类型：文生视频、图生视频、首尾帧过渡、产品宣发、短剧对白、Seedream 图片或视频编辑。
+4. 必须按生产结构输出：任务类型、生成目标、素材与引用、主体与场景、镜头设计、时间轴/分镜、动作与表演、视觉风格、声音与字幕、平台参数、负面约束、需要补充的信息。
+5. 主输出语言必须是中文；英文区域会单独同步输出英文。
+6. 保留用户原意，把主题、平台、画幅、时长、人物 / 产品 / 场景、参考图、首尾帧、动作、镜头运动、字幕、BGM 等信息填入对应部分。
+7. 信息不足时使用“待补充/待确认”，不要替用户编造具体品牌、人物、时长、比例、素材、对白或卖点。
+8. 如果是首尾帧、图生视频或多图融合，必须强调主体一致性、关键特征不变、参考素材作用、转场运动、节奏和避免漂移。
+9. 如果是短剧或宣发，必须把台词、字幕、声音、卖点和镜头节奏写成可执行画面语言，不要写空泛营销词。
 
 用户原始需求：
 {FallbackText(userRequest, "请生成一份即梦 / Seedance 短视频提示词。")}
@@ -7111,62 +8885,19 @@ Local structure draft:
 """;
     }
 
-    private async Task<string> BuildSynchronizedEnglishPromptAsync(string finalPrompt, LlmRequestOptions? llmOptions, bool canUseModel, bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget)
+    private static string BuildEnglishTranslationStructureRule(bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget)
     {
-        var result = await BuildSynchronizedEnglishPromptForGenerationAsync(finalPrompt, llmOptions, canUseModel, isTextToImageMode, isVideoMode, isAgenticMode, isAcademicHumanizeMode, selectedTarget, _settings);
-        if (!string.IsNullOrWhiteSpace(result.Status))
-        {
-            SetStatus(result.Status);
-        }
-
-        return result.Text;
-    }
-
-    private async Task<EnglishPromptResult> BuildSynchronizedEnglishPromptForGenerationAsync(string finalPrompt, LlmRequestOptions? llmOptions, bool canUseModel, bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget, AppSettings settings)
-    {
-        if (canUseModel && llmOptions?.IsConfigured == true && settings.Privacy.ModelExternalRequestsEnabled)
-        {
-            try
-            {
-                var englishPrompt = await _llmClient.CompleteAsync(BuildEnglishTranslationPrompt(finalPrompt, isTextToImageMode, isVideoMode, isAgenticMode, isAcademicHumanizeMode, selectedTarget), llmOptions).ConfigureAwait(false);
-                return new EnglishPromptResult(englishPrompt, null);
-            }
-            catch (Exception ex)
-            {
-                return new EnglishPromptResult(BuildLocalEnglishMirror(finalPrompt), $"英文同步翻译失败，已使用本地同步结构：{ex.Message}");
-            }
-        }
-
-        return new EnglishPromptResult(BuildLocalEnglishMirror(finalPrompt), null);
-    }
-
-    private static string BuildEnglishTranslationPrompt(string finalPrompt, bool isTextToImageMode, bool isVideoMode, bool isAgenticMode, bool isAcademicHumanizeMode, OptimizationTargetItem? selectedTarget)
-    {
-        var structureRule = isVideoMode
+        return selectedTarget is not null && !string.IsNullOrWhiteSpace(selectedTarget.EnglishTranslationRule)
+            ? selectedTarget.EnglishTranslationRule
+            : isVideoMode
             ? "Preserve the exact video prompt structure, section order, placeholders, timeline beats, dialogue lines, audio details, and negative constraints."
             : isTextToImageMode
             ? "Preserve the exact text-to-image section order, numbered headings, placeholders, and negative constraints."
             : isAgenticMode
             ? "Preserve the exact agentic coding or skill-authoring structure, headings, placeholders, safety boundaries, verification commands, directory paths, and file names such as SKILL.md, AGENTS.md, CLAUDE.md, and Rules."
-            : selectedTarget is not null && !string.IsNullOrWhiteSpace(selectedTarget.EnglishTranslationRule)
-            ? selectedTarget.EnglishTranslationRule
             : isAcademicHumanizeMode
             ? "Preserve the academic rewriting prompt as an executable instruction. Keep the anti-AI-tone banned phrase list, no-listing rules, no-fabrication rules, and the final text-only output rule."
             : "Preserve the exact TCREI structure and order. Convert section labels to [Task], [Context], [References], [Evaluate], [Iterate].";
-
-        return $"""
-Translate the following finalized primary-language prompt into English.
-
-Hard rules:
-1. {structureRule}
-2. Translate the content faithfully. Do not add new facts, examples, brands, features, or requirements.
-3. Keep placeholders and "需要补充的信息" as "Information needed".
-4. Output only the English prompt. No explanations, no markdown fences, no bilingual duplication.
-5. Do not introduce Markdown formatting: no # headings, bullet markers, bold markers, inline-code backticks, Markdown links, separators, or fenced code blocks.
-
-Final primary-language prompt:
-{finalPrompt}
-""";
     }
 
     private string BuildLocalEnglishMirror(string finalPrompt)
@@ -7281,7 +9012,20 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
     private static bool IsTextToImageMode(string selectedScenes, string effectiveMode)
     {
         return selectedScenes.Contains("文生图", StringComparison.Ordinal)
-            || string.Equals(effectiveMode, "文生图", StringComparison.OrdinalIgnoreCase);
+            || effectiveMode.Contains("文生图", StringComparison.Ordinal)
+            || IsComfyStableDiffusionMode(effectiveMode)
+            || effectiveMode.Contains("SDXL", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SD3", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsComfyStableDiffusionMode(string effectiveMode)
+    {
+        return effectiveMode.Contains("ComfyUI", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("Stable Diffusion", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SDXL", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SD3", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SD WebUI", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("A1111", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsVideoMode()
@@ -7574,7 +9318,6 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
     private async Task AnimateTextBoxesAsync(string text, Action updateCounts, CancellationToken cancellationToken, params TextBox[] boxes)
     {
         var cleanText = text ?? string.Empty;
-        var chunkSize = CalculateTypewriterChunkSize(cleanText.Length);
         _syncingText = true;
         try
         {
@@ -7584,24 +9327,22 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
             }
             updateCounts();
 
-            for (var length = chunkSize; length < cleanText.Length; length += chunkSize)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var partial = cleanText[..length];
-                foreach (var box in boxes)
+            await AnimateTypewriterTextAsync(
+                cleanText,
+                value =>
                 {
-                    box.Text = partial;
-                    box.Select(partial.Length, 0);
-                }
+                    foreach (var box in boxes)
+                    {
+                        box.Text = value;
+                    }
 
-                updateCounts();
-                await Task.Delay(TypewriterFrameDelayMs, cancellationToken);
-            }
+                    updateCounts();
+                },
+                cancellationToken);
 
             foreach (var box in boxes)
             {
                 box.Text = cleanText;
-                box.Select(cleanText.Length, 0);
             }
             updateCounts();
         }
@@ -7614,9 +9355,143 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         }
     }
 
-    private static int CalculateTypewriterChunkSize(int textLength)
+    private async Task AnimateTypewriterTextAsync(string text, Action<string> applyText, CancellationToken cancellationToken)
     {
-        return Math.Max(1, (int)Math.Ceiling(textLength / (double)TypewriterMaxFrames));
+        if (text.Length == 0 || !AreAnimationsEnabled())
+        {
+            applyText(text);
+            return;
+        }
+
+        var durationMs = CalculateTypewriterDurationMs(text.Length);
+        var stopwatch = Stopwatch.StartNew();
+        var revealedLength = 0;
+
+        while (revealedLength < text.Length)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!AreAnimationsEnabled())
+            {
+                applyText(text);
+                return;
+            }
+
+            var progress = Math.Clamp(stopwatch.Elapsed.TotalMilliseconds / durationMs, 0d, 1d);
+            var eased = EaseTypewriterProgress(progress);
+            var desiredLength = Math.Max(revealedLength + 1, (int)Math.Round(text.Length * eased));
+            var nextLength = SnapTypewriterRevealLength(text, desiredLength, revealedLength);
+
+            if (nextLength > revealedLength)
+            {
+                revealedLength = nextLength;
+                applyText(text[..revealedLength]);
+                await WaitForNextRenderAsync(cancellationToken);
+            }
+
+            if (revealedLength >= text.Length)
+            {
+                break;
+            }
+
+            await Task.Delay(CalculateTypewriterCadenceDelay(text, revealedLength), cancellationToken);
+        }
+    }
+
+    private static async Task WaitForNextRenderAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        EventHandler<object>? handler = null;
+        handler = (_, _) => completion.TrySetResult();
+
+        CompositionTarget.Rendering += handler;
+        try
+        {
+            var fallbackDelay = Task.Delay(64, cancellationToken);
+            var completed = await Task.WhenAny(completion.Task, fallbackDelay);
+            await completed;
+        }
+        finally
+        {
+            CompositionTarget.Rendering -= handler;
+        }
+    }
+
+    private static int CalculateTypewriterDurationMs(int textLength)
+    {
+        var duration = TypewriterMinDurationMs + (int)Math.Round(Math.Sqrt(textLength) * 95);
+        return Math.Clamp(duration, TypewriterMinDurationMs, TypewriterMaxDurationMs);
+    }
+
+    private static double EaseTypewriterProgress(double progress)
+    {
+        var value = Math.Clamp(progress, 0d, 1d);
+        return value * value * (3d - 2d * value);
+    }
+
+    private static int SnapTypewriterRevealLength(string text, int desiredLength, int previousLength)
+    {
+        var length = Math.Clamp(desiredLength, previousLength + 1, text.Length);
+        if (length >= text.Length)
+        {
+            return text.Length;
+        }
+
+        if (char.IsHighSurrogate(text[length - 1]))
+        {
+            return Math.Min(text.Length, length + 1);
+        }
+
+        if (IsTypewriterBoundary(text[length - 1]) || IsTypewriterBoundary(text[length]))
+        {
+            return length;
+        }
+
+        var forwardLimit = Math.Min(text.Length, length + TypewriterBoundaryLookahead);
+        for (var i = length + 1; i <= forwardLimit; i++)
+        {
+            if (IsTypewriterBoundary(text[i - 1]))
+            {
+                return i;
+            }
+        }
+
+        var backwardLimit = Math.Max(previousLength + 1, length - 4);
+        for (var i = length - 1; i >= backwardLimit; i--)
+        {
+            if (IsTypewriterBoundary(text[i - 1]))
+            {
+                return i;
+            }
+        }
+
+        return length;
+    }
+
+    private static TimeSpan CalculateTypewriterCadenceDelay(string text, int revealedLength)
+    {
+        if (revealedLength <= 0 || revealedLength > text.Length)
+        {
+            return TimeSpan.FromMilliseconds(TypewriterFrameDelayMs);
+        }
+
+        var last = text[revealedLength - 1];
+        var extraDelay = last switch
+        {
+            '\n' => 52,
+            '。' or '！' or '？' or '.' or '!' or '?' => 42,
+            '，' or '、' or '；' or ';' or ',' or ':' or '：' => 18,
+            _ => 0
+        };
+
+        return TimeSpan.FromMilliseconds(TypewriterFrameDelayMs + extraDelay);
+    }
+
+    private static bool IsTypewriterBoundary(char value)
+    {
+        return char.IsWhiteSpace(value)
+            || char.IsPunctuation(value)
+            || value is '，' or '。' or '、' or '；' or '：' or '！' or '？' or '（' or '）' or '【' or '】' or '《' or '》';
     }
 
     private static string StripPromptMarkdown(string text)
@@ -7937,6 +9812,200 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         }
     }
 
+    private TransientChatMessage? AddPendingThinkingMessage(bool deepThinkingEnabled)
+    {
+        if ((ChatMessagesPanel is null && CompactChatMessagesPanel is null) || !DispatcherQueue.HasThreadAccess)
+        {
+            return null;
+        }
+
+        var text = deepThinkingEnabled
+            ? "正在思考，等待模型返回。返回后会替换为正式思考过程和提示词摘要。"
+            : "正在整理需求，等待模型返回。返回后会替换为正式提示词摘要。";
+        var timestamp = DateTimeOffset.Now;
+        var elements = new List<UIElement>(2);
+        var elapsedTexts = new List<TextBlock>(2);
+        var detailTexts = new List<TextBlock>(2);
+
+        if (ChatMessagesPanel is not null)
+        {
+            var (element, elapsedText, detailText) = CreatePendingThinkingMessageElement(text, timestamp);
+            ChatMessagesPanel.Children.Add(element);
+            elements.Add(element);
+            elapsedTexts.Add(elapsedText);
+            detailTexts.Add(detailText);
+        }
+
+        if (CompactChatMessagesPanel is not null)
+        {
+            var (element, elapsedText, detailText) = CreatePendingThinkingMessageElement(text, timestamp);
+            CompactChatMessagesPanel.Children.Add(element);
+            elements.Add(element);
+            elapsedTexts.Add(elapsedText);
+            detailTexts.Add(detailText);
+        }
+
+        if (CompactChatStatusText is not null)
+        {
+            CompactChatStatusText.Text = L("啊拼正在思考...");
+        }
+
+        var message = new TransientChatMessage(elements, elapsedTexts, detailTexts, timestamp, new CancellationTokenSource());
+        RefreshPendingThinkingMessage(message);
+        _ = RunPendingThinkingTickerAsync(message);
+        return message;
+    }
+
+    private async Task RunPendingThinkingTickerAsync(TransientChatMessage message)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+            while (await timer.WaitForNextTickAsync(message.TickerCts.Token))
+            {
+                if (!DispatcherQueue.TryEnqueue(() => RefreshPendingThinkingMessage(message)))
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
+    private void RemoveTransientChatMessage(TransientChatMessage? message)
+    {
+        if (message is null)
+        {
+            return;
+        }
+
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            DispatcherQueue.TryEnqueue(() => RemoveTransientChatMessage(message));
+            return;
+        }
+
+        message.StopTicker();
+        foreach (var element in message.Elements)
+        {
+            ChatMessagesPanel?.Children.Remove(element);
+            CompactChatMessagesPanel?.Children.Remove(element);
+        }
+    }
+
+    private void RefreshPendingThinkingMessage(TransientChatMessage message)
+    {
+        var elapsedSeconds = Math.Max(0, (int)Math.Floor(message.Stopwatch.Elapsed.TotalSeconds));
+        var elapsedText = $"{L("已思考")}{elapsedSeconds}{L("秒")}";
+        var contentCharacters = message.ContentCharacters;
+        var reasoningCharacters = message.ReasoningCharacters;
+        var detailText = contentCharacters + reasoningCharacters > 0
+            ? $"{L("正在接收模型输出")}，{L("正文")}{contentCharacters}{L("字")}，{L("思考")}{reasoningCharacters}{L("字")}。"
+            : L("等待模型开始返回内容。");
+
+        foreach (var textBlock in message.ElapsedTexts)
+        {
+            textBlock.Text = elapsedText;
+        }
+
+        foreach (var textBlock in message.DetailTexts)
+        {
+            textBlock.Text = detailText;
+        }
+
+        if (CompactChatStatusText is not null)
+        {
+            CompactChatStatusText.Text = $"{L("啊拼正在思考...")} {elapsedText}";
+        }
+    }
+
+    private (Grid Element, TextBlock ElapsedText, TextBlock DetailText) CreatePendingThinkingMessageElement(string text, DateTimeOffset timestamp)
+    {
+        var grid = new Grid
+        {
+            ColumnSpacing = 10
+        };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(42) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(54) });
+
+        var avatar = new Border
+        {
+            Width = 34,
+            Height = 34,
+            CornerRadius = new CornerRadius(17),
+            Background = ResourceBrush("ControlFillColorSecondaryBrush", Colors.WhiteSmoke),
+            Child = new FontIcon
+            {
+                FontFamily = new FontFamily("Segoe Fluent Icons"),
+                Glyph = "\uE82F",
+                FontSize = 18
+            }
+        };
+        var bubble = new Border
+        {
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(12, 9, 12, 9),
+            Background = ResourceBrush("LayerFillColorAltBrush", Colors.FloralWhite),
+            BorderBrush = ResourceBrush("AccentFillColorSecondaryBrush", Colors.DodgerBlue),
+            BorderThickness = new Thickness(1),
+            Child = BuildPendingThinkingBubbleContent(text, out var elapsedText, out var detailText)
+        };
+        var time = new TextBlock
+        {
+            Text = timestamp.ToLocalTime().ToString("HH:mm"),
+            FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = ResourceBrush("TextFillColorSecondaryBrush", Colors.DimGray)
+        };
+
+        Grid.SetColumn(avatar, 0);
+        Grid.SetColumn(bubble, 1);
+        Grid.SetColumn(time, 2);
+        grid.Children.Add(avatar);
+        grid.Children.Add(bubble);
+        grid.Children.Add(time);
+        return (grid, elapsedText, detailText);
+    }
+
+    private UIElement BuildPendingThinkingBubbleContent(string text, out TextBlock elapsedText, out TextBlock detailText)
+    {
+        elapsedText = new TextBlock
+        {
+            Text = L("已思考0秒"),
+            Foreground = ResourceBrush("TextFillColorTertiaryBrush", Colors.Gray),
+            FontSize = 12
+        };
+        detailText = new TextBlock
+        {
+            Text = L(text),
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = ResourceBrush("TextFillColorSecondaryBrush", Colors.DimGray),
+            FontSize = 13
+        };
+
+        return new StackPanel
+        {
+            Spacing = 6,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = L("正在思考"),
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = ResourceBrush("TextFillColorPrimaryBrush", Colors.Black)
+                },
+                elapsedText,
+                detailText
+            }
+        };
+    }
+
     private (Grid Container, Border Bubble, bool ShouldAnimateAssistant) CreateChatMessageElement(string displayText, bool isUser, bool isThinking, DateTimeOffset timestamp, bool animate)
     {
         var grid = new Grid
@@ -7962,7 +10031,7 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         };
 
         var bubbleForeground = ResourceBrush("TextFillColorPrimaryBrush", Colors.Black);
-        var shouldAnimateAssistant = animate && !isUser && !isThinking;
+        var shouldAnimateAssistant = animate && !isUser && !isThinking && AreAnimationsEnabled();
         var bubble = new Border
         {
             CornerRadius = new CornerRadius(12),
@@ -8128,12 +10197,7 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         {
             var textBlock = bubble.Child as TextBlock ?? BuildPlainAssistantBubbleContent(string.Empty, foreground);
             bubble.Child = textBlock;
-            var chunkSize = CalculateTypewriterChunkSize(cleanText.Length);
-            for (var length = chunkSize; length < cleanText.Length; length += chunkSize)
-            {
-                textBlock.Text = cleanText[..length];
-                await Task.Delay(TypewriterFrameDelayMs);
-            }
+            await AnimateTypewriterTextAsync(cleanText, value => textBlock.Text = value, CancellationToken.None);
 
             bubble.Child = BuildMarkdownBubbleContent(cleanText, foreground);
         }

@@ -60,6 +60,18 @@ Third-party components, prompt datasets, bundled Skill packages, framework/runti
 | Fire Eye fp16 recognition model | Local-only `assets/fire_eye/PP-OCRv5_mobile_rec_fp16.mnn` | Reviewed as converted PP-OCRv5 / Apache-2.0; hash recorded in `docs/ocr-model-license-review.md`. |
 | OCR charset | Local-only `assets/fire_eye/ppocr_keys_v5.dict` | Reviewed as PaddleOCR PP-OCRv5 support data / Apache-2.0; hash recorded in `docs/ocr-model-license-review.md`. |
 
+## Candidate Skill References
+
+Jimeng / Dreamina / Seedance Skill repositories under review are listed in `docs/skill-source-candidates.md`. They are not bundled assets, direct dependencies, or release notices unless a later change imports reviewed content.
+
+The built-in `即梦导演 Skill` optimization target and Jimeng template entries are original clean-room project content. They do not bundle upstream Skill files, README text, scripts, source code, prompt dictionaries, or API/CLI implementations from the candidate repositories.
+
+Current policy:
+
+- Repositories with GitHub-detected MIT, MIT-0, or Apache-2.0 licenses may be studied as preferred candidates.
+- Repositories with no detected license are architecture references only until license text and copyright scope are confirmed.
+- GPL API/CLI/Skill projects are not candidates for bundled content in Microsoft Store or other proprietary distribution paths.
+
 ## Release Requirements
 
 - Keep upstream license files for MNN and `ocr-rs`.
