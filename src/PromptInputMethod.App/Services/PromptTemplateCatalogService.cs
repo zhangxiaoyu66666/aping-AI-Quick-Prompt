@@ -138,28 +138,28 @@ public sealed class PromptTemplateCatalogService
                 """
                 把需求改写成 ComfyUI 可填字段。
 
-                Positive CLIP Text Encode:
-                {英文正向提示词：主体、场景、构图、镜头、光线、风格、质量；不要写解释}
+                正向 CLIP 文本编码（Positive CLIP Text Encode）：
+                {中文正向提示词：主体、场景、构图、镜头、光线、风格、质量；需要渲染的英文文字按用户原文保留；不要写解释}
 
-                Negative CLIP Text Encode:
-                {英文反向提示词：low quality, blurry, bad anatomy, extra limbs, text artifacts, watermark, logo artifacts, identity drift, underage, child, teenager, juvenile, loli, young-looking, age ambiguity}
+                反向 CLIP 文本编码（Negative CLIP Text Encode）：
+                {中文反向提示词：低质量、模糊、解剖错误、额外肢体、文字乱码、水印、Logo 伪影、主体漂移、未成年、儿童、少年、幼态、年龄不明确}
 
-                KSampler:
-                checkpoint/model: {待补充}
-                width x height: {待补充}
-                steps: {待补充，常见 20-40}
-                cfg: {待补充，按模型调整}
-                sampler: {待补充}
-                scheduler: {待补充}
-                seed: {random / 指定 seed}
-                denoise: {txt2img=1.0；img2img/inpaint 待补充}
+                KSampler 参数：
+                检查点 / 模型：{待补充}
+                画布尺寸：{宽 x 高，待补充}
+                采样步数：{待补充，常见 20-40}
+                CFG 引导强度：{待补充，按模型调整}
+                采样器：{待补充}
+                调度器：{待补充}
+                随机种子：{随机 / 指定 seed}
+                降噪强度：{文生图=1.0；图生图/局部重绘待补充}
 
-                Optional nodes:
+                可选节点：
                 LoRA: {无 / <lora:name:weight> / 待补充}
-                embedding: {无 / embedding:name / 待补充}
+                文本反转 / embedding: {无 / embedding:name / 待补充}
                 ControlNet: {无 / 类型、预处理器、强度、起止步 / 待补充}
-                IP-Adapter: {无 / 参考图作用、权重、起止步 / 待补充}
-                VAE / upscale: {无 / 待补充}
+                IP-Adapter / 参考图：{无 / 参考图作用、权重、起止步 / 待补充}
+                VAE / 放大：{无 / 待补充}
                 """),
             new(
                 "builtin-sd-webui-positive-negative",
@@ -169,20 +169,20 @@ public sealed class PromptTemplateCatalogService
                 """
                 生成可粘贴到 Stable Diffusion WebUI / A1111 的字段。
 
-                Prompt:
-                {英文正向提示词，按主体、环境、动作、构图、镜头、光线、风格、质量组织；LoRA 标签只放在正向提示词里}
+                正向提示词（Prompt）：
+                {中文正向提示词，按主体、环境、动作、构图、镜头、光线、风格、质量组织；LoRA 标签只放在正向提示词里}
 
-                Negative prompt:
-                low quality, worst quality, blurry, bad anatomy, bad hands, extra fingers, extra limbs, deformed, distorted face, text artifacts, watermark, signature, logo artifacts, underage, child, teenager, juvenile, loli, young-looking, age ambiguity, nsfw if not requested
+                反向提示词（Negative prompt）：
+                低质量、最差质量、模糊、解剖错误、手部错误、多余手指、多余肢体、变形、面部扭曲、文字乱码、水印、签名、Logo 伪影、未成年、儿童、少年、幼态、年龄不明确、未要求时避免 NSFW
 
-                Parameters:
-                Steps: {待补充}
-                Sampler: {待补充}
-                CFG scale: {待补充}
-                Size: {待补充}
-                Seed: {random / 指定 seed}
-                Clip skip: {仅需要时填写}
-                Hires fix: {off / on，放大倍率与 denoising 待补充}
+                生成参数（Parameters）：
+                采样步数（Steps）：{待补充}
+                采样器（Sampler）：{待补充}
+                CFG 引导强度（CFG scale）：{待补充}
+                尺寸（Size）：{待补充}
+                随机种子（Seed）：{随机 / 指定 seed}
+                Clip skip：{仅需要时填写}
+                高清修复（Hires fix）：{关闭 / 开启，放大倍率与重绘幅度待补充}
                 """),
             new(
                 "builtin-sd-img2img-controlnet",
@@ -192,25 +192,25 @@ public sealed class PromptTemplateCatalogService
                 """
                 生成适合 img2img、inpainting、ControlNet 或 IP-Adapter 的提示词字段。
 
-                Task:
-                {img2img / inpainting / ControlNet / IP-Adapter / reference-only}
+                任务类型：
+                {图生图 / 局部重绘 / ControlNet / IP-Adapter / 仅参考图}
 
-                Reference image:
+                参考图：
                 {参考图作用：保留主体 / 保留姿势 / 保留构图 / 保留风格 / 保留产品外形}
 
-                Positive prompt:
-                {英文正向提示词：描述目标变化，但明确哪些特征必须保持}
+                正向提示词（Positive prompt）：
+                {中文正向提示词：描述目标变化，但明确哪些特征必须保持}
 
-                Negative prompt:
-                low quality, blurry, deformation, identity drift, inconsistent face, product shape error, text artifacts, watermark, underage, child, teenager, juvenile, loli, age ambiguity
+                反向提示词（Negative prompt）：
+                低质量、模糊、变形、身份漂移、脸部不一致、产品形状错误、文字乱码、水印、未成年、儿童、少年、幼态、年龄不明确
 
-                Parameters:
-                Denoising strength: {0.25-0.45 小改；0.45-0.65 中等改；0.65+ 大改，按用户需求待补充}
-                ControlNet type: {canny / depth / openpose / lineart / tile / scribble / 待补充}
-                Control weight: {待补充}
-                Start/end step: {待补充}
-                Resize mode: {待补充}
-                Seed: {random / 指定 seed}
+                生成参数（Parameters）：
+                重绘幅度（Denoising strength）：{0.25-0.45 小改；0.45-0.65 中等改；0.65+ 大改，按用户需求待补充}
+                ControlNet 类型：{canny / depth / openpose / lineart / tile / scribble / 待补充}
+                ControlNet 权重：{待补充}
+                起止步：{待补充}
+                缩放模式：{待补充}
+                随机种子（Seed）：{随机 / 指定 seed}
                 """),
             new(
                 "builtin-sd-lora-embedding",
@@ -220,19 +220,19 @@ public sealed class PromptTemplateCatalogService
                 """
                 生成带 LoRA、embedding 或风格触发词的 Stable Diffusion 提示词。
 
-                Base model family:
+                基础模型族：
                 {SD 1.5 / SDXL / SD3 / Flux / 待补充}
 
-                Prompt:
+                正向提示词（Prompt）：
                 {主体、场景、构图、镜头、光线、风格、质量}
-                LoRA tags: {<lora:name:0.6-0.9>，仅在用户提供 LoRA 名称时写}
-                Trigger words: {用户提供的触发词；没有则待补充}
-                Embeddings: {embedding:name；没有则无}
+                LoRA 标签：{<lora:name:0.6-0.9>，仅在用户提供 LoRA 名称时写}
+                触发词：{用户提供的触发词；没有则待补充}
+                文本反转 / Embeddings：{embedding:name；没有则无}
 
-                Negative prompt:
-                low quality, worst quality, blurry, bad anatomy, extra limbs, text artifacts, watermark, identity drift, style conflict, underage, child, teenager, juvenile, loli, age ambiguity
+                反向提示词（Negative prompt）：
+                低质量、最差质量、模糊、解剖错误、额外肢体、文字乱码、水印、身份漂移、风格冲突、未成年、儿童、少年、幼态、年龄不明确
 
-                Notes:
+                注意事项：
                 不要编造 LoRA 名称、模型族、触发词或 embedding 名称；缺失时列为待补充。
                 """),
             new(

@@ -276,64 +276,64 @@ public sealed class OptimizationTargetService
             1. 只输出最终可复制内容，不解释、不推理、不写 Markdown、不使用代码块。
             2. 默认输出字段适配，不生成完整 ComfyUI workflow JSON；除非用户提供了 workflow 节点 ID，否则不要编造节点编号。
             3. 保留用户原意，不默认女性人像、写实摄影、二次元、特定年龄、特定画幅、特定模型或 LoRA。
-            4. 人物或角色必须明确为成年 / 18+；用户未指定年龄时写“adult subject, 18+, exact age unspecified”。负向提示词必须包含未成年相关排除项。
-            5. 中文需求可以理解，但 Stable Diffusion 正向提示词默认输出英文短语；专有名词、中文 Logo 文案或必须出现的中文文字按用户原文保留。
-            6. LoRA、embedding、ControlNet、IP-Adapter、inpainting、img2img 只有用户明确要求或上下文明确存在时才写；没有素材时写“not provided / 待补充”。
+            4. 人物或角色必须明确为成年 / 18+；用户未指定年龄时写“成年主体，18+，具体年龄待确认”。负向提示词必须包含未成年相关排除项。
+            5. 主输出语言为中文时，字段名、说明、占位符、正向提示词正文和反向提示词正文都必须使用中文；英文区域会单独输出英文版。只在括号中保留 ComfyUI、Stable Diffusion、KSampler、prompt、negative_prompt、LoRA、embedding 等平台专有名词或 API 字段。
+            6. LoRA、embedding、ControlNet、IP-Adapter、inpainting、img2img 只有用户明确要求或上下文明确存在时才写；没有素材时写“待补充”。
 
             请按下面结构输出：
 
             【适配目标】
-            target: ComfyUI / Stable Diffusion
-            model family: {SD 1.5 / SDXL / SD3 / Flux / unknown}
-            task: {text-to-image / image-to-image / inpainting / ControlNet / IP-Adapter / LoRA portrait / product / illustration / unknown}
+            目标：ComfyUI / Stable Diffusion
+            模型族：{SD 1.5 / SDXL / SD3 / Flux / 待确认}
+            任务类型：{文生图 / 图生图 / 局部重绘 / ControlNet / IP-Adapter / LoRA 人像 / 产品图 / 插画 / 待确认}
 
             【ComfyUI 节点字段】
-            Positive CLIP Text Encode:
-            {英文正向提示词，按主体、场景、构图、镜头、光线、风格、质量顺序组织}
+            正向 CLIP 文本编码（Positive CLIP Text Encode）：
+            {中文正向提示词，按主体、场景、构图、镜头、光线、风格、质量顺序组织；需要渲染的英文文字按用户原文保留}
 
-            Negative CLIP Text Encode:
-            {英文反向提示词，包含低质量、结构错误、文字水印、主体漂移、未成年相关排除项；不要过度堆无关词}
+            反向 CLIP 文本编码（Negative CLIP Text Encode）：
+            {中文反向提示词，包含低质量、结构错误、文字水印、主体漂移、未成年相关排除项；不要过度堆无关词}
 
-            KSampler:
-            checkpoint/model: {待补充或用户指定}
-            width x height: {待补充或用户指定}
-            steps: {待补充；常见范围 20-40}
-            cfg: {待补充；SD 1.5/SDXL 常见 5-8，按模型调整}
-            sampler: {待补充}
-            scheduler: {待补充}
-            seed: {random 或用户指定}
-            denoise: {txt2img 为 1.0；img2img/inpaint 按用户要求待补充}
+            KSampler 参数：
+            检查点 / 模型：{待补充或用户指定}
+            画布尺寸：{宽 x 高，待补充或用户指定}
+            采样步数：{待补充；常见范围 20-40}
+            CFG 引导强度：{待补充；SD 1.5/SDXL 常见 5-8，按模型调整}
+            采样器：{待补充}
+            调度器：{待补充}
+            随机种子：{随机或用户指定}
+            降噪强度：{文生图为 1.0；图生图/局部重绘按用户要求待补充}
 
-            Optional nodes:
+            可选节点：
             LoRA: {无 / <lora:name:weight> / 待补充}
-            embedding/textual inversion: {无 / embedding:name / 待补充}
+            文本反转 / embedding: {无 / embedding:name / 待补充}
             ControlNet: {无 / 类型、预处理器、强度、起止步 / 待补充}
-            IP-Adapter/reference image: {无 / 参考图作用、权重、起止步 / 待补充}
-            VAE / upscale / hires fix: {无 / 待补充}
+            IP-Adapter / 参考图：{无 / 参考图作用、权重、起止步 / 待补充}
+            VAE / 放大 / 高清修复：{无 / 待补充}
 
             【Stable Diffusion WebUI 字段】
-            Prompt:
-            {可直接粘贴到 WebUI Prompt 的正向提示词；LoRA 标签只在这里写}
+            正向提示词（Prompt）：
+            {可直接粘贴到 WebUI Prompt 的中文正向提示词；LoRA 标签只在这里写}
 
-            Negative prompt:
-            {可直接粘贴到 WebUI Negative prompt 的反向提示词}
+            反向提示词（Negative prompt）：
+            {可直接粘贴到 WebUI Negative prompt 的中文反向提示词}
 
-            Parameters:
-            Steps: {待补充}
-            Sampler: {待补充}
-            CFG scale: {待补充}
-            Size: {待补充}
-            Seed: {random 或用户指定}
-            Denoising strength: {仅 img2img/inpaint 使用；否则写 not applicable}
+            生成参数（Parameters）：
+            采样步数（Steps）：{待补充}
+            采样器（Sampler）：{待补充}
+            CFG 引导强度（CFG scale）：{待补充}
+            尺寸（Size）：{待补充}
+            随机种子（Seed）：{随机或用户指定}
+            重绘幅度（Denoising strength）：{仅图生图/局部重绘使用；否则写不适用}
 
             【diffusers 参数】
-            prompt = "{正向提示词}"
-            negative_prompt = "{反向提示词}"
-            width = {待补充}
-            height = {待补充}
-            num_inference_steps = {待补充}
-            guidance_scale = {待补充}
-            seed = {random 或用户指定}
+            提示词（prompt）= "{正向提示词}"
+            反向提示词（negative_prompt）= "{反向提示词}"
+            宽度（width）= {待补充}
+            高度（height）= {待补充}
+            推理步数（num_inference_steps）= {待补充}
+            引导强度（guidance_scale）= {待补充}
+            随机种子（seed）= {随机或用户指定}
 
             【需要补充的信息】
             最多列 5 条真正影响生成质量的缺失项，例如模型族、尺寸、参考图、LoRA 名称、ControlNet 类型、采样器或是否 img2img。
@@ -348,7 +348,7 @@ public sealed class OptimizationTargetService
             {{userRequest}}
             """,
             ModelInstruction = """
-            生成一份 ComfyUI / Stable Diffusion 可复制字段。输出只能是最终正文，不要解释、不要 Markdown、不要完整 workflow JSON，除非用户提供节点 ID。必须包含：适配目标、ComfyUI 节点字段、Stable Diffusion WebUI 字段、diffusers 参数、需要补充的信息。ComfyUI 部分必须输出 Positive CLIP Text Encode、Negative CLIP Text Encode、KSampler 参数和可选节点。WebUI 部分必须输出 Prompt、Negative prompt 和 Parameters。diffusers 部分必须输出 prompt、negative_prompt、width、height、num_inference_steps、guidance_scale、seed。正向提示词默认英文，负向提示词必须包含未成年、18 岁以下、儿童、少年、幼态、文字乱码、水印、解剖错误、低质量等排除项。不得编造模型、LoRA、embedding、ControlNet、参考图、尺寸、seed 或采样器；信息不足写待补充。
+            生成一份 ComfyUI / Stable Diffusion 可复制字段。输出只能是最终正文，不要解释、不要 Markdown、不要完整 workflow JSON，除非用户提供节点 ID。必须包含：适配目标、ComfyUI 节点字段、Stable Diffusion WebUI 字段、diffusers 参数、需要补充的信息。主输出语言为中文时，AIPIN_PROMPT 必须使用中文字段名、中文占位符、中文说明和中文提示词正文；只在括号中保留必要的平台专有名词或 API 字段，例如 Positive CLIP Text Encode、Negative CLIP Text Encode、KSampler、Prompt、Negative prompt、Parameters、prompt、negative_prompt、width、height、num_inference_steps、guidance_scale、seed。英文提示词由 AIPIN_ENGLISH_PROMPT 单独输出，不要把英文版提前塞进中文提示词框。负向提示词必须包含未成年、18 岁以下、儿童、少年、幼态、文字乱码、水印、解剖错误、低质量等排除项。不得编造模型、LoRA、embedding、ControlNet、参考图、尺寸、seed 或采样器；信息不足写待补充。
             """,
             EnglishTranslationRule = "Keep the ComfyUI / Stable Diffusion adapter field names exactly as written: Positive CLIP Text Encode, Negative CLIP Text Encode, KSampler, Prompt, Negative prompt, Parameters, prompt, negative_prompt, width, height, num_inference_steps, guidance_scale, seed. Translate prompt content into executable English, but preserve exact Chinese text that the user wants rendered in the image.",
             CreatedAt = now,

@@ -192,6 +192,22 @@ public sealed partial class CompactPromptWindow : Window
         }
     }
 
+    private readonly record struct OptimizationTargetSuggestion(string Mode, string DisplayName, string Reason);
+
+    private enum PromptFieldCopyKind
+    {
+        Primary,
+        Constraint,
+        Parameter
+    }
+
+    private sealed record PromptFieldCopyPlan(
+        string ButtonText,
+        string Label,
+        bool PreferEnglishOutput,
+        IReadOnlyList<string> StartLabels,
+        IReadOnlyList<string> StopLabels);
+
     private sealed record TemplateSourceChoice(string Value, string DisplayTitle, string DisplaySubtitle)
     {
         public override string ToString()
@@ -656,6 +672,32 @@ public sealed partial class CompactPromptWindow : Window
         SceneText.Text = $"{L("优化目标：")}{target}";
         BottomSceneText.Text = $"{L("优化目标：")}{target}";
         BottomLanguageText.Text = L("输出语言：中英双语");
+        RefreshFieldCopyButtons();
+    }
+
+    private void RefreshFieldCopyButtons()
+    {
+        var primary = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Primary);
+        var constraint = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Constraint);
+        var parameter = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Parameter);
+
+        ApplyFieldCopyButton(CompactFieldCopyPrimaryButton, primary);
+        ApplyFieldCopyButton(ExpandedFieldCopyPrimaryButton, primary);
+        ApplyFieldCopyButton(CompactFieldCopyConstraintButton, constraint);
+        ApplyFieldCopyButton(ExpandedFieldCopyConstraintButton, constraint);
+        ApplyFieldCopyButton(CompactFieldCopyParameterButton, parameter);
+        ApplyFieldCopyButton(ExpandedFieldCopyParameterButton, parameter);
+    }
+
+    private void ApplyFieldCopyButton(Button? button, PromptFieldCopyPlan plan)
+    {
+        if (button is null)
+        {
+            return;
+        }
+
+        button.Content = L(plan.ButtonText);
+        ToolTipService.SetToolTip(button, $"{L("复制")}{L(plan.Label)}");
     }
 
     private async void OptimizeButton_Click(object sender, RoutedEventArgs e)
@@ -696,6 +738,11 @@ public sealed partial class CompactPromptWindow : Window
         var context = GetTargetWindowContext();
         var scene = _sceneDetector.Detect(context);
         var userRequest = string.IsNullOrWhiteSpace(overrideUserRequest) ? GetUserInput() : overrideUserRequest.Trim();
+        if (overrideUserRequest is null)
+        {
+            TryApplySuggestedOptimizationTarget(userRequest);
+        }
+
         LockConversationTargetIfNeeded();
         if (overrideUserRequest is null)
         {
@@ -1225,6 +1272,252 @@ public sealed partial class CompactPromptWindow : Window
         }
 
         SetStatus(_clipboardContextService.TrySetClipboardText(EnglishOutputBox.Text) ? "已复制英文提示词" : "剪贴板暂时被占用，请再点一次复制");
+    }
+
+    private void CopyComfyPositiveButton_Click(object sender, RoutedEventArgs e)
+    {
+        CopyPromptField(PromptFieldCopyKind.Primary);
+    }
+
+    private void CopyComfyNegativeButton_Click(object sender, RoutedEventArgs e)
+    {
+        CopyPromptField(PromptFieldCopyKind.Constraint);
+    }
+
+    private void CopyComfyParametersButton_Click(object sender, RoutedEventArgs e)
+    {
+        CopyPromptField(PromptFieldCopyKind.Parameter);
+    }
+
+    private void CopyPromptField(PromptFieldCopyKind kind)
+    {
+        var plan = BuildPromptFieldCopyPlan(kind);
+        var primarySource = plan.PreferEnglishOutput
+            ? EnglishOutputBox.Text
+            : GetChineseOutput();
+        var secondarySource = plan.PreferEnglishOutput
+            ? GetChineseOutput()
+            : EnglishOutputBox.Text;
+        var field = ExtractPromptField(primarySource, plan.StartLabels, plan.StopLabels)
+            ?? ExtractPromptField(secondarySource, plan.StartLabels, plan.StopLabels);
+        if (string.IsNullOrWhiteSpace(field))
+        {
+            SetStatus($"没有找到可复制的{plan.Label}；请先生成当前优化目标的结构化输出");
+            return;
+        }
+
+        SetStatus(_clipboardContextService.TrySetClipboardText(field)
+            ? $"已复制{plan.Label}"
+            : "剪贴板暂时被占用，请再点一次复制");
+    }
+
+    private PromptFieldCopyPlan BuildPromptFieldCopyPlan(PromptFieldCopyKind kind)
+    {
+        var selectedScenes = FormatSelectedScenes();
+        var effectiveMode = GetEffectiveMode();
+        if (IsComfyStableDiffusionMode(effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("正向", "正向提示词字段", true,
+                    ["Positive CLIP Text Encode", "正向 CLIP 文本编码", "Positive prompt", "正向提示词", "Prompt"],
+                    ["Negative CLIP Text Encode", "反向 CLIP 文本编码", "Negative prompt", "反向提示词", "KSampler", "KSampler 参数", "Parameters", "生成参数", "diffusers 参数", "需要补充的信息"]),
+                PromptFieldCopyKind.Constraint => new("反向", "反向提示词字段", true,
+                    ["Negative CLIP Text Encode", "反向 CLIP 文本编码", "Negative prompt", "反向提示词"],
+                    ["KSampler", "KSampler 参数", "Optional nodes", "可选节点", "Stable Diffusion WebUI", "Parameters", "生成参数", "diffusers 参数", "需要补充的信息"]),
+                _ => new("参数", "参数字段", true,
+                    ["KSampler 参数", "KSampler", "Parameters", "生成参数"],
+                    ["Optional nodes", "可选节点", "Stable Diffusion WebUI", "diffusers 参数", "需要补充的信息"])
+            };
+        }
+
+        if (IsVeoMode(selectedScenes, effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("镜头", "镜头字段", true,
+                    ["Shot / structure", "Shot", "镜头结构", "镜头"],
+                    ["Subject", "Location and time", "Action", "Camera", "Camera movement", "Lighting and color", "Visual style", "Dialogue", "Sound", "Duration and aspect ratio", "Continuity and constraints", "User requirement"]),
+                PromptFieldCopyKind.Constraint => new("约束", "连续性与约束字段", true,
+                    ["Continuity and constraints", "Constraints", "连续性与约束", "约束"],
+                    ["User requirement", "用户需求", "需要补充的信息"]),
+                _ => new("时长", "时长与比例字段", true,
+                    ["Duration and aspect ratio", "Duration", "Aspect ratio", "时长与画幅", "平台参数"],
+                    ["Continuity and constraints", "Constraints", "User requirement", "用户需求", "需要补充的信息"])
+            };
+        }
+
+        if (IsJimengMode(selectedScenes, effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("分镜", "时间轴 / 分镜字段", false,
+                    ["时间轴 / 分镜", "时间轴", "分镜", "Timeline / storyboard", "Timeline", "Storyboard"],
+                    ["动作与表演", "视觉风格", "声音与字幕", "平台参数", "负面约束", "需要补充的信息", "用户需求补充"]),
+                PromptFieldCopyKind.Constraint => new("约束", "负面约束字段", false,
+                    ["负面约束", "Negative constraints", "Constraints"],
+                    ["需要补充的信息", "用户需求补充", "User requirement"]),
+                _ => new("参数", "平台参数字段", false,
+                    ["平台参数", "输出参数", "Platform parameters", "Duration and aspect ratio"],
+                    ["负面约束", "Negative constraints", "需要补充的信息", "用户需求补充"])
+            };
+        }
+
+        if (IsAiCodingMode(selectedScenes, effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("任务", "任务字段", false,
+                    ["我的需求", "需求", "问题现象", "Bug 描述", "功能目标", "目标页面 / 组件", "Task", "Requirement"],
+                    ["执行规则", "限制", "技术限制", "实现要求", "验证规则", "验收", "输出", "最终输出"]),
+                PromptFieldCopyKind.Constraint => new("约束", "执行约束字段", false,
+                    ["执行规则", "限制", "技术限制", "禁止事项", "边界", "Hard rules", "Constraints"],
+                    ["验证规则", "验证", "验收", "输出", "最终输出", "产物"]),
+                _ => new("验证", "验证字段", false,
+                    ["验证规则", "验证", "验收", "Verification", "Acceptance"],
+                    ["最终回复格式", "最终输出", "输出格式", "输出"])
+            };
+        }
+
+        if (IsAcademicHumanizeMode(selectedScenes, effectiveMode))
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("原文", "待处理文本字段", false,
+                    ["需要处理的文本如下", "待处理文本", "原文", "Text"],
+                    ["改写要求", "反 AI 腔禁用词库", "禁止事项", "输出规则"]),
+                PromptFieldCopyKind.Constraint => new("禁用", "禁用约束字段", false,
+                    ["反 AI 腔禁用词库", "禁止事项", "禁用词", "Banned phrases"],
+                    ["需要处理的文本如下", "待处理文本", "输出规则"]),
+                _ => new("规则", "输出规则字段", false,
+                    ["输出规则", "改写要求", "要求", "Rules"],
+                    ["需要处理的文本如下", "待处理文本"])
+            };
+        }
+
+        return kind switch
+        {
+            PromptFieldCopyKind.Primary => new("要点", "核心要点字段", false,
+                ["任务", "生成目标", "主体身份", "我的需求", "Task", "Goal"],
+                ["约束", "负面约束", "参数", "需要补充的信息", "Context", "Constraints"]),
+            PromptFieldCopyKind.Constraint => new("约束", "约束字段", false,
+                ["约束", "负面约束", "Constraints", "Negative constraints"],
+                ["参数", "需要补充的信息", "输出", "Output"]),
+            _ => new("参数", "参数字段", false,
+                ["参数", "平台参数", "生成参数", "Parameters"],
+                ["需要补充的信息", "输出", "Output"])
+        };
+    }
+
+    private static string? ExtractPromptField(string source, IReadOnlyList<string> startLabels, IReadOnlyList<string> stopLabels)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return null;
+        }
+
+        var lines = source.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var collecting = false;
+        var builder = new StringBuilder();
+
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.TrimEnd('\r');
+            var trimmed = line.Trim();
+            if (!collecting)
+            {
+                if (TryConsumePromptFieldLabel(trimmed, startLabels, out var inlineContent))
+                {
+                    collecting = true;
+                    if (!string.IsNullOrWhiteSpace(inlineContent))
+                    {
+                        builder.AppendLine(inlineContent);
+                    }
+                }
+
+                continue;
+            }
+
+            if (TryConsumePromptFieldLabel(trimmed, stopLabels, out _))
+            {
+                break;
+            }
+
+            builder.AppendLine(line);
+        }
+
+        var value = builder.ToString().Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static bool TryConsumePromptFieldLabel(string line, IReadOnlyList<string> labels, out string inlineContent)
+    {
+        inlineContent = string.Empty;
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return false;
+        }
+
+        var normalizedLine = NormalizePromptFieldHeading(line);
+        foreach (var label in labels)
+        {
+            if (!line.StartsWith(label, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!normalizedLine.StartsWith(label, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                inlineContent = StripPromptLabelPrefix(normalizedLine[label.Length..]);
+                return true;
+            }
+
+            inlineContent = StripPromptLabelPrefix(line[label.Length..]);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string NormalizePromptFieldHeading(string line)
+    {
+        var value = line.Trim();
+        if (value.StartsWith("【", StringComparison.Ordinal) && value.Contains('】'))
+        {
+            var end = value.IndexOf('】');
+            value = $"{value[1..end]} {value[(end + 1)..]}";
+        }
+        else if (value.StartsWith("[", StringComparison.Ordinal) && value.Contains(']'))
+        {
+            var end = value.IndexOf(']');
+            value = $"{value[1..end]} {value[(end + 1)..]}";
+        }
+
+        return value.Trim().TrimStart('#', '*').Trim();
+    }
+
+    private static string StripPromptLabelPrefix(string text)
+    {
+        var value = text.TrimStart();
+        while (value.Length > 0 && (value[0] == '(' || value[0] == '（'))
+        {
+            var end = value[0] == '('
+                ? value.IndexOf(')')
+                : value.IndexOf('）');
+            if (end < 0)
+            {
+                break;
+            }
+
+            value = value[(end + 1)..].TrimStart();
+        }
+
+        if (value.Length > 0 && (value[0] == ':' || value[0] == '：' || value[0] == '='))
+        {
+            value = value[1..].TrimStart();
+        }
+
+        return value;
     }
 
     private void FavoriteChinesePromptButton_Click(object sender, RoutedEventArgs e)
@@ -4832,6 +5125,90 @@ Skill 文件：{skillPath}
         SetStatus($"{L("已切换优化目标")}：{choice.Category} / {choice.Title}");
     }
 
+    private bool TryApplySuggestedOptimizationTarget(string userRequest)
+    {
+        if (string.IsNullOrWhiteSpace(userRequest)
+            || _conversationLockedMode is not null
+            || !string.Equals(_selectedMode, "通用 LLM", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var suggestion = SuggestOptimizationTarget(userRequest);
+        if (suggestion is null || string.Equals(suggestion.Value.Mode, _selectedMode, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        _selectedMode = suggestion.Value.Mode;
+        _syncingModeSelection = true;
+        try
+        {
+            SetModeSelectionState(_selectedMode);
+        }
+        finally
+        {
+            _syncingModeSelection = false;
+        }
+
+        SelectTemplateSourceForMode(_selectedMode);
+        RefreshModelDisplayText();
+        RefreshScene();
+        RefreshTemplateViews();
+        SaveUiSettings();
+        SetStatus($"{L("已根据需求建议优化目标")}：{suggestion.Value.DisplayName}（{suggestion.Value.Reason}）");
+        return true;
+    }
+
+    private OptimizationTargetSuggestion? SuggestOptimizationTarget(string userRequest)
+    {
+        var text = userRequest.Trim();
+        var lower = text.ToLowerInvariant();
+
+        if (ContainsAny(lower, "veo", "veo3", "veo 3"))
+        {
+            return new("Veo 3", "Veo 3", "命中 Veo 视频模型关键词");
+        }
+
+        if (ContainsAny(text, "即梦", "剪映", "豆包视频", "首尾帧", "图生视频", "短视频", "分镜", "口播", "产品宣发")
+            || ContainsAny(lower, "seedance", "dreamina", "seedream"))
+        {
+            return new("即梦", "即梦 / Seedance", "命中短视频或即梦/Seedance 关键词");
+        }
+
+        if (ContainsAny(lower, "comfyui", "stable diffusion", "sdxl", "sd3", "a1111", "webui", "ksampler", "checkpoint", "lora", "controlnet")
+            || ContainsAny(text, "正向提示词", "反向提示词", "负面词", "采样器", "出图", "生图", "文生图", "图生图", "生成图片", "图片", "配图", "美图", "画一张", "画个", "海报", "人像", "写真"))
+        {
+            return new(FindOptimizationTargetMode("builtin-comfyui-stable-diffusion") ?? "文生图", "ComfyUI / Stable Diffusion", "命中文生图或 SD 工作流关键词");
+        }
+
+        if (ContainsAny(text, "论文", "降AI", "去AI", "去 AI", "AI味", "AI 味", "查重", "学术润色", "自然改写", "人话")
+            || ContainsAny(lower, "aigc", "academic humanize"))
+        {
+            return new(FindOptimizationTargetMode("builtin-academic-humanize-cn") ?? "论文去AI味", "论文去AI味", "命中论文自然化关键词");
+        }
+
+        if (ContainsAny(text, "代码", "报错", "修 bug", "修复 bug", "根因", "仓库", "提交", "拉取请求", "新增功能", "重构", "单元测试", "构建失败")
+            || ContainsAny(lower, "bug", "stack trace", "github", "pull request", "pr", "commit", "codex", "claude code", "cursor", "antigravity"))
+        {
+            return new("AI编程", "AI 编程", "命中代码/仓库任务关键词");
+        }
+
+        return null;
+    }
+
+    private string? FindOptimizationTargetMode(string targetId)
+    {
+        return _optimizationTargetService.Load().Any(target => string.Equals(target.Id, targetId, StringComparison.OrdinalIgnoreCase))
+            ? MakeOptimizationTargetMode(targetId)
+            : null;
+    }
+
+    private static bool ContainsAny(string text, params string[] keywords)
+    {
+        return keywords.Any(keyword => text.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+    }
+
     private void OptimizationTargetManagementList_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is OptimizationTargetItem target)
@@ -5916,10 +6293,48 @@ Skill 文件：{skillPath}
             string.Equals(item.Value, mode, StringComparison.OrdinalIgnoreCase));
         if (OptimizationModeDescriptionText is not null)
         {
+            var capabilityText = BuildOptimizationModeCapabilityText(mode);
             OptimizationModeDescriptionText.Text = choice is null
                 ? "按类别选择模型目标。"
-                : $"{choice.Category} / {choice.Title}：{choice.Description}";
+                : $"{choice.Category} / {choice.Title}：{choice.Description}{Environment.NewLine}{capabilityText}";
         }
+    }
+
+    private string BuildOptimizationModeCapabilityText(string mode)
+    {
+        var effectiveMode = GetSelectedOptimizationTarget(mode)?.Title
+            ?? (string.Equals(mode, "自定义", StringComparison.OrdinalIgnoreCase) ? CustomModeBox.Text.Trim() : mode);
+        if (IsComfyStableDiffusionMode(effectiveMode))
+        {
+            return "能力标签：中文输入、英文同步、正向/反向/参数复制、适合 ComfyUI / SD WebUI；未接入 workflow API。";
+        }
+
+        if (IsVeoMode(string.Empty, effectiveMode))
+        {
+            return "能力标签：英文导演提示词、镜头/约束/时长复制、适合 Veo；未自动提交到视频平台。";
+        }
+
+        if (IsJimengMode(string.Empty, effectiveMode))
+        {
+            return "能力标签：中文短视频结构、分镜/约束/参数复制、适合即梦 / Seedance；未自动上传平台。";
+        }
+
+        if (IsAiCodingMode(string.Empty, effectiveMode))
+        {
+            return "能力标签：任务/约束/验证复制、适合 Codex / Claude Code / Cursor；不自动读取仓库上下文。";
+        }
+
+        if (IsAcademicHumanizeMode(string.Empty, effectiveMode))
+        {
+            return "能力标签：中文论文自然化、禁用词/输出规则复制；不自动导入 Word / PDF。";
+        }
+
+        if (effectiveMode.Contains("文生图", StringComparison.Ordinal))
+        {
+            return "能力标签：中文结构化、英文同步、负面约束；建议具体平台优先选择 ComfyUI / Stable Diffusion。";
+        }
+
+        return "能力标签：中文主输出、英文同步、聊天式补充、常用提示词收藏。";
     }
 
     private void SelectTemplateSourceForMode(string mode)
@@ -6232,6 +6647,9 @@ Skill 文件：{skillPath}
             tags.Add("深度思考：提示词摘要");
         }
 
+        tags.Add("流式输出");
+        tags.Add(IsVisionCapableModel(capability.ProviderId, model) ? "图片输入：可能支持" : "图片输入：未标记");
+        tags.Add(GetModelLanguageFitTag(capability.ProviderId, model));
         return tags;
     }
 
@@ -6244,7 +6662,11 @@ Skill 文件：{skillPath}
 
         var tags = BuildModelTagList(providerId, model)
             .Skip(1)
-            .Where(tag => !string.Equals(tag, "深度思考：提示词摘要", StringComparison.Ordinal))
+            .Where(tag => !string.Equals(tag, "深度思考：提示词摘要", StringComparison.Ordinal)
+                && !string.Equals(tag, "流式输出", StringComparison.Ordinal)
+                && !tag.StartsWith("中文", StringComparison.Ordinal)
+                && !tag.StartsWith("英文", StringComparison.Ordinal)
+                && !string.Equals(tag, "图片输入：未标记", StringComparison.Ordinal))
             .ToArray();
         return tags.Length == 0 ? model : $"{model}  [{string.Join(" · ", tags)}]";
     }
@@ -6252,8 +6674,48 @@ Skill 文件：{skillPath}
     private string BuildModelCapabilityTooltip(string providerId, string model, string? ownedBy = null)
     {
         var capability = ResolveReasoningCapability(providerId, string.Empty, model);
+        var tags = string.Join(" · ", BuildModelTagList(providerId, model).Select(L));
         var owner = string.IsNullOrWhiteSpace(ownedBy) ? string.Empty : $"{Environment.NewLine}{L("所属：")}{ownedBy}";
-        return $"{model}{Environment.NewLine}{L(capability.Description)}{owner}";
+        return $"{model}{Environment.NewLine}{L("能力标签：")}{tags}{Environment.NewLine}{L(capability.Description)}{owner}";
+    }
+
+    private static bool IsVisionCapableModel(string providerId, string model)
+    {
+        var lowerModel = model.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(lowerModel))
+        {
+            return false;
+        }
+
+        return lowerModel.Contains("vision", StringComparison.Ordinal)
+            || lowerModel.Contains("vl", StringComparison.Ordinal)
+            || lowerModel.Contains("qwen-vl", StringComparison.Ordinal)
+            || lowerModel.Contains("4o", StringComparison.Ordinal)
+            || lowerModel.Contains("gpt-5", StringComparison.Ordinal)
+            || lowerModel.Contains("gemini", StringComparison.Ordinal)
+            || lowerModel.Contains("claude", StringComparison.Ordinal)
+            || lowerModel.Contains("pixtral", StringComparison.Ordinal)
+            || lowerModel.Contains("multimodal", StringComparison.Ordinal)
+            || string.Equals(providerId, "gemini", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "claude", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetModelLanguageFitTag(string providerId, string model)
+    {
+        var lowerModel = model.Trim().ToLowerInvariant();
+        if (string.Equals(providerId, "deepseek", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "glm", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "doubao", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "kimi", StringComparison.OrdinalIgnoreCase)
+            || lowerModel.Contains("qwen", StringComparison.Ordinal)
+            || lowerModel.Contains("deepseek", StringComparison.Ordinal)
+            || lowerModel.Contains("glm", StringComparison.Ordinal)
+            || lowerModel.Contains("kimi", StringComparison.Ordinal))
+        {
+            return "中文友好";
+        }
+
+        return "英文友好";
     }
 
     private static string GetProviderLabelById(string providerId)
@@ -7816,10 +8278,19 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
     {
         return selectedScenes.Contains("文生图", StringComparison.Ordinal)
             || effectiveMode.Contains("文生图", StringComparison.Ordinal)
-            || effectiveMode.Contains("ComfyUI", StringComparison.OrdinalIgnoreCase)
-            || effectiveMode.Contains("Stable Diffusion", StringComparison.OrdinalIgnoreCase)
+            || IsComfyStableDiffusionMode(effectiveMode)
             || effectiveMode.Contains("SDXL", StringComparison.OrdinalIgnoreCase)
             || effectiveMode.Contains("SD3", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsComfyStableDiffusionMode(string effectiveMode)
+    {
+        return effectiveMode.Contains("ComfyUI", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("Stable Diffusion", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SDXL", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SD3", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("SD WebUI", StringComparison.OrdinalIgnoreCase)
+            || effectiveMode.Contains("A1111", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsVideoMode()

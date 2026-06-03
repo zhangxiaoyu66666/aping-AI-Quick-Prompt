@@ -20,28 +20,28 @@
 默认输出三组字段：
 
 1. `ComfyUI 节点字段`
-   - `Positive CLIP Text Encode`
-   - `Negative CLIP Text Encode`
-   - `KSampler`
-   - `Optional nodes`
+   - `正向 CLIP 文本编码（Positive CLIP Text Encode）`
+   - `反向 CLIP 文本编码（Negative CLIP Text Encode）`
+   - `KSampler 参数`
+   - `可选节点`
 2. `Stable Diffusion WebUI 字段`
-   - `Prompt`
-   - `Negative prompt`
-   - `Parameters`
+   - `正向提示词（Prompt）`
+   - `反向提示词（Negative prompt）`
+   - `生成参数（Parameters）`
 3. `diffusers 参数`
-   - `prompt`
-   - `negative_prompt`
-   - `width`
-   - `height`
-   - `num_inference_steps`
-   - `guidance_scale`
-   - `seed`
+   - `提示词（prompt）`
+   - `反向提示词（negative_prompt）`
+   - `宽度（width）`
+   - `高度（height）`
+   - `推理步数（num_inference_steps）`
+   - `引导强度（guidance_scale）`
+   - `随机种子（seed）`
 
 默认不输出完整 ComfyUI workflow JSON。只有当用户提供 workflow JSON 或明确给出节点 ID 时，后续才适合生成节点字段 patch。
 
 ## 适配规则
 
-- 正向提示词默认输出英文短语或英文自然语言描述，便于 SD 1.5、SDXL、SD3 和常见 LoRA/embedding 生态使用。
+- 中文主输出使用中文字段名、中文占位符和中文提示词正文；英文提示词栏单独生成英文可执行版本，便于 SD 1.5、SDXL、SD3 和常见 LoRA/embedding 生态使用。
 - 中文 Logo、中文海报标题、中文 UI 文案等必须保留原文，但应明确“文字内容为：...”。
 - 负向提示词必须包含低质量、模糊、结构错误、多余肢体、文字乱码、水印、主体漂移等基础排除项。
 - 人物或角色主体必须包含成年约束；负向提示词必须排除 `underage`、`child`、`teenager`、`juvenile`、`loli`、`young-looking`、`age ambiguity`。

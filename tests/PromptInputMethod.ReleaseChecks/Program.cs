@@ -105,8 +105,9 @@ static void CheckSkillMatchingInputs(string repoRoot)
     AssertContains(optimizationTargetSource, "builtin-jimeng-seedance-director", "Built-in optimization targets must include the Jimeng / Seedance director Skill.");
     AssertContains(optimizationTargetSource, "文生视频、图生视频、首尾帧过渡、产品宣发、短剧对白、Seedream 图片和视频编辑", "Jimeng director target must cover the reviewed video and image generation scenarios.");
     AssertContains(optimizationTargetSource, "builtin-comfyui-stable-diffusion", "Built-in optimization targets must include the ComfyUI / Stable Diffusion adapter.");
-    AssertContains(optimizationTargetSource, "Positive CLIP Text Encode", "ComfyUI adapter must output positive CLIP text fields.");
-    AssertContains(optimizationTargetSource, "Negative prompt", "Stable Diffusion adapter must output WebUI negative prompt fields.");
+    AssertContains(optimizationTargetSource, "正向 CLIP 文本编码（Positive CLIP Text Encode）", "ComfyUI adapter must keep Chinese primary-output labels for positive CLIP fields.");
+    AssertContains(optimizationTargetSource, "反向提示词（Negative prompt）", "Stable Diffusion adapter must keep Chinese primary-output labels for WebUI negative prompt fields.");
+    AssertContains(optimizationTargetSource, "英文提示词由 AIPIN_ENGLISH_PROMPT 单独输出", "ComfyUI adapter must not push English output into the Chinese prompt pane.");
 
     var skillCandidatesDoc = File.ReadAllText(Path.Combine(repoRoot, "docs", "skill-source-candidates.md"));
     AssertContains(skillCandidatesDoc, "原创干净房间实现", "Jimeng Skill candidate notes must document the clean-room implementation boundary.");
@@ -151,6 +152,7 @@ static void CheckProviderValidation(string repoRoot)
 
 static void CheckBilingualPromptGeneration(string repoRoot)
 {
+    var appXaml = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.App", "CompactPromptWindow.xaml"));
     var appCode = File.ReadAllText(Path.Combine(repoRoot, "src", "PromptInputMethod.App", "CompactPromptWindow.xaml.cs"));
 
     AssertContains(appCode, "<AIPIN_ENGLISH_PROMPT>", "Model protocol must ask for the English prompt in the same completion.");
@@ -158,6 +160,18 @@ static void CheckBilingualPromptGeneration(string repoRoot)
     AssertContains(appCode, "var protocolEnglishPrompt = protocolResult.EnglishPrompt;", "Generation flow should read the protocol English prompt directly.");
     AssertContains(appCode, "模型未按协议返回英文提示词，已使用本地同步结构", "Missing protocol English should use local fallback instead of a second model translation.");
     AssertContains(appCode, "BuildEnglishTranslationStructureRule", "One-pass English generation should still preserve target-specific structure rules.");
+    AssertContains(appXaml, "CopyComfyPositiveButton_Click", "ComfyUI / Stable Diffusion outputs should expose one-click positive prompt copy.");
+    AssertContains(appXaml, "CopyComfyNegativeButton_Click", "ComfyUI / Stable Diffusion outputs should expose one-click negative prompt copy.");
+    AssertContains(appXaml, "CopyComfyParametersButton_Click", "ComfyUI / Stable Diffusion outputs should expose one-click parameter copy.");
+    AssertContains(appCode, "BuildPromptFieldCopyPlan", "Target outputs should expose target-specific field copy plans instead of copying the whole prompt.");
+    AssertContains(appCode, "PromptFieldCopyKind.Primary", "Field copy should support the current target's core field.");
+    AssertContains(appCode, "PromptFieldCopyKind.Constraint", "Field copy should support the current target's constraint field.");
+    AssertContains(appCode, "PromptFieldCopyKind.Parameter", "Field copy should support the current target's parameter or verification field.");
+    AssertContains(appCode, "ExtractPromptField", "One-click field copy should parse fields instead of copying the whole prompt.");
+    AssertContains(appCode, "SuggestOptimizationTarget", "Generation should recommend a target from obvious user intent when the user is still on the general LLM target.");
+    AssertContains(appCode, "BuildOptimizationModeCapabilityText", "Optimization target picker should surface target capability tags.");
+    AssertContains(appCode, "图片输入：可能支持", "Model capability tags should show likely multimodal support.");
+    AssertContains(appCode, "流式输出", "Model capability tags should show streaming support.");
     AssertContains(appCode, "LooksLikeQuotaOrBillingError", "Provider quota and billing errors should be surfaced clearly.");
     AssertNotContains(appCode, "BuildGenerationRequestOptions", "Generation flow must not hard-code longer timeouts for slow reasoning calls.");
     AssertNotContains(appCode, "BuildSynchronizedEnglishPromptForGenerationAsync(", "Generation flow must not call the model a second time for translation.");

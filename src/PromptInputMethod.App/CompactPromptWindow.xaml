@@ -447,10 +447,16 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="英语提示词" Style="{StaticResource SectionTitleStyle}" />
-                            <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
-                            <Button Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
+                            <Button x:Name="CompactFieldCopyPrimaryButton" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="正向" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段" />
+                            <Button x:Name="CompactFieldCopyConstraintButton" Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="反向" Click="CopyComfyNegativeButton_Click" ToolTipService.ToolTip="复制当前目标的约束字段" />
+                            <Button x:Name="CompactFieldCopyParameterButton" Grid.Column="3" Style="{StaticResource FluentButtonStyle}" Content="参数" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段" />
+                            <Button Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
+                            <Button Grid.Column="5" Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
                         </Grid>
                         <Border Grid.Row="1" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="12">
                             <Grid>
@@ -831,6 +837,9 @@
                                         <Button Style="{StaticResource IconButtonStyle}" Click="ExpandEnglishOutputButton_Click" ToolTipService.ToolTip="放大">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE740;" FontSize="15" />
                                         </Button>
+                                        <Button x:Name="ExpandedFieldCopyPrimaryButton" Style="{StaticResource FluentButtonStyle}" Content="正向" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段" />
+                                        <Button x:Name="ExpandedFieldCopyConstraintButton" Style="{StaticResource FluentButtonStyle}" Content="反向" Click="CopyComfyNegativeButton_Click" ToolTipService.ToolTip="复制当前目标的约束字段" />
+                                        <Button x:Name="ExpandedFieldCopyParameterButton" Style="{StaticResource FluentButtonStyle}" Content="参数" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段" />
                                         <Button Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
                                         <Button Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
                                     </StackPanel>
