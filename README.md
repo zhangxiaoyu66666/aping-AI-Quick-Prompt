@@ -6,6 +6,18 @@
 
 It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. The app is designed for Windows users who move between ChatGPT, Claude, Gemini, local OpenAI-compatible models, image models, video models, and coding agents.
 
+## Screenshots
+
+![AI Quick Prompt main workbench](docs/screenshots/en/workbench.png)
+
+| Quick prompts | Skill management |
+| --- | --- |
+| ![Quick prompt editor](docs/screenshots/en/quick-prompts-dialog.png) | ![Skill management page](docs/screenshots/en/skill-management.png) |
+
+| Quick prompt library | Optimization targets |
+| --- | --- |
+| ![Quick prompt library](docs/screenshots/en/quick-prompts-library.png) | ![Optimization target management](docs/screenshots/en/optimization-targets.png) |
+
 ## Highlights
 
 - **Chat-style requirement refinement**: iterate from a rough request into a more precise prompt, with follow-up questions when the request is incomplete.

@@ -6,6 +6,18 @@
 
 项目基于 WinUI 3 与 .NET 8 构建，并集成可选的 Rust 原生 OCR worker。啊拼面向经常在 ChatGPT、Claude、Gemini、本地 OpenAI 兼容模型、文生图模型、视频模型和代码智能体之间切换的 Windows 用户。
 
+## 界面截图
+
+![啊拼主工作台](docs/screenshots/zh-CN/workbench.png)
+
+| 常用提示词 | Skill 管理 |
+| --- | --- |
+| ![新建常用提示词](docs/screenshots/zh-CN/quick-prompts-dialog.png) | ![Skill 管理页面](docs/screenshots/zh-CN/skill-management.png) |
+
+| 常用提示词库 | 优化目标 |
+| --- | --- |
+| ![常用提示词库](docs/screenshots/zh-CN/quick-prompts-library.png) | ![优化目标管理](docs/screenshots/zh-CN/optimization-targets.png) |
+
 ## 核心特性
 
 - **聊天式需求优化**：从一句粗略想法开始，通过追问和补充逐步生成更精确的提示词。
