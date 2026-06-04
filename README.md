@@ -1,16 +1,31 @@
-# 啊拼 / AI Quick Prompt
+# AIPIN / AI Quick Prompt
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-啊拼 / AI Quick Prompt is a GPL-licensed Windows Fluent prompt workbench for turning rough intent, OCR text, clipboard context, image references, local templates, and mounted Skill workflows into clearer prompts.
+AIPIN is a Windows desktop prompt workbench for people who move between ChatGPT, Claude, Gemini, local OpenAI-compatible models, image models, video models, and coding agents. It turns rough intent, OCR text, clipboard context, image references, local templates, and mounted `SKILL.md` workflows into clearer prompts that are easier to reuse.
 
-It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. The app is designed for Windows users who move between ChatGPT, Claude, Gemini, local OpenAI-compatible models, image models, video models, and coding agents.
+Current public community version: `1.0.5`
 
-## Screenshots
+Download: [GitHub Releases](https://github.com/zhangxiaoyu66666/aping-AI-Quick-Prompt/releases)
 
-![AI Quick Prompt main workbench](docs/screenshots/en/workbench.png)
+## 1. Software Features
 
-| Quick prompts | Skill management |
+- Chat-style requirement refinement: start with a rough request, then continue the conversation until the prompt is specific enough to use.
+- Chinese and English prompt panes: keep localized Chinese output and English prompt output visible side by side.
+- Optimization targets: general LLM, text-to-image, ComfyUI / Stable Diffusion, Jimeng / Seedance, Veo 3, AI coding, Skill workflows, and custom targets.
+- Field-level copy buttons: copy positive prompt, negative prompt, parameters, task, constraints, verification, storyboard, timing, and other target-specific fields.
+- Skill mounting: mount a folder containing `SKILL.md`; AIPIN can match it to the current request and inject it as high-priority workflow context.
+- Template and quick prompt library: reuse prompt templates, common snippets, favorite prompts, and imported JSON packs.
+- OCR input: use local Fire Eye OCR first, with Windows Media OCR as a fallback when the worker is unavailable.
+- OpenAI-compatible model providers: configure base URL, API key, and model name for local or remote chat-completions-compatible endpoints.
+- Privacy-aware defaults: API keys are stored in Windows Credential Manager; OCR is local unless the user explicitly sends image context to a model provider.
+- GitHub community edition boundary: this branch does not ship OneDrive / WebDAV cloud sync UI, settings, services, or `PromptInputMethod.Core.Sync`.
+
+## 2. Screenshots
+
+![AIPIN main workbench](docs/screenshots/en/workbench.png)
+
+| Quick prompt editor | Skill management |
 | --- | --- |
 | ![Quick prompt editor](docs/screenshots/en/quick-prompts-dialog.png) | ![Skill management page](docs/screenshots/en/skill-management.png) |
 
@@ -18,122 +33,59 @@ It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. 
 | --- | --- |
 | ![Quick prompt library](docs/screenshots/en/quick-prompts-library.png) | ![Optimization target management](docs/screenshots/en/optimization-targets.png) |
 
-## Highlights
+## 3. Technology Stack
 
-- **Chat-style requirement refinement**: iterate from a rough request into a more precise prompt, with follow-up questions when the request is incomplete.
-- **Chinese + English output panes**: keep the primary localized prompt and English prompt visible side by side.
-- **Optimization targets**: general LLM, text-to-image, ComfyUI / Stable Diffusion field adapters, Jimeng / Seedance style video prompts, Veo 3, AI coding, Skill systems, and custom targets.
-- **Skill mounting**: mount a folder containing `SKILL.md`, let AI Quick Prompt match it to the current request, then inject the Skill as high-priority workflow context for direct execution.
-- **Template library**: built-in template groups inspired by `ChatGPT-Shortcut`, `prompts.chat`, and `SD-Anima-Prompt-Studio`, plus the bundled `Female Portrait Prompt Director Skill` and user templates with categories.
-- **Quick prompts**: user-managed common prompts with left-click copy and right-click edit/delete.
-- **JSON import/export**: templates, quick prompts, and language packs can be imported or exported without one-by-one manual entry.
-- **OCR input**: Fire Eye OCR is the preferred local OCR path, with Windows Media OCR kept only as a fallback when the worker is unavailable.
-- **OpenAI-compatible providers**: configure base URL, API key, and model name for local or remote chat-completions-compatible endpoints.
-- **Privacy-aware defaults**: API keys are stored in Windows Credential Manager; OCR is local unless the user explicitly sends image context to a model provider.
+- Desktop UI: WinUI 3, Windows App SDK, .NET 8, Fluent-style Windows desktop layout.
+- Core logic: `PromptInputMethod.Core` for local prompt routing and structuring primitives.
+- Local storage: SQLite through `Microsoft.Data.Sqlite`.
+- Model calls: OpenAI-compatible chat-completions protocol with configurable providers, model refresh, endpoint validation, streaming output, and deep-thinking display.
+- OCR: optional Rust native worker under `native/`, with Fire Eye OCR / PP-OCR related assets reviewed separately.
+- Secrets: Windows Credential Manager for API keys and provider credentials.
+- Packaging: public demo zip, sideload MSIX, and Microsoft Store `.msixupload` helper scripts.
+- Release checks: lightweight .NET release checks for prompt routing, template import/export, Skill matching, provider validation, UI coverage, packaging policy, and GitHub cloud-sync exclusion.
 
-## Current Status
+Related docs:
 
-AI Quick Prompt 1.0.5 is the current public GPL community release. The current codebase includes:
+- [Privacy model](docs/privacy.md)
+- [License inventory](docs/license-inventory.md)
+- [Open-source references](docs/open-source-references.md)
+- [Optimization target format](docs/optimization-target-format.md)
+- [Microsoft Store submission notes](docs/microsoft-store-submission.md)
 
-- WinUI 3 expanded and compact prompt windows.
-- Global hotkey entry for a topmost prompt window.
-- Fluent-style navigation, template panes, model management, settings, and about pages.
-- Local prompt structuring fallback when model calls are unavailable.
-- OpenAI-compatible model calls with model refresh and endpoint validation.
-- Built-in and user-defined templates.
-- AI coding and Skill-system prompt targets.
-- Local OCR routing and optional Rust worker integration.
-- Built-in Chinese and English UI resources plus mounted language-pack support.
-- No cloud sync entry in the GitHub community edition; cloud sync architecture notes for the Microsoft Store branch are documented separately in [docs/cloud-sync-architecture.md](docs/cloud-sync-architecture.md).
+## 4. Future Plan
 
-The 1.0 OCR model and vendored native dependency review is complete. Fire Eye OCR may ship with embedded PP-OCRv5 model assets when the release includes the required Apache-2.0 notices. See [docs/ocr-model-license-review.md](docs/ocr-model-license-review.md), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and [docs/license-inventory.md](docs/license-inventory.md).
+- Windows stability first: tray behavior, global hotkey recovery, OCR capture reliability, compact window consistency, high-DPI layout, and faster template / Skill switching.
+- Better prompt workflows: richer field adapters for image, video, coding, academic writing, and user-imported optimization targets.
+- Stronger local privacy controls: clearer model egress confirmation, local redaction improvements, and safer audit boundaries.
+- Template and Skill ecosystem: stable import/export formats for templates, quick prompts, Skills, language packs, and optimization targets.
+- macOS research: split shared core logic before choosing Avalonia, .NET MAUI, SwiftUI, or another shell.
+- Cross-platform long-term direction: keep Windows native quality while making prompt data and Skill workflows portable.
+- Store/commercial branch separation: cloud or paid features, if developed, stay isolated from the public GPL community branch unless intentionally released.
 
-Copied upstream source trees, local OCR model files, and old migration reference trees are intentionally ignored by Git. The public repository keeps generated app template data, bundled Skill packages with their own notices, the integrated native OCR code, and attribution documents. See [docs/template-source-imports.md](docs/template-source-imports.md) if you need to recreate local reference folders for maintenance.
+The longer roadmap lives in [PROMPT_INPUT_METHOD_ROADMAP.md](PROMPT_INPUT_METHOD_ROADMAP.md).
 
-Future Windows polish, macOS adaptation, cross-platform core extraction, template/Skill data formats, and long-term platform plans are tracked in [PROMPT_INPUT_METHOD_ROADMAP.md](PROMPT_INPUT_METHOD_ROADMAP.md).
+## 5. Author Background And Sponsorship
 
-## License
+AIPIN is developed by Zhang Xiaoyu. The author describes himself as a second-level disabled developer who has appeared on CCTV. For the past half year, he has also been building an AI narrative game project, exploring how AI can help ordinary people write stories, characters, branching choices, and eventually their own galgame-style works.
 
-The original source code and documentation in this repository are released under the GNU General Public License, version 3 or any later version (`GPL-3.0-or-later`).
+AIPIN is part of that larger direction. It starts as a prompt workbench, but the longer vision is warmer and more stubborn: lower the barrier between an idea and a finished interactive story, so that people who do not have a full studio, a large budget, or perfect physical conditions can still make something personal, playable, and alive.
 
-- Full license text: [LICENSE](LICENSE).
-- Project notice: [NOTICE.md](NOTICE.md).
-- Third-party notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-- Working dependency inventory: [docs/license-inventory.md](docs/license-inventory.md).
+This project is open source, but continued development still takes real time and real living pressure: Windows packaging, OCR testing, model-provider compatibility, localization, documentation, issue triage, AI narrative game experiments, and future macOS research all need sustained work. If AIPIN helps your workflow, please consider starring the repository, sharing it, reporting useful issues, or sponsoring the author.
 
-Third-party components, prompt datasets, bundled Skill packages, model assets, and framework/runtime dependencies remain under their own licenses. GPL licensing of this repository does not relicense those upstream materials.
+- GitHub profile README: [zhangxiaoyu66666](https://github.com/zhangxiaoyu66666)
+- Profile README repository: [zhangxiaoyu66666/zhangxiaoyu66666](https://github.com/zhangxiaoyu66666/zhangxiaoyu66666)
+- Sponsor page: [github.com/sponsors/zhangxiaoyu66666](https://github.com/sponsors/zhangxiaoyu66666)
 
-## Screens And Workflow
+The goal is not only to make one prompt tool, but to prove that an independent disabled developer can keep building useful AI software, keep telling stories, and keep moving toward a future where everyone can write their own galgame, half joking, half very serious.
 
-The intended workflow is:
+## 6. Build Instructions
 
-1. Open AI Quick Prompt from the global hotkey or the main window.
-2. Enter a rough requirement or import editable OCR text from an image/screenshot.
-3. Choose an optimization target such as `通用 LLM`, `文生图`, `AI编程`, or `Skill体系`.
-4. Optionally mount a `SKILL.md` folder or click a quick template to insert it into the requirement.
-5. Send the request to the configured model.
-6. Continue the chat if the model asks for missing details.
-7. Copy, insert, save, or export the generated Chinese and English prompts.
-
-## Skill System
-
-AI Quick Prompt treats Skills as reusable text workflows, not executable plugins. A mounted Skill is expected to live in a folder containing `SKILL.md`.
-
-When a user mounts a Skill:
-
-- AI Quick Prompt reads the `SKILL.md` file.
-- It stores the Skill as a user template under `Skill体系`.
-- It extracts likely trigger terms from the title, description, headings, and workflow hints.
-- If a later user request matches that Skill, AI Quick Prompt injects the Skill as high-priority context.
-- The model is instructed to directly complete the user task according to the mounted Skill, rather than merely explaining how to write a Skill.
-
-This is useful for workflows such as:
-
-- image prompt systems,
-- coding-agent instructions,
-- writing and editing standards,
-- project-specific operating procedures,
-- repeatable prompt engineering playbooks.
-
-## Built-In Template Sources
-
-AI Quick Prompt includes built-in template groups inspired by open-source prompt projects:
-
-- `ChatGPT-Shortcut`: general writing, translation, summarization, and prompt-engineering references.
-- `prompts.chat`: open role prompt library, developer prompts, structured prompts, and image prompt references.
-- `SD-Anima-Prompt-Studio`: text-to-image, character, composition, and visual prompt references.
-- `Female Portrait Prompt Director Skill`: built-in text-to-image Skill workflow for female portrait prompts, fashion/ecommerce try-on prompts, style routing, reference-image preservation, prompt optimization, and safety rewriting.
-
-The original project names are intentionally preserved in source labels for attribution. AI Quick Prompt does not include unrelated website, account, community, membership, or paid-feature logic from those projects. Bundled Skill packages retain their original LICENSE and NOTICE files under `src/PromptInputMethod.App/Data/skills/`.
-The copied upstream source trees are not tracked in the public repo; only generated template data and source labels are kept.
-
-Jimeng / Dreamina / Seedance related Skill candidates are tracked in [docs/skill-source-candidates.md](docs/skill-source-candidates.md). The built-in `即梦导演 Skill` and Jimeng template entries are original clean-room project content and do not copy candidate repository code, prompt text, or Skill files. Candidate repositories become third-party built-in templates or Skill packages only after license scope, import scope, platform terms, and privacy impact are reviewed.
-
-## Privacy Model
-
-AI Quick Prompt is meant to be local-first, but it can send text and optional images to a configured model provider when enabled.
-
-- API keys are stored in Windows Credential Manager under the app credential target.
-- Local OCR does not send images to model providers by itself.
-- Image context is sent only when the user explicitly attaches it for a multimodal model call and image sending is enabled.
-- Local redaction can reduce accidental exposure of common secrets, but it is not a formal data-loss-prevention system.
-- User prompts, OCR text, and templates may contain sensitive content; do not commit local app data or screenshots with private information.
-
-See [docs/privacy.md](docs/privacy.md) for more detail.
-
-## Build Requirements
+Requirements:
 
 - Windows 10 1809 or later.
-- Visual Studio 2022 or newer with:
-  - .NET desktop development,
-  - C++ build tools,
-  - Windows SDK,
-  - MSBuild,
-  - CMake tools if building native OCR.
+- Visual Studio 2022 or newer with .NET desktop development, C++ build tools, Windows SDK, MSBuild, and CMake tools if building native OCR.
 - .NET 8 SDK.
 - Rust stable toolchain if building the optional Fire Eye OCR worker.
-
-## Build
 
 Build the WinUI app with Visual Studio MSBuild:
 
@@ -141,7 +93,7 @@ Build the WinUI app with Visual Studio MSBuild:
 & "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\amd64\MSBuild.exe" src\PromptInputMethod.App\PromptInputMethod.App.csproj /t:Build /p:Configuration=Debug /p:Platform=x64 /p:OutputPath=bin\CodexVerify\ /m /v:minimal
 ```
 
-Fallback on machines where `msbuild` is on `PATH`:
+Fallback when `msbuild` is available on `PATH`:
 
 ```powershell
 msbuild src\PromptInputMethod.App\PromptInputMethod.App.csproj /t:Build /p:Configuration=Debug /p:Platform=x64 /m /v:minimal
@@ -153,71 +105,13 @@ Build the optional OCR worker:
 cargo build -p fire-eye-ocr-worker --manifest-path native\Cargo.toml --release
 ```
 
-`dotnet build` may fail WinUI PRI generation on some machines. Prefer Visual Studio MSBuild for the app project.
-
-## Run
-
-Debug x64 build:
-
-```powershell
-& "src\PromptInputMethod.App\bin\x64\Debug\net8.0-windows10.0.19041.0\win-x64\PromptInputMethod.App.exe"
-```
-
-Release x64 build:
-
-```powershell
-& "src\PromptInputMethod.App\bin\x64\Release\net8.0-windows10.0.19041.0\win-x64\PromptInputMethod.App.exe"
-```
-
-## Repository Layout
-
-```text
-src/PromptInputMethod.App/   WinUI 3 app, UI, settings, OCR, model calls, templates
-src/PromptInputMethod.Core/  local prompt structuring and routing primitives
-native/                      optional Rust OCR worker and patched OCR dependency tree
-assets/                      app logo and OCR model assets
-docs/                        privacy, license inventory, open-source references
-```
-
-Local-only folders such as `ChatGPT-Shortcut-main/`, `SD-Anima-Prompt-Studio-main/`, `reference/xiaxia-pet/`, and `assets/fire_eye/` are ignored. They are useful during maintenance, but they are not required for a normal app build.
-
-## Open-Source Files
-
-The repository includes:
-
-- GPL project license.
-- Project notice.
-- Third-party notices and working license inventory.
-- Contributing guide.
-- Security policy.
-- Code of conduct.
-- Changelog.
-- Agent instructions for future coding assistants.
-- GitHub issue templates and pull request template.
-- GitHub Actions Windows build workflow.
-- Template source import notes for local-only upstream references.
-- Product roadmap for Windows polish, macOS adaptation, and cross-platform planning.
-- 1.0 release readiness notes, OCR model license review, and lightweight release checks.
-
-For Codex for Open Source preparation, see [docs/codex-for-open-source.md](docs/codex-for-open-source.md).
-
-Example mounted Skill: [examples/skills/aipin-template-review/SKILL.md](examples/skills/aipin-template-review/SKILL.md).
-
-## Release Checks
-
-Run the lightweight non-GUI release checks:
+Run release checks:
 
 ```powershell
 dotnet run --project tests\PromptInputMethod.ReleaseChecks\PromptInputMethod.ReleaseChecks.csproj --configuration Release
 ```
 
-Capture layout screenshots for expanded, compact, narrow, and current high-DPI display settings:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\Invoke-UiScreenshotChecks.ps1
-```
-
-Create a public demo package with notices and reviewed OCR assets:
+Create a public demo package:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\New-PublicDemoPackage.ps1
@@ -229,10 +123,4 @@ Create a signed MSIX sideload package:
 powershell -ExecutionPolicy Bypass -File scripts\New-MsixPackage.ps1
 ```
 
-The completed 1.0 release checklist lives in [docs/release-1.0-readiness.md](docs/release-1.0-readiness.md). The forward-looking product roadmap lives in [PROMPT_INPUT_METHOD_ROADMAP.md](PROMPT_INPUT_METHOD_ROADMAP.md).
-
-## Contributing
-
-Small focused patches are easiest to review. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) before changing code.
-
-If a change touches OCR capture, clipboard behavior, model requests, API-key storage, Skill mounting, or local file access, document the privacy impact in the pull request.
+`dotnet build` may fail WinUI PRI generation on some machines. Prefer Visual Studio MSBuild for the app project.
