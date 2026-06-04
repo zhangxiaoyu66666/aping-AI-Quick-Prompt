@@ -66,17 +66,17 @@ The longer roadmap lives in [PROMPT_INPUT_METHOD_ROADMAP.md](PROMPT_INPUT_METHOD
 
 ## 5. Author Background And Sponsorship
 
-AIPIN is developed by Zhang Xiaoyu. The author describes himself as a second-level disabled developer who has appeared on CCTV. For the past half year, he has also been building an AI narrative game project, exploring how AI can help ordinary people write stories, characters, branching choices, and eventually their own galgame-style works.
+I am Zhang Xiaoyu (章笑语), the developer of AIPIN. I am a second-level disabled developer, and my story has appeared in CCTV-related coverage. For the past half year, I have also been building an AI narrative game project, exploring how AI can help ordinary people write stories, characters, branching choices, and eventually create their own galgame-style works.
 
-AIPIN is part of that larger direction. It starts as a prompt workbench, but the longer vision is warmer and more stubborn: lower the barrier between an idea and a finished interactive story, so that people who do not have a full studio, a large budget, or perfect physical conditions can still make something personal, playable, and alive.
+AIPIN is one of the first pieces of that longer road. It starts as a prompt workbench, but what I really want to do is lower the barrier between a rough idea and a finished interactive story, so that people who do not have a full studio, a large budget, or perfect physical conditions can still make something personal, playable, and alive.
 
-This project is open source, but continued development still takes real time and real living pressure: Windows packaging, OCR testing, model-provider compatibility, localization, documentation, issue triage, AI narrative game experiments, and future macOS research all need sustained work. If AIPIN helps your workflow, please consider starring the repository, sharing it, reporting useful issues, or sponsoring the author.
+This project is open source, but keeping it alive still takes real time and real living pressure: Windows packaging, OCR testing, model-provider compatibility, localization, documentation, issue triage, AI narrative game experiments, and future macOS research all need sustained work. If AIPIN helps your workflow, please consider starring the repository, sharing it, reporting useful issues, or sponsoring me.
 
 - GitHub profile README: [zhangxiaoyu66666](https://github.com/zhangxiaoyu66666)
 - Profile README repository: [zhangxiaoyu66666/zhangxiaoyu66666](https://github.com/zhangxiaoyu66666/zhangxiaoyu66666)
 - Sponsor page: [github.com/sponsors/zhangxiaoyu66666](https://github.com/sponsors/zhangxiaoyu66666)
 
-The goal is not only to make one prompt tool, but to prove that an independent disabled developer can keep building useful AI software, keep telling stories, and keep moving toward a future where everyone can write their own galgame, half joking, half very serious.
+My goal is not only to make one prompt tool, but to prove that an independent disabled developer can keep building useful AI software, keep telling stories, and keep moving toward a future where everyone can write their own galgame, half joking, half very serious.
 
 ## 6. Build Instructions
 
