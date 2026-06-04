@@ -21,7 +21,7 @@ It is built as a WinUI 3 + .NET 8 desktop app with an optional Rust OCR worker. 
 
 ## Current Status
 
-AI Quick Prompt 1.0.4 is the current public GPL community release. The current codebase includes:
+AI Quick Prompt 1.0.5 is the current public GPL community release. The current codebase includes:
 
 - WinUI 3 expanded and compact prompt windows.
 - Global hotkey entry for a topmost prompt window.

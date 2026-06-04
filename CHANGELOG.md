@@ -1,12 +1,37 @@
 # Changelog
 
+## 1.0.5 - 2026-06-04
+
+### Highlights
+
+- English prompt field-copy buttons now refresh immediately when switching optimization targets. Agent targets show task / constraints / verification, ComfyUI and Stable Diffusion targets show positive / negative / parameters, and video targets show their matching storyboard or timing fields without requiring an app restart.
+- The GitHub source tree now includes Microsoft Store submission reference material: listing copy, certification notes, and the Store `.msixupload` helper script. These files document packaging and submission boundaries without adding Store-only cloud sync code to the community build.
+
+### Community Edition Boundary
+
+- OneDrive, WebDAV, and encrypted cloud-sync implementation files remain excluded from the GitHub community release. The public build keeps the local-first behavior and release checks that prevent cloud-sync UI, settings, services, or `PromptInputMethod.Core.Sync` from shipping here.
+
+### Verification
+
+- App, core, manifest, public demo package, and sideloading MSIX metadata now report version `1.0.5`.
+
 ## 1.0.3 - 2026-06-03
 
-- Added ComfyUI and Stable Diffusion prompt output adapters for positive prompts, negative prompts, sampling parameters, and workflow-ready fields.
-- Expanded the original clean-room Jimeng / Dreamina / Seedance target and documented candidate Skill repositories under review.
-- Reworked optimization target selection into a two-level category and target picker for text, image, video, Agent, and custom workflows.
-- Kept cloud sync code out of the GitHub community release and added release checks to prevent OneDrive/WebDAV implementation leakage.
-- Bumped app, core, public demo, and MSIX package version metadata to 1.0.3.
+### Highlights
+
+- Image-generation workflows now produce copy-ready fields for ComfyUI and Stable Diffusion instead of a generic image prompt blob. Outputs separate positive prompt, negative prompt, sampler settings, and workflow notes so users can paste them into node-based or WebUI pipelines with less cleanup.
+- Video prompt work is more explicit for Jimeng, Dreamina, and Seedance. The built-in director target now asks for task type, references, frame continuity, storyboard timing, motion, subtitles, sound, platform parameters, and missing materials instead of flattening everything into a vague video description.
+- Optimization targets now use a two-level picker: choose the category first, then the exact target. This keeps text, image, video, Agent, and custom workflows from being mixed into one long list.
+
+### Community Edition Boundary
+
+- The GitHub community release does not include OneDrive or WebDAV sync UI, settings, or service code. Cloud sync remains a Microsoft Store branch architecture topic and is documented separately so the public GPL build stays local-first and clear.
+- High-star Jimeng / Seedance candidate repositories without clear licenses remain black-box research references. The built-in Jimeng director target and templates are original clean-room project content.
+
+### Verification
+
+- Release checks now guard the new ComfyUI / Stable Diffusion adapters, Jimeng clean-room boundary, two-level target picker, streaming thinking bubble, animation setting, and GitHub cloud-sync exclusion.
+- App and package metadata now report version `1.0.3`.
 
 ## 1.0.0 - 2026-06-02
 

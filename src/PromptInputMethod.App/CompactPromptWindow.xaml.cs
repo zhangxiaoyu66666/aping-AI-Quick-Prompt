@@ -201,6 +201,16 @@ public sealed partial class CompactPromptWindow : Window
         Parameter
     }
 
+    private enum PromptFieldCopyProfile
+    {
+        General,
+        ComfyStableDiffusion,
+        Veo,
+        Jimeng,
+        AiCoding,
+        AcademicHumanize
+    }
+
     private sealed record PromptFieldCopyPlan(
         string ButtonText,
         string Label,
@@ -666,37 +676,64 @@ public sealed partial class CompactPromptWindow : Window
         }
     }
 
-    private void RefreshScene()
+    private void RefreshScene(string? mode = null)
     {
-        var target = L(FormatSelectedScenes());
+        var target = GetEffectiveModeDisplay(mode);
         SceneText.Text = $"{L("优化目标：")}{target}";
         BottomSceneText.Text = $"{L("优化目标：")}{target}";
         BottomLanguageText.Text = L("输出语言：中英双语");
-        RefreshFieldCopyButtons();
+        RefreshFieldCopyButtons(mode);
     }
 
-    private void RefreshFieldCopyButtons()
+    private void RefreshOptimizationTargetRuntimeUi(string? mode = null)
     {
-        var primary = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Primary);
-        var constraint = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Constraint);
-        var parameter = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Parameter);
-
-        ApplyFieldCopyButton(CompactFieldCopyPrimaryButton, primary);
-        ApplyFieldCopyButton(ExpandedFieldCopyPrimaryButton, primary);
-        ApplyFieldCopyButton(CompactFieldCopyConstraintButton, constraint);
-        ApplyFieldCopyButton(ExpandedFieldCopyConstraintButton, constraint);
-        ApplyFieldCopyButton(CompactFieldCopyParameterButton, parameter);
-        ApplyFieldCopyButton(ExpandedFieldCopyParameterButton, parameter);
+        var targetMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        RefreshScene(targetMode);
+        UpdateOptimizationModeDescription(targetMode);
+        RefreshFieldCopyButtonsNowAndQueued(targetMode);
     }
 
-    private void ApplyFieldCopyButton(Button? button, PromptFieldCopyPlan plan)
+    private void RefreshFieldCopyButtonsNowAndQueued(string? mode = null)
+    {
+        var fieldMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        RefreshFieldCopyButtons(fieldMode);
+        if (!DispatcherQueue.TryEnqueue(() => RefreshFieldCopyButtons(_selectedMode)))
+        {
+            RefreshFieldCopyButtons(_selectedMode);
+        }
+    }
+
+    private void RefreshFieldCopyButtons(string? mode = null)
+    {
+        var fieldMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        var primary = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Primary, fieldMode);
+        var constraint = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Constraint, fieldMode);
+        var parameter = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Parameter, fieldMode);
+
+        ApplyFieldCopyButton(CompactFieldCopyPrimaryButton, CompactFieldCopyPrimaryText, primary);
+        ApplyFieldCopyButton(ExpandedFieldCopyPrimaryButton, ExpandedFieldCopyPrimaryText, primary);
+        ApplyFieldCopyButton(CompactFieldCopyConstraintButton, CompactFieldCopyConstraintText, constraint);
+        ApplyFieldCopyButton(ExpandedFieldCopyConstraintButton, ExpandedFieldCopyConstraintText, constraint);
+        ApplyFieldCopyButton(CompactFieldCopyParameterButton, CompactFieldCopyParameterText, parameter);
+        ApplyFieldCopyButton(ExpandedFieldCopyParameterButton, ExpandedFieldCopyParameterText, parameter);
+    }
+
+    private void ApplyFieldCopyButton(Button? button, TextBlock? labelText, PromptFieldCopyPlan plan)
     {
         if (button is null)
         {
             return;
         }
 
-        button.Content = L(plan.ButtonText);
+        if (labelText is not null)
+        {
+            labelText.Text = L(plan.ButtonText);
+        }
+        else
+        {
+            button.Content = L(plan.ButtonText);
+        }
+
         ToolTipService.SetToolTip(button, $"{L("复制")}{L(plan.Label)}");
     }
 
@@ -1291,7 +1328,7 @@ public sealed partial class CompactPromptWindow : Window
 
     private void CopyPromptField(PromptFieldCopyKind kind)
     {
-        var plan = BuildPromptFieldCopyPlan(kind);
+        var plan = BuildPromptFieldCopyPlan(kind, _selectedMode);
         var primarySource = plan.PreferEnglishOutput
             ? EnglishOutputBox.Text
             : GetChineseOutput();
@@ -1311,11 +1348,10 @@ public sealed partial class CompactPromptWindow : Window
             : "剪贴板暂时被占用，请再点一次复制");
     }
 
-    private PromptFieldCopyPlan BuildPromptFieldCopyPlan(PromptFieldCopyKind kind)
+    private PromptFieldCopyPlan BuildPromptFieldCopyPlan(PromptFieldCopyKind kind, string? mode = null)
     {
-        var selectedScenes = FormatSelectedScenes();
-        var effectiveMode = GetEffectiveMode();
-        if (IsComfyStableDiffusionMode(effectiveMode))
+        var profile = ResolveFieldCopyProfile(mode);
+        if (profile == PromptFieldCopyProfile.ComfyStableDiffusion)
         {
             return kind switch
             {
@@ -1331,7 +1367,7 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
-        if (IsVeoMode(selectedScenes, effectiveMode))
+        if (profile == PromptFieldCopyProfile.Veo)
         {
             return kind switch
             {
@@ -1347,7 +1383,7 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
-        if (IsJimengMode(selectedScenes, effectiveMode))
+        if (profile == PromptFieldCopyProfile.Jimeng)
         {
             return kind switch
             {
@@ -1363,7 +1399,7 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
-        if (IsAiCodingMode(selectedScenes, effectiveMode))
+        if (profile == PromptFieldCopyProfile.AiCoding)
         {
             return kind switch
             {
@@ -1379,7 +1415,7 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
-        if (IsAcademicHumanizeMode(selectedScenes, effectiveMode))
+        if (profile == PromptFieldCopyProfile.AcademicHumanize)
         {
             return kind switch
             {
@@ -1407,6 +1443,73 @@ public sealed partial class CompactPromptWindow : Window
                 ["参数", "平台参数", "生成参数", "Parameters"],
                 ["需要补充的信息", "输出", "Output"])
         };
+    }
+
+    private PromptFieldCopyProfile ResolveFieldCopyProfile(string? mode)
+    {
+        var selectedMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        var profile = ResolveFieldCopyProfileFromText(BuildFieldCopyStateText(selectedMode, includeVisibleStatus: false));
+        if (profile != PromptFieldCopyProfile.General)
+        {
+            return profile;
+        }
+
+        return ResolveFieldCopyProfileFromText(BuildFieldCopyStateText(selectedMode, includeVisibleStatus: true));
+    }
+
+    private string BuildFieldCopyStateText(string selectedMode, bool includeVisibleStatus)
+    {
+        var target = GetSelectedOptimizationTarget(selectedMode);
+        var parts = new List<string?>
+        {
+            selectedMode,
+            GetEffectiveMode(selectedMode),
+            GetEffectiveModeDisplay(selectedMode),
+            target?.Title,
+            target?.Category,
+            target?.Description,
+            target?.Compatibility,
+            target?.TemplateSource
+        };
+
+        if (includeVisibleStatus)
+        {
+            parts.Add(SceneText?.Text);
+            parts.Add(BottomSceneText?.Text);
+            parts.Add(OptimizationModeDescriptionText?.Text);
+        }
+
+        return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private static PromptFieldCopyProfile ResolveFieldCopyProfileFromText(string stateText)
+    {
+        if (IsComfyStableDiffusionMode(stateText))
+        {
+            return PromptFieldCopyProfile.ComfyStableDiffusion;
+        }
+
+        if (IsVeoMode(stateText, stateText))
+        {
+            return PromptFieldCopyProfile.Veo;
+        }
+
+        if (IsJimengMode(stateText, stateText))
+        {
+            return PromptFieldCopyProfile.Jimeng;
+        }
+
+        if (IsAiCodingMode(stateText, stateText))
+        {
+            return PromptFieldCopyProfile.AiCoding;
+        }
+
+        if (IsAcademicHumanizeMode(stateText, stateText))
+        {
+            return PromptFieldCopyProfile.AcademicHumanize;
+        }
+
+        return PromptFieldCopyProfile.General;
     }
 
     private static string? ExtractPromptField(string source, IReadOnlyList<string> startLabels, IReadOnlyList<string> stopLabels)
@@ -5051,17 +5154,17 @@ Skill 文件：{skillPath}
 
     private void OptimizationCategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyOptimizationCategoryFromCombo(OptimizationCategoryBox);
+        ApplyOptimizationCategorySelection(sender as ComboBox);
     }
 
     private void CompactOptimizationCategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyOptimizationCategoryFromCombo(CompactOptimizationCategoryBox);
+        ApplyOptimizationCategorySelection(sender as ComboBox);
     }
 
-    private void ApplyOptimizationCategoryFromCombo(ComboBox comboBox)
+    private void ApplyOptimizationCategorySelection(ComboBox? comboBox)
     {
-        if (!_uiReady || _syncingModeSelection || comboBox.SelectedItem is not OptimizationCategoryChoice category)
+        if (!_uiReady || _syncingModeSelection || comboBox?.SelectedItem is not OptimizationCategoryChoice category)
         {
             return;
         }
@@ -5091,16 +5194,27 @@ Skill 文件：{skillPath}
         RefreshTemplateViews();
         SaveUiSettings();
         SetStatus($"{L("已切换优化目标")}：{category.Title}");
+        RefreshFieldCopyButtonsNowAndQueued(_selectedMode);
     }
 
     private void OptimizationModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyModeChoiceFromCombo(OptimizationModeBox);
+        ApplyModeChoiceSelection(sender as ComboBox);
     }
 
-    private void ApplyModeChoiceFromCombo(ComboBox comboBox)
+    private void OptimizationTargetPicker_DropDownClosed(object sender, object e)
     {
-        if (!_uiReady || _syncingModeSelection || comboBox.SelectedItem is not OptimizationModeChoice choice)
+        if (!_uiReady || _syncingModeSelection)
+        {
+            return;
+        }
+
+        RefreshOptimizationTargetRuntimeUi(_selectedMode);
+    }
+
+    private void ApplyModeChoiceSelection(ComboBox? comboBox)
+    {
+        if (!_uiReady || _syncingModeSelection || comboBox?.SelectedItem is not OptimizationModeChoice choice)
         {
             return;
         }
@@ -5123,6 +5237,7 @@ Skill 文件：{skillPath}
         RefreshTemplateViews();
         SaveUiSettings();
         SetStatus($"{L("已切换优化目标")}：{choice.Category} / {choice.Title}");
+        RefreshFieldCopyButtonsNowAndQueued(requestedMode);
     }
 
     private bool TryApplySuggestedOptimizationTarget(string userRequest)
@@ -5157,6 +5272,7 @@ Skill 文件：{skillPath}
         RefreshTemplateViews();
         SaveUiSettings();
         SetStatus($"{L("已根据需求建议优化目标")}：{suggestion.Value.DisplayName}（{suggestion.Value.Reason}）");
+        RefreshFieldCopyButtonsNowAndQueued(_selectedMode);
         return true;
     }
 
@@ -5231,7 +5347,7 @@ Skill 文件：{skillPath}
 
     private void CompactModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyModeChoiceFromCombo(CompactModeBox);
+        ApplyModeChoiceSelection(sender as ComboBox);
     }
 
     private async void CompactTemplateBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -6079,6 +6195,7 @@ Skill 文件：{skillPath}
         RefreshOptimizationModeChoices(targets);
         RefreshOptimizationTargetLists(targets, selectedId, moveToSelected: true);
         SyncModeSelectionBoxes(_selectedMode);
+        RefreshFieldCopyButtons();
     }
 
     private void RefreshOptimizationTargetLists(IReadOnlyList<OptimizationTargetItem> targets, string? selectedId, bool moveToSelected)
@@ -6215,6 +6332,7 @@ Skill 文件：{skillPath}
     {
         RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(mode), moveToSelected: true);
         SyncModeSelectionBoxes(mode);
+        RefreshOptimizationTargetRuntimeUi(mode);
     }
 
     private void SyncCompactModeBox()
@@ -8239,20 +8357,35 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         return IsOptimizationTargetMode(mode) ? mode![7..].Trim() : null;
     }
 
-    private string GetEffectiveMode()
+    private string GetEffectiveMode(string? mode = null)
     {
-        var target = GetSelectedOptimizationTarget();
+        var selectedMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        var target = GetSelectedOptimizationTarget(selectedMode);
         if (target is not null)
         {
             return target.Title;
         }
 
-        if (_selectedMode == "自定义" && !string.IsNullOrWhiteSpace(CustomModeBox.Text))
+        if (selectedMode == "自定义" && !string.IsNullOrWhiteSpace(CustomModeBox.Text))
         {
             return CustomModeBox.Text.Trim();
         }
 
-        return _selectedMode;
+        return selectedMode;
+    }
+
+    private string GetEffectiveModeDisplay(string? mode = null)
+    {
+        var selectedMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        var target = GetSelectedOptimizationTarget(selectedMode);
+        if (target is not null)
+        {
+            var title = L(target.Title);
+            var category = string.IsNullOrWhiteSpace(target.Category) ? string.Empty : L(target.Category);
+            return string.IsNullOrWhiteSpace(category) ? title : $"{category} / {title}";
+        }
+
+        return L(GetEffectiveMode(selectedMode));
     }
 
     private string GetPrimaryPromptLanguage()

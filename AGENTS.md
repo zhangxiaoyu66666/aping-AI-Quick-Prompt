@@ -23,6 +23,21 @@ PromptBar is a Windows desktop prompt workbench built with WinUI 3 and .NET 8. I
 - Do not edit generated `bin/`, `obj/`, `.vs/`, build artifacts, local user settings, or OCR diagnostics.
 - Do not commit API keys, local model provider credentials, screenshots containing secrets, or user prompt history.
 
+## Agent Writing Rules
+
+- Do not write changelogs, release notes, README updates, or roadmap entries as a raw task log.
+- For release notes, use `更新内容` + `使用说明` as the default structure unless the user explicitly asks for a different format.
+- Start release-facing text from the user's point of view: what changed in the app, why it matters, what is safer/faster/easier now, and what the user should notice after installing.
+- Group changes by product meaning, not by implementation order. Prefer sections such as `Highlights`, `Changed`, `Fixed`, `Privacy / Packaging`, and `Verification` when a release has more than a few items.
+- Keep implementation details only when they explain user impact, compatibility, privacy boundaries, packaging behavior, or future maintenance risk.
+- Avoid filler such as "bumped version", "updated files", "added checks", or "documented candidates" unless the sentence explains the practical consequence.
+- For open-source attribution or license notes, state the boundary clearly: what is bundled, what is only a research reference, what is original clean-room content, and what is excluded.
+- For GitHub community releases, explicitly call out store-only or branch-only features when there is a risk of confusing users, especially cloud sync and proprietary service integrations.
+- Do not include local experiments, uncommitted user changes, Microsoft Store-only features, cloud sync work, proprietary service hooks, or branch-only code in GitHub community changelogs, release notes, packages, or release assets unless the user explicitly asks for that scope.
+- Before writing release notes or preparing a package, inspect `git status`, the release branch, and the intended commit range. Treat dirty working-tree changes as user work by default and exclude them from release content.
+- If the user says they have already edited release text, do not overwrite it. Ask or only make the exact scoped change requested.
+- Before publishing a release, reread the changelog as a new user. If it does not answer "should I download this, and what changed for me?", rewrite it.
+
 ## Build And Verification
 
 Use Visual Studio MSBuild for the WinUI app:
