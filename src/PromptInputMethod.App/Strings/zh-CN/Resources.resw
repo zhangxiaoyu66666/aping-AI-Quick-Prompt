@@ -2832,4 +2832,672 @@
     <value>模板库</value>
     <comment>模板库</comment>
   </data>
+  <data name="S_c9b9ae7a61444ab7" xml:space="preserve">
+    <value>上一页</value>
+    <comment>上一页</comment>
+  </data>
+  <data name="S_8a8542f6964852dc" xml:space="preserve">
+    <value>下一页</value>
+    <comment>下一页</comment>
+  </data>
+  <data name="S_05492fdd2446c076" xml:space="preserve">
+    <value>WebDAV 同步</value>
+    <comment>WebDAV 同步</comment>
+  </data>
+  <data name="S_0a98a48eaaac4175" xml:space="preserve">
+    <value>测试连接</value>
+    <comment>测试连接</comment>
+  </data>
+  <data name="S_0b992c467d5265d6" xml:space="preserve">
+    <value>启用 WebDAV 同步（坚果云 / Nextcloud 等）</value>
+    <comment>启用 WebDAV 同步（坚果云 / Nextcloud 等）</comment>
+  </data>
+  <data name="S_0d6fad8138e77630" xml:space="preserve">
+    <value>选择文件夹</value>
+    <comment>选择文件夹</comment>
+  </data>
+  <data name="S_1a3f0617d6de8e52" xml:space="preserve">
+    <value>用户名</value>
+    <comment>用户名</comment>
+  </data>
+  <data name="S_2317b8ee5099a68e" xml:space="preserve">
+    <value>修改后自动保存，标题栏会显示 Provider + 模型名称。模型生成会等待服务端返回；可用性检测会单独检查 endpoint 和错误码。</value>
+    <comment>修改后自动保存，标题栏会显示 Provider + 模型名称。模型生成会等待服务端返回；可用性检测会单独检查 endpoint 和错误码。</comment>
+  </data>
+  <data name="S_250610589cc2a2c3" xml:space="preserve">
+    <value>导入同步快照</value>
+    <comment>导入同步快照</comment>
+  </data>
+  <data name="S_2ab3d5051fa04da2" xml:space="preserve">
+    <value>OneDrive 文件夹同步未启用。</value>
+    <comment>OneDrive 文件夹同步未启用。</comment>
+  </data>
+  <data name="S_2ec4ab035625608e" xml:space="preserve">
+    <value>复制当前目标的约束字段</value>
+    <comment>复制当前目标的约束字段</comment>
+  </data>
+  <data name="S_324b1e7d08213814" xml:space="preserve">
+    <value>复制当前目标的参数字段</value>
+    <comment>复制当前目标的参数字段</comment>
+  </data>
+  <data name="S_3677053dcd11b0d8" xml:space="preserve">
+    <value>反向</value>
+    <comment>反向</comment>
+  </data>
+  <data name="S_3ecc3c7311089aea" xml:space="preserve">
+    <value>第三方应用密码，不会明文保存</value>
+    <comment>第三方应用密码，不会明文保存</comment>
+  </data>
+  <data name="S_455729414075c71d" xml:space="preserve">
+    <value>例如：https://dav.jianguoyun.com/dav/</value>
+    <comment>例如：https://dav.jianguoyun.com/dav/</comment>
+  </data>
+  <data name="S_4cfb0b29c8086de8" xml:space="preserve">
+    <value>例如：C:\Users\用户名\OneDrive\啊拼</value>
+    <comment>例如：C:\Users\用户名\OneDrive\啊拼</comment>
+  </data>
+  <data name="S_5461c4da99d42df9" xml:space="preserve">
+    <value>应用密码</value>
+    <comment>应用密码</comment>
+  </data>
+  <data name="S_57060c88a36bf3d0" xml:space="preserve">
+    <value>目标</value>
+    <comment>目标</comment>
+  </data>
+  <data name="S_6897472e7ce88b70" xml:space="preserve">
+    <value>按类别选择模型目标。</value>
+    <comment>按类别选择模型目标。</comment>
+  </data>
+  <data name="S_6ecb847eb4fe199d" xml:space="preserve">
+    <value>同步历史</value>
+    <comment>同步历史</comment>
+  </data>
+  <data name="S_7a8e5186a3e9e3f7" xml:space="preserve">
+    <value>复制当前目标的核心字段</value>
+    <comment>复制当前目标的核心字段</comment>
+  </data>
+  <data name="S_7c9084ab5be1c910" xml:space="preserve">
+    <value>选择目标</value>
+    <comment>选择目标</comment>
+  </data>
+  <data name="S_83a5c97f03782d3f" xml:space="preserve">
+    <value>启用 OneDrive 文件夹同步</value>
+    <comment>启用 OneDrive 文件夹同步</comment>
+  </data>
+  <data name="S_9634fb0832be624f" xml:space="preserve">
+    <value>参数</value>
+    <comment>参数</comment>
+  </data>
+  <data name="S_978752e3f5ff9909" xml:space="preserve">
+    <value>同步文件夹</value>
+    <comment>同步文件夹</comment>
+  </data>
+  <data name="S_9aa99f9f2d9dccb9" xml:space="preserve">
+    <value>WebDAV 服务器地址</value>
+    <comment>WebDAV 服务器地址</comment>
+  </data>
+  <data name="S_a3cc883b432ac56c" xml:space="preserve">
+    <value>用于解锁端到端加密 vault，不会保存</value>
+    <comment>用于解锁端到端加密 vault，不会保存</comment>
+  </data>
+  <data name="S_a8246588df7f5bd1" xml:space="preserve">
+    <value>远端目录</value>
+    <comment>远端目录</comment>
+  </data>
+  <data name="S_a8b0822fb9a4d0a2" xml:space="preserve">
+    <value>选择大类</value>
+    <comment>选择大类</comment>
+  </data>
+  <data name="S_b0236493f8734f05" xml:space="preserve">
+    <value>在本机 Windows Credential Manager 记住同步密钥</value>
+    <comment>在本机 Windows Credential Manager 记住同步密钥</comment>
+  </data>
+  <data name="S_b243f727764d8240" xml:space="preserve">
+    <value>自动检测路径</value>
+    <comment>自动检测路径</comment>
+  </data>
+  <data name="S_b65f167bfc8738e2" xml:space="preserve">
+    <value>同步口令</value>
+    <comment>同步口令</comment>
+  </data>
+  <data name="S_b7b4c907eb003ca2" xml:space="preserve">
+    <value>主数据库仍保存在本机默认数据目录。这里仅把历史记录导出为端到端加密 JSON 快照；跨设备上传下载由你已登录的 OneDrive 客户端完成。勾选开关不会自动写入文件，只有手动同步时才会创建或更新同步目录。</value>
+    <comment>主数据库仍保存在本机默认数据目录。这里仅把历史记录导出为端到端加密 JSON 快照；跨设备上传下载由你已登录的 OneDrive 客户端完成。勾选开关不会自动写入文件，只有手动同步时才会创建或更新同步目录。</comment>
+  </data>
+  <data name="S_b7bfdca57d136baa" xml:space="preserve">
+    <value>大类</value>
+    <comment>大类</comment>
+  </data>
+  <data name="S_bf4e1825e9e8fe20" xml:space="preserve">
+    <value>正向</value>
+    <comment>正向</comment>
+  </data>
+  <data name="S_c1490d9ff91c1af3" xml:space="preserve">
+    <value>关闭同步</value>
+    <comment>关闭同步</comment>
+  </data>
+  <data name="S_d0b2c523fcca7cf4" xml:space="preserve">
+    <value>关闭后页面切换、聊天气泡和提示词输出会直接显示最终内容。</value>
+    <comment>关闭后页面切换、聊天气泡和提示词输出会直接显示最终内容。</comment>
+  </data>
+  <data name="S_dc0158797445f3e1" xml:space="preserve">
+    <value>启用界面动画</value>
+    <comment>启用界面动画</comment>
+  </data>
+  <data name="S_e38b02890f44e103" xml:space="preserve">
+    <value>OneDrive 文件夹同步</value>
+    <comment>OneDrive 文件夹同步</comment>
+  </data>
+  <data name="S_e4e517cfff59e9be" xml:space="preserve">
+    <value>同步历史记录（端到端加密）</value>
+    <comment>同步历史记录（端到端加密）</comment>
+  </data>
+  <data name="S_e5ddd471296b972b" xml:space="preserve">
+    <value>WebDAV 远端只保存端到端加密历史快照。坚果云请使用第三方应用密码；不会自动后台上传，只有点击同步按钮才会写入远端。</value>
+    <comment>WebDAV 远端只保存端到端加密历史快照。坚果云请使用第三方应用密码；不会自动后台上传，只有点击同步按钮才会写入远端。</comment>
+  </data>
+  <data name="S_e922f11a36345322" xml:space="preserve">
+    <value>WebDAV 同步未启用。</value>
+    <comment>WebDAV 同步未启用。</comment>
+  </data>
+  <data name="S_ed56e147544bf3ae" xml:space="preserve">
+    <value>坚果云账号 / WebDAV 用户名</value>
+    <comment>坚果云账号 / WebDAV 用户名</comment>
+  </data>
+  <data name="S_eddc25b25251eb69" xml:space="preserve">
+    <value>关闭 WebDAV</value>
+    <comment>关闭 WebDAV</comment>
+  </data>
+  <data name="S_34d63c1c0c12c586" xml:space="preserve">
+    <value>啊拼已最小化到系统托盘，可用快捷键或托盘图标呼出。</value>
+    <comment>啊拼已最小化到系统托盘，可用快捷键或托盘图标呼出。</comment>
+  </data>
+  <data name="S_c89c45dd36725ae2" xml:space="preserve">
+    <value>啊拼正在思考...</value>
+    <comment>啊拼正在思考...</comment>
+  </data>
+  <data name="S_00d9e8485347c56e" xml:space="preserve">
+    <value>保存历史失败：</value>
+    <comment>保存历史失败：</comment>
+  </data>
+  <data name="S_1e1cf129977bb77b" xml:space="preserve">
+    <value>处理方式：按当前优化目标、挂载 Skill 和模型协议生成最终提示词，并移除 Markdown 外壳。</value>
+    <comment>处理方式：按当前优化目标、挂载 Skill 和模型协议生成最终提示词，并移除 Markdown 外壳。</comment>
+  </data>
+  <data name="S_37aa6ad6a36d46fa" xml:space="preserve">
+    <value>打开设置</value>
+    <comment>打开设置</comment>
+  </data>
+  <data name="S_75d0e09b2b2d08be" xml:space="preserve">
+    <value>当前标签：</value>
+    <comment>当前标签：</comment>
+  </data>
+  <data name="S_22e1a1a869e86cad" xml:space="preserve">
+    <value>当前提示词为空</value>
+    <comment>当前提示词为空</comment>
+  </data>
+  <data name="S_f1e26484ec288ddf" xml:space="preserve">
+    <value>等待模型开始返回内容。</value>
+    <comment>等待模型开始返回内容。</comment>
+  </data>
+  <data name="S_f34307d2a95dcac1" xml:space="preserve">
+    <value>还没有模型发送记录</value>
+    <comment>还没有模型发送记录</comment>
+  </data>
+  <data name="S_2c1d884c03b9fdeb" xml:space="preserve">
+    <value>检测到 OneDrive 同步快照更新</value>
+    <comment>检测到 OneDrive 同步快照更新</comment>
+  </data>
+  <data name="S_209779ae21f37dac" xml:space="preserve">
+    <value>可能缺失：</value>
+    <comment>可能缺失：</comment>
+  </data>
+  <data name="S_0c64e30317a45672" xml:space="preserve">
+    <value>模型不可用，已用当前结果本地补充需求</value>
+    <comment>模型不可用，已用当前结果本地补充需求</comment>
+  </data>
+  <data name="S_bdc38bcde1410f3d" xml:space="preserve">
+    <value>模型未返回可见原生思考正文，以下为客户端基于可见结果整理的处理摘要。</value>
+    <comment>模型未返回可见原生思考正文，以下为客户端基于可见结果整理的处理摘要。</comment>
+  </data>
+  <data name="S_ee2af386783a8798" xml:space="preserve">
+    <value>内置 Skill 不能删除</value>
+    <comment>内置 Skill 不能删除</comment>
+  </data>
+  <data name="S_633d457bf4697822" xml:space="preserve">
+    <value>能力标签：</value>
+    <comment>能力标签：</comment>
+  </data>
+  <data name="S_cac233e53c72d5f7" xml:space="preserve">
+    <value>请先检测或选择 OneDrive 本地同步文件夹。</value>
+    <comment>请先检测或选择 OneDrive 本地同步文件夹。</comment>
+  </data>
+  <data name="S_4e62df3dde01bb2c" xml:space="preserve">
+    <value>请先填写 WebDAV 服务器地址和用户名。</value>
+    <comment>请先填写 WebDAV 服务器地址和用户名。</comment>
+  </data>
+  <data name="S_2b5a88b7a99fbbbd" xml:space="preserve">
+    <value>请选择发送记录</value>
+    <comment>请选择发送记录</comment>
+  </data>
+  <data name="S_61830ea9b92720e6" xml:space="preserve">
+    <value>请选择要编辑的 Skill</value>
+    <comment>请选择要编辑的 Skill</comment>
+  </data>
+  <data name="S_7e74b7ebbbc433e0" xml:space="preserve">
+    <value>请选择要插入的 Skill</value>
+    <comment>请选择要插入的 Skill</comment>
+  </data>
+  <data name="S_813f67cdb1d1482b" xml:space="preserve">
+    <value>请选择要继续编辑的历史记录</value>
+    <comment>请选择要继续编辑的历史记录</comment>
+  </data>
+  <data name="S_80e7c889dd32d657" xml:space="preserve">
+    <value>请选择要删除的 Skill</value>
+    <comment>请选择要删除的 Skill</comment>
+  </data>
+  <data name="S_4f786fccf9192480" xml:space="preserve">
+    <value>请选择要执行的命令</value>
+    <comment>请选择要执行的命令</comment>
+  </data>
+  <data name="S_277c9dfe57fbcbfd" xml:space="preserve">
+    <value>删除 Skill 失败</value>
+    <comment>删除 Skill 失败</comment>
+  </data>
+  <data name="S_439e864e8324379f" xml:space="preserve">
+    <value>尚未同步</value>
+    <comment>尚未同步</comment>
+  </data>
+  <data name="S_9d2ca261281a158a" xml:space="preserve">
+    <value>稍后</value>
+    <comment>稍后</comment>
+  </data>
+  <data name="S_af588707aaa5b4de" xml:space="preserve">
+    <value>同步目录：</value>
+    <comment>同步目录：</comment>
+  </data>
+  <data name="S_d11d4f417f5636fa" xml:space="preserve">
+    <value>同步目录有较新的加密历史快照：</value>
+    <comment>同步目录有较新的加密历史快照：</comment>
+  </data>
+  <data name="S_b32b3ae977583bcf" xml:space="preserve">
+    <value>未找到 SKILL.md，请选择 Skill 根目录</value>
+    <comment>未找到 SKILL.md，请选择 Skill 根目录</comment>
+  </data>
+  <data name="S_578cc4fff490a35f" xml:space="preserve">
+    <value>未找到 SKILL.md，无法导入 Skill 包</value>
+    <comment>未找到 SKILL.md，无法导入 Skill 包</comment>
+  </data>
+  <data name="S_c6772bfaab052560" xml:space="preserve">
+    <value>下一步追问：</value>
+    <comment>下一步追问：</comment>
+  </data>
+  <data name="S_fea2c9c66f32b8bd" xml:space="preserve">
+    <value>先输入要修改的需求</value>
+    <comment>先输入要修改的需求</comment>
+  </data>
+  <data name="S_785bd9676bc218a1" xml:space="preserve">
+    <value>需求摘要：</value>
+    <comment>需求摘要：</comment>
+  </data>
+  <data name="S_36eccc29247b5d10" xml:space="preserve">
+    <value>已根据需求建议优化目标</value>
+    <comment>已根据需求建议优化目标</comment>
+  </data>
+  <data name="S_15e1c1650e1a50ae" xml:space="preserve">
+    <value>已开始新会话</value>
+    <comment>已开始新会话</comment>
+  </data>
+  <data name="S_ef4cbc27eefa671c" xml:space="preserve">
+    <value>已清空发送审计记录</value>
+    <comment>已清空发送审计记录</comment>
+  </data>
+  <data name="S_2eaa988841290254" xml:space="preserve">
+    <value>已取消导入 Skill 包</value>
+    <comment>已取消导入 Skill 包</comment>
+  </data>
+  <data name="S_aaf5da76c8422af3" xml:space="preserve">
+    <value>已取消挂载 Skill</value>
+    <comment>已取消挂载 Skill</comment>
+  </data>
+  <data name="S_2599e9cb34398c64" xml:space="preserve">
+    <value>已删除 Skill</value>
+    <comment>已删除 Skill</comment>
+  </data>
+  <data name="S_356e173b724970ac" xml:space="preserve">
+    <value>已思考</value>
+    <comment>已思考</comment>
+  </data>
+  <data name="S_aa5587eef8d546ed" xml:space="preserve">
+    <value>已思考0秒</value>
+    <comment>已思考0秒</comment>
+  </data>
+  <data name="S_fdcdc065df26e5a1" xml:space="preserve">
+    <value>已替换当前提示词</value>
+    <comment>已替换当前提示词</comment>
+  </data>
+  <data name="S_b7a2e1ba797ac327" xml:space="preserve">
+    <value>已移除附件</value>
+    <comment>已移除附件</comment>
+  </data>
+  <data name="S_85f6e18dade0e043" xml:space="preserve">
+    <value>已引用中文提示词，可继续补充修改意见</value>
+    <comment>已引用中文提示词，可继续补充修改意见</comment>
+  </data>
+  <data name="S_ce8c03a828321dba" xml:space="preserve">
+    <value>优化后提示词为空，无法替换</value>
+    <comment>优化后提示词为空，无法替换</comment>
+  </data>
+  <data name="S_c2929ac672af52db" xml:space="preserve">
+    <value>远端目录：</value>
+    <comment>远端目录：</comment>
+  </data>
+  <data name="S_d1507999ed65b666" xml:space="preserve">
+    <value>正在加载 prompts.chat 模板...</value>
+    <comment>正在加载 prompts.chat 模板...</comment>
+  </data>
+  <data name="S_377dd8f140f882e4" xml:space="preserve">
+    <value>正在接收模型输出</value>
+    <comment>正在接收模型输出</comment>
+  </data>
+  <data name="S_a1e51762ef1d80fd" xml:space="preserve">
+    <value>正在生成中，请稍等</value>
+    <comment>正在生成中，请稍等</comment>
+  </data>
+  <data name="S_24b3f40433ed1c9e" xml:space="preserve">
+    <value>正在思考</value>
+    <comment>正在思考</comment>
+  </data>
+  <data name="S_bffa1bb5c8721746" xml:space="preserve">
+    <value>中文提示词为空，无法引用</value>
+    <comment>中文提示词为空，无法引用</comment>
+  </data>
+  <data name="S_ae007488c4937281" xml:space="preserve">
+    <value>OneDrive 文件夹同步未启用，当前使用本机默认数据目录。</value>
+    <comment>OneDrive 文件夹同步未启用，当前使用本机默认数据目录。</comment>
+  </data>
+  <data name="S_20bc4f6eb9fdc7e3" xml:space="preserve">
+    <value>SKILL.md 为空，无法导入 Skill 包</value>
+    <comment>SKILL.md 为空，无法导入 Skill 包</comment>
+  </data>
+  <data name="S_0f91dd2063004248" xml:space="preserve">
+    <value>SKILL.md 为空，无法挂载</value>
+    <comment>SKILL.md 为空，无法挂载</comment>
+  </data>
+  <data name="S_ba17bde3656f72d1" xml:space="preserve">
+    <value>WebDAV 同步未启用，当前使用本机默认数据目录。</value>
+    <comment>WebDAV 同步未启用，当前使用本机默认数据目录。</comment>
+  </data>
+  <data name="S_86344fd28ab4ea2d" xml:space="preserve">
+    <value>状态：</value>
+    <comment>状态：</comment>
+  </data>
+  <data name="S_2a845bd8e225c004" xml:space="preserve">
+    <value>模型：</value>
+    <comment>模型：</comment>
+  </data>
+  <data name="S_d6aad262da29ba03" xml:space="preserve">
+    <value>脱敏：</value>
+    <comment>脱敏：</comment>
+  </data>
+  <data name="S_481026384de154c5" xml:space="preserve">
+    <value>附图：</value>
+    <comment>附图：</comment>
+  </data>
+  <data name="S_6d89eb074a8ec969" xml:space="preserve">
+    <value>附件名：</value>
+    <comment>附件名：</comment>
+  </data>
+  <data name="S_2227758ede179f35" xml:space="preserve">
+    <value>错误：</value>
+    <comment>错误：</comment>
+  </data>
+  <data name="S_0ace4f149be19117" xml:space="preserve">
+    <value>发送文本：</value>
+    <comment>发送文本：</comment>
+  </data>
+  <data name="S_2cd478a84a8fbb91" xml:space="preserve">
+    <value>模板：</value>
+    <comment>模板：</comment>
+  </data>
+  <data name="S_86bb645187935d04" xml:space="preserve">
+    <value>常用提示词：</value>
+    <comment>常用提示词：</comment>
+  </data>
+  <data name="S_4fb5e43d04a60853" xml:space="preserve">
+    <value>历史：</value>
+    <comment>历史：</comment>
+  </data>
+  <data name="S_7632435b14f11103" xml:space="preserve">
+    <value>能力标签：中文输入、英文同步、正向/反向/参数复制、适合 ComfyUI / SD WebUI；未接入 workflow API。</value>
+    <comment>能力标签：中文输入、英文同步、正向/反向/参数复制、适合 ComfyUI / SD WebUI；未接入 workflow API。</comment>
+  </data>
+  <data name="S_9008c286ac628d12" xml:space="preserve">
+    <value>能力标签：英文导演提示词、镜头/约束/时长复制、适合 Veo；未自动提交到视频平台。</value>
+    <comment>能力标签：英文导演提示词、镜头/约束/时长复制、适合 Veo；未自动提交到视频平台。</comment>
+  </data>
+  <data name="S_e11db1e1acb3db8b" xml:space="preserve">
+    <value>能力标签：中文短视频结构、分镜/约束/参数复制、适合即梦 / Seedance；未自动上传平台。</value>
+    <comment>能力标签：中文短视频结构、分镜/约束/参数复制、适合即梦 / Seedance；未自动上传平台。</comment>
+  </data>
+  <data name="S_9941e811a9015cc6" xml:space="preserve">
+    <value>能力标签：任务/约束/验证复制、适合 Codex / Claude Code / Cursor；不自动读取仓库上下文。</value>
+    <comment>能力标签：任务/约束/验证复制、适合 Codex / Claude Code / Cursor；不自动读取仓库上下文。</comment>
+  </data>
+  <data name="S_27d765eac4b581bf" xml:space="preserve">
+    <value>能力标签：中文论文自然化、禁用词/输出规则复制；不自动导入 Word / PDF。</value>
+    <comment>能力标签：中文论文自然化、禁用词/输出规则复制；不自动导入 Word / PDF。</comment>
+  </data>
+  <data name="S_e5abee4172e201d4" xml:space="preserve">
+    <value>能力标签：中文结构化、英文同步、负面约束；建议具体平台优先选择 ComfyUI / Stable Diffusion。</value>
+    <comment>能力标签：中文结构化、英文同步、负面约束；建议具体平台优先选择 ComfyUI / Stable Diffusion。</comment>
+  </data>
+  <data name="S_e6e86c8095527ad6" xml:space="preserve">
+    <value>能力标签：中文主输出、英文同步、聊天式补充、常用提示词收藏。</value>
+    <comment>能力标签：中文主输出、英文同步、聊天式补充、常用提示词收藏。</comment>
+  </data>
+  <data name="S_bec5dd6e9068921a" xml:space="preserve">
+    <value>镜头</value>
+    <comment>镜头</comment>
+  </data>
+  <data name="S_ba0934c9778f2bdd" xml:space="preserve">
+    <value>约束</value>
+    <comment>约束</comment>
+  </data>
+  <data name="S_04a95e0654d3cec7" xml:space="preserve">
+    <value>时长</value>
+    <comment>时长</comment>
+  </data>
+  <data name="S_c6b1d5264c01a261" xml:space="preserve">
+    <value>分镜</value>
+    <comment>分镜</comment>
+  </data>
+  <data name="S_5253040db8643c85" xml:space="preserve">
+    <value>任务</value>
+    <comment>任务</comment>
+  </data>
+  <data name="S_154723a1aa0a09a4" xml:space="preserve">
+    <value>验证</value>
+    <comment>验证</comment>
+  </data>
+  <data name="S_354b28c853334568" xml:space="preserve">
+    <value>原文</value>
+    <comment>原文</comment>
+  </data>
+  <data name="S_7df5c456c765e4c3" xml:space="preserve">
+    <value>禁用</value>
+    <comment>禁用</comment>
+  </data>
+  <data name="S_1123245d1bed08b2" xml:space="preserve">
+    <value>规则</value>
+    <comment>规则</comment>
+  </data>
+  <data name="S_c3b187c6f34bb62c" xml:space="preserve">
+    <value>要点</value>
+    <comment>要点</comment>
+  </data>
+  <data name="S_b169d275166cfab5" xml:space="preserve">
+    <value>正向提示词字段</value>
+    <comment>正向提示词字段</comment>
+  </data>
+  <data name="S_bbf98cecf3934ba0" xml:space="preserve">
+    <value>反向提示词字段</value>
+    <comment>反向提示词字段</comment>
+  </data>
+  <data name="S_22e11e0d407b7487" xml:space="preserve">
+    <value>参数字段</value>
+    <comment>参数字段</comment>
+  </data>
+  <data name="S_85281521c0848337" xml:space="preserve">
+    <value>镜头字段</value>
+    <comment>镜头字段</comment>
+  </data>
+  <data name="S_b643f9fc7fe859c9" xml:space="preserve">
+    <value>连续性与约束字段</value>
+    <comment>连续性与约束字段</comment>
+  </data>
+  <data name="S_0f74e6c6198f554c" xml:space="preserve">
+    <value>时长与比例字段</value>
+    <comment>时长与比例字段</comment>
+  </data>
+  <data name="S_3a6efbdbd7a54afd" xml:space="preserve">
+    <value>时间轴 / 分镜字段</value>
+    <comment>时间轴 / 分镜字段</comment>
+  </data>
+  <data name="S_77a4e36411fbf46b" xml:space="preserve">
+    <value>负面约束字段</value>
+    <comment>负面约束字段</comment>
+  </data>
+  <data name="S_289056c81b9a1409" xml:space="preserve">
+    <value>平台参数字段</value>
+    <comment>平台参数字段</comment>
+  </data>
+  <data name="S_7462227dd8752467" xml:space="preserve">
+    <value>任务字段</value>
+    <comment>任务字段</comment>
+  </data>
+  <data name="S_a40be27aaae89def" xml:space="preserve">
+    <value>执行约束字段</value>
+    <comment>执行约束字段</comment>
+  </data>
+  <data name="S_e3f1b18985b07ab5" xml:space="preserve">
+    <value>验证字段</value>
+    <comment>验证字段</comment>
+  </data>
+  <data name="S_49b4c83f24f2dd52" xml:space="preserve">
+    <value>待处理文本字段</value>
+    <comment>待处理文本字段</comment>
+  </data>
+  <data name="S_544436504b85cd27" xml:space="preserve">
+    <value>禁用约束字段</value>
+    <comment>禁用约束字段</comment>
+  </data>
+  <data name="S_1fc3659be5a4e19f" xml:space="preserve">
+    <value>输出规则字段</value>
+    <comment>输出规则字段</comment>
+  </data>
+  <data name="S_d002b82719d10d17" xml:space="preserve">
+    <value>核心要点字段</value>
+    <comment>核心要点字段</comment>
+  </data>
+  <data name="S_756dc85c74409d05" xml:space="preserve">
+    <value>约束字段</value>
+    <comment>约束字段</comment>
+  </data>
+  <data name="S_479bb2b9fad2a1aa" xml:space="preserve">
+    <value>。OneDrive 客户端负责跨设备同步。</value>
+    <comment>。OneDrive 客户端负责跨设备同步。</comment>
+  </data>
+  <data name="S_0bdb1860e376b2d0" xml:space="preserve">
+    <value>。WebDAV 远端保存端到端加密快照。</value>
+    <comment>。WebDAV 远端保存端到端加密快照。</comment>
+  </data>
+  <data name="S_a1be527c56bc79d8" xml:space="preserve">
+    <value>使用当前需求生成提示词</value>
+    <comment>使用当前需求生成提示词</comment>
+  </data>
+  <data name="S_3939f76b3bd5f858" xml:space="preserve">
+    <value>切换到主工作台</value>
+    <comment>切换到主工作台</comment>
+  </data>
+  <data name="S_0c70665b6eb65f1a" xml:space="preserve">
+    <value>否</value>
+    <comment>否</comment>
+  </data>
+  <data name="S_28384d7afd2e4fa6" xml:space="preserve">
+    <value>失败</value>
+    <comment>失败</comment>
+  </data>
+  <data name="S_c55038b272b109b8" xml:space="preserve">
+    <value>字</value>
+    <comment>字</comment>
+  </data>
+  <data name="S_48be61c63942856a" xml:space="preserve">
+    <value>客户端可见处理摘要</value>
+    <comment>客户端可见处理摘要</comment>
+  </data>
+  <data name="S_bb07da848ff35fcb" xml:space="preserve">
+    <value>导入包含 SKILL.md 和可选清单/示例的包</value>
+    <comment>导入包含 SKILL.md 和可选清单/示例的包</comment>
+  </data>
+  <data name="S_8cf0105d35ee8db8" xml:space="preserve">
+    <value>思考</value>
+    <comment>思考</comment>
+  </data>
+  <data name="S_75a1dd4bccbfd4c8" xml:space="preserve">
+    <value>恢复历史会话并继续编辑</value>
+    <comment>恢复历史会话并继续编辑</comment>
+  </data>
+  <data name="S_053461ce86d26572" xml:space="preserve">
+    <value>成功</value>
+    <comment>成功</comment>
+  </data>
+  <data name="S_f15a734f99547b3b" xml:space="preserve">
+    <value>打开设置后输入同步口令，再点击“导入同步快照”。</value>
+    <comment>打开设置后输入同步口令，再点击“导入同步快照”。</comment>
+  </data>
+  <data name="S_ef39d1972a2a8f8c" xml:space="preserve">
+    <value>挂载、导入、编辑和删除 Skill</value>
+    <comment>挂载、导入、编辑和删除 Skill</comment>
+  </data>
+  <data name="S_b5141d3d19e9a048" xml:space="preserve">
+    <value>是</value>
+    <comment>是</comment>
+  </data>
+  <data name="S_ab94dfe3f3a6cf77" xml:space="preserve">
+    <value>查看最近发给模型的文本和附件记录</value>
+    <comment>查看最近发给模型的文本和附件记录</comment>
+  </data>
+  <data name="S_d661c3d96d53ebc0" xml:space="preserve">
+    <value>正文</value>
+    <comment>正文</comment>
+  </data>
+  <data name="S_ca226cbd93620c1a" xml:space="preserve">
+    <value>清空当前会话和输出</value>
+    <comment>清空当前会话和输出</comment>
+  </data>
+  <data name="S_9dcdc2b289b9d233" xml:space="preserve">
+    <value>秒</value>
+    <comment>秒</comment>
+  </data>
+  <data name="S_c6f11708048fb819" xml:space="preserve">
+    <value>管理常用提示词</value>
+    <comment>管理常用提示词</comment>
+  </data>
+  <data name="S_b9608178dae87bd4" xml:space="preserve">
+    <value>管理用户模板</value>
+    <comment>管理用户模板</comment>
+  </data>
+  <data name="S_69c120d28e0fdb16" xml:space="preserve">
+    <value>选择包含 SKILL.md 的目录</value>
+    <comment>选择包含 SKILL.md 的目录</comment>
+  </data>
+  <data name="S_431628f299fec1ec" xml:space="preserve">
+    <value>配置模型 Provider</value>
+    <comment>配置模型 Provider</comment>
+  </data>
+  <data name="S_ac3a897f0de5444d" xml:space="preserve">
+    <value>；最后同步：</value>
+    <comment>；最后同步：</comment>
+  </data>
 </root>

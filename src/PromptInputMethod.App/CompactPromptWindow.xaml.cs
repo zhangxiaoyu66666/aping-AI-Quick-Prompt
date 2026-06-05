@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Dispatching;
 using PromptInputMethod.App.Services;
 using PromptInputMethod.Core.Llm;
 using PromptInputMethod.Core.Ocr;
@@ -66,6 +67,643 @@ public sealed partial class CompactPromptWindow : Window
         new("即梦 / Seedance", "即梦 / Seedance", "短视频、产品、首尾帧"),
         new("AI编程", "AI编程", "Codex、Claude Code、反重力")
     ];
+    private static readonly IReadOnlyDictionary<string, BuiltInTemplateEnglishOverride> BuiltInTemplateEnglishOverrides = new Dictionary<string, BuiltInTemplateEnglishOverride>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["builtin-chatgpt-shortcut-translate"] = new("English translation and polishing", "ChatGPT-Shortcut", "Language and editing"),
+        ["builtin-chatgpt-shortcut-writing"] = new("Writing assistant", "ChatGPT-Shortcut", "Writing"),
+        ["builtin-chatgpt-shortcut-prompt-generator"] = new("Prompt generator", "ChatGPT-Shortcut", "Prompt engineering"),
+        ["builtin-chatgpt-shortcut-prompt-improver"] = new("Prompt improver", "ChatGPT-Shortcut", "Prompt engineering"),
+        ["builtin-chatgpt-shortcut-summary"] = new("Content summarizer", "ChatGPT-Shortcut", "Summarization"),
+        ["builtin-sd-anima-quality"] = new("SD high-quality image", "SD-Anima-Prompt-Studio", "Image quality"),
+        ["builtin-sd-anima-character"] = new("Anima character base", "SD-Anima-Prompt-Studio", "Character"),
+        ["builtin-sd-anima-composition"] = new("Anima composition and camera", "SD-Anima-Prompt-Studio", "Composition"),
+        ["builtin-sd-anima-background"] = new("Anima background mood", "SD-Anima-Prompt-Studio", "Background"),
+        ["builtin-sd-comfyui-node-fields"] = new(
+            "ComfyUI node-field adapter",
+            "ComfyUI / Stable Diffusion",
+            "ComfyUI",
+            """
+            Rewrite the request into fields that can be pasted into ComfyUI nodes.
+
+            Positive CLIP Text Encode:
+            {positive prompt: subject, scene, composition, camera, lighting, style, quality; preserve any requested visible English text exactly; do not add explanations}
+
+            Negative CLIP Text Encode:
+            {negative prompt: low quality, blurry, bad anatomy, extra limbs, garbled text, watermark, logo artifacts, subject drift, minor, child, teen, underage, ambiguous age}
+
+            KSampler:
+            Checkpoint / model: {to be specified}
+            Canvas size: {width x height, to be specified}
+            Steps: {to be specified, common range 20-40}
+            CFG scale: {to be specified by model}
+            Sampler: {to be specified}
+            Scheduler: {to be specified}
+            Seed: {random / fixed seed}
+            Denoising strength: {text-to-image = 1.0; img2img / inpaint to be specified}
+
+            Optional nodes:
+            LoRA: {none / <lora:name:weight> / to be specified}
+            Textual inversion / embedding: {none / embedding:name / to be specified}
+            ControlNet: {none / type, preprocessor, strength, start and end steps / to be specified}
+            IP-Adapter / reference image: {none / reference role, weight, start and end steps / to be specified}
+            VAE / upscale: {none / to be specified}
+            """),
+        ["builtin-sd-webui-positive-negative"] = new(
+            "Stable Diffusion positive and negative prompts",
+            "ComfyUI / Stable Diffusion",
+            "SD WebUI",
+            """
+            Generate fields that can be pasted into Stable Diffusion WebUI / A1111.
+
+            Prompt:
+            {positive prompt organized by subject, environment, action, composition, camera, lighting, style, and quality; put LoRA tags only in the positive prompt}
+
+            Negative prompt:
+            low quality, worst quality, blurry, bad anatomy, bad hands, extra fingers, extra limbs, deformed, distorted face, garbled text, watermark, signature, logo artifacts, minor, child, teen, underage, ambiguous age, avoid NSFW unless explicitly requested
+
+            Parameters:
+            Steps: {to be specified}
+            Sampler: {to be specified}
+            CFG scale: {to be specified}
+            Size: {to be specified}
+            Seed: {random / fixed seed}
+            Clip skip: {only when needed}
+            Hires fix: {off / on, upscale factor and denoising strength to be specified}
+            """),
+        ["builtin-sd-img2img-controlnet"] = new(
+            "Stable Diffusion img2img / ControlNet",
+            "ComfyUI / Stable Diffusion",
+            "Img2img",
+            """
+            Generate prompt fields for img2img, inpainting, ControlNet, or IP-Adapter.
+
+            Task type:
+            {img2img / inpainting / ControlNet / IP-Adapter / reference image only}
+
+            Reference image:
+            {role of the reference: preserve subject / pose / composition / style / product shape}
+
+            Positive prompt:
+            {describe the target change while clearly stating which traits must stay unchanged}
+
+            Negative prompt:
+            low quality, blurry, deformed, identity drift, inconsistent face, wrong product shape, garbled text, watermark, minor, child, teen, underage, ambiguous age
+
+            Parameters:
+            Denoising strength: {0.25-0.45 small edit; 0.45-0.65 medium edit; 0.65+ major edit, to be specified}
+            ControlNet type: {canny / depth / openpose / lineart / tile / scribble / to be specified}
+            ControlNet weight: {to be specified}
+            Start and end steps: {to be specified}
+            Resize mode: {to be specified}
+            Seed: {random / fixed seed}
+            """),
+        ["builtin-sd-lora-embedding"] = new(
+            "Stable Diffusion LoRA / Embedding",
+            "ComfyUI / Stable Diffusion",
+            "LoRA",
+            """
+            Generate a Stable Diffusion prompt with LoRA, embedding, or trigger words.
+
+            Base model family:
+            {SD 1.5 / SDXL / SD3 / Flux / to be specified}
+
+            Prompt:
+            {subject, scene, composition, camera, lighting, style, quality}
+            LoRA tags: {<lora:name:0.6-0.9>, only when the user provides a LoRA name}
+            Trigger words: {user-provided trigger words; otherwise to be specified}
+            Textual inversion / embeddings: {embedding:name; otherwise none}
+
+            Negative prompt:
+            low quality, worst quality, blurry, bad anatomy, extra limbs, garbled text, watermark, identity drift, style conflict, minor, child, teen, underage, ambiguous age
+
+            Notes:
+            Do not invent LoRA names, model families, trigger words, or embedding names; mark missing fields as "to be specified".
+            """),
+        ["builtin-veo3-single-shot"] = new("Veo 3 cinematic single shot", "Veo 3", "Cinematic shot"),
+        ["builtin-veo3-dialogue-scene"] = new("Veo 3 dialogue scene", "Veo 3", "Dialogue scene"),
+        ["builtin-veo3-timestamp-storyboard"] = new("Veo 3 timestamp storyboard", "Veo 3", "Timestamp storyboard"),
+        ["builtin-jimeng-general-video"] = new(
+            "Jimeng / Seedance general short video",
+            "Jimeng / Seedance",
+            "General short video",
+            """
+            Generate a short-video prompt.
+
+            Topic: {video topic}
+            Style: {realistic / cinematic / light commercial / anime / other}
+            Main subject: {person / product / scene / event}
+            Visual details: {appearance, environment, props, colors}
+            Motion: {subject action, camera movement, transition style}
+            Pacing: {slow / fast / steady progression}
+            Captions: {whether captions are needed, caption text and style}
+            BGM / sound effects: {music mood, ambience, key sound effects}
+            Format: {duration, aspect ratio, resolution, platform}
+            Negative constraints: avoid flicker, subject deformation, garbled text, style drift, unrelated elements.
+            """),
+        ["builtin-jimeng-product-video"] = new(
+            "Jimeng / Seedance ecommerce product video",
+            "Jimeng / Seedance",
+            "Ecommerce product",
+            """
+            Generate an ecommerce product short-video prompt.
+
+            Product: {product name / type}
+            Selling points: {1-3 real selling points}
+            Use case: {home / outdoor / office / beauty / food / other}
+            Opening shot: {how the product appears}
+            Showcase actions: {rotation, push-in, exploded view, demo, before-after comparison}
+            Camera language: {close-up, macro, push / pull, orbit, slow motion}
+            Lighting and background: {clean background, soft light, brand colors}
+            Captions and copy: {short selling-point text, no long paragraphs}
+            BGM / sound effects: {upbeat, tech, fresh, premium}
+            Format: {9:16 / 16:9, duration}
+            Negative constraints: avoid exaggerated claims, false promises, busy backgrounds, garbled text, product deformation, cheap studio look.
+            """),
+        ["builtin-jimeng-keyframe-transition"] = new(
+            "Jimeng / Seedance first-last-frame transition",
+            "Jimeng / Seedance",
+            "Keyframe transition",
+            """
+            Generate a natural transition video prompt from the first and last frames.
+
+            First frame: {subject, composition, lighting, scene}
+            Last frame: {subject, composition, lighting, scene}
+            Transition goal: {what changes from A to B}
+            Subject consistency: keep {person / product / character / scene} identity, proportions, colors, and key traits consistent.
+            Camera movement: {push in / pull back / pan / orbit / smooth zoom / stable transition}
+            Motion details: {hair, clothing, light, background, product angle changes}
+            Pacing: {natural, smooth, uninterrupted}
+            Captions / BGM: {fill in if needed}
+            Format: {duration, aspect ratio}
+            Negative constraints: avoid subject drift, identity change, flicker, jump cuts, garbled text, extra people or objects.
+            """),
+        ["builtin-jimeng-director-storyboard"] = new(
+            "Jimeng / Seedance director storyboard",
+            "Jimeng / Seedance",
+            "Director storyboard",
+            """
+            Rewrite the idea into an executable Jimeng / Seedance director storyboard prompt.
+
+            Task type: {text-to-video / image-to-video / first-last frame / video editing}
+            Generation goal: {one sentence describing the final video}
+            References: {none / @image1 / @image2 / @video1 / @audio1, with each reference role}
+            Subject and scene: {people, product, environment, props, key identity traits}
+            Shot language: {shot size, angle, lens feel, composition, focus, depth of field}
+            Camera movement: {push in / pull back / dolly / orbit / follow / handheld / stabilized / one-take}
+            Timeline:
+            0-2s: {opening frame, subject entrance, camera action, sound}
+            2-5s: {main action, emotion, or selling point, camera progression}
+            5-8s: {change, transition, reveal, or visual climax}
+            8-10s: {ending frame, hold, caption, or brand memory point}
+            Visual style: {lighting, color, texture, density, mood}
+            Sound and captions: {BGM, ambience, effects, dialogue, caption position and language}
+            Platform parameters: {duration, aspect ratio, resolution, whether to preserve reference subject consistency}
+            Negative constraints: avoid flicker, identity drift, product deformation, extra limbs, garbled text, watermark, jump cuts, style drift.
+            """),
+        ["builtin-jimeng-reference-control"] = new(
+            "Jimeng / Seedance multimodal reference control",
+            "Jimeng / Seedance",
+            "Reference assets",
+            """
+            Generate a Jimeng / Seedance prompt from reference assets and state each asset's control role.
+
+            Goal: {final video or image goal}
+            @image1: {preserve subject / composition / style / color / product shape / character identity}
+            @image2: {optional, role}
+            @video1: {optional, reference action / camera movement / pacing / transition}
+            @audio1: {optional, reference music rhythm / tone / ambience}
+            Subject consistency: keep {face, hairstyle, outfit, product shape, color, material, brand element} stable.
+            Allowed changes: {background / camera angle / lighting / action / expression / transition}
+            Forbidden changes: {identity / product structure / logo / core color / key prop}
+            Shot design: {shot size, angle, movement, focus, pacing}
+            Visual style: {realistic / cinematic / commercial / anime / Chinese style / tech / other}
+            Output parameters: {duration, ratio, resolution, captions, sound}
+            Negative constraints: avoid distorted reference subject, unrelated elements, facial drift, wrong product structure, garbled text, low clarity.
+            """),
+        ["builtin-jimeng-short-drama"] = new(
+            "Jimeng / Seedance short-drama dialogue storyboard",
+            "Jimeng / Seedance",
+            "Short drama dialogue",
+            """
+            Generate a Jimeng / Seedance prompt for a short-drama or comic-style dialogue video.
+
+            Premise: {one sentence describing the conflict or event}
+            Character A: {identity, appearance, emotion, outfit, action habits}
+            Character B: {identity, appearance, emotion, outfit, action habits}
+            Scene: {place, time, environment, props, atmosphere}
+            Performance rhythm: {pauses, eye contact, turn, approach, silence, outburst, restraint}
+            Storyboard:
+            0-2s: {establish scene and relationship}
+            2-5s: {Character A action or line}
+            5-8s: {Character B reaction or twist}
+            8-10s: {emotional landing, final frame, caption}
+            Dialogue:
+            A: "{line, to be specified}"
+            B: "{line, to be specified}"
+            Camera: {close-up / medium shot / over-shoulder / two-shot / push-in / follow}
+            Sound: {ambience, BGM, effects, dialogue language}
+            Captions: {Chinese / bilingual / none, position and style}
+            Negative constraints: avoid lip-sync mismatch, identity drift, stiff expressions, extra characters, garbled lines, abrupt cuts.
+            """),
+        ["builtin-jimeng-viral-promo"] = new(
+            "Jimeng / Seedance viral promo template",
+            "Jimeng / Seedance",
+            "Promotion",
+            """
+            Generate a Jimeng / Seedance short-video promo prompt for a product, project, or piece of content.
+
+            Promo subject: {product / software / game / content / event}
+            Core selling points: {1-3 true selling points, no exaggeration}
+            Audience: {target users, use scenario, emotional need}
+            Opening hook: {first-second visual or action that grabs attention}
+            Showcase style: {product close-up, UI operation, real scenario, before-after, user reaction}
+            Editing rhythm: {fast cuts / steady progression / one take / beat-synced}
+            Visual style: {clean commercial / tech / lifestyle / light comedy / cinematic}
+            Caption copy: {short, clear, few words; no long paragraphs}
+            Sound: {BGM, button sound, notification sound, ambience, or voiceover}
+            Output parameters: {9:16 / 16:9 / 1:1, duration, resolution}
+            Compliance constraints: no false promises, no exaggerated medical or financial claims, no fake official endorsement.
+            Negative constraints: avoid cheap look, busy background, product deformation, garbled text, subject drift, unrelated people stealing focus.
+            """),
+        ["builtin-jimeng-seedream-image"] = new(
+            "Jimeng Seedream image prompt",
+            "Jimeng / Seedance",
+            "Text-to-image",
+            """
+            Generate an image prompt for Jimeng Seedream.
+
+            Image goal: {poster / product image / character image / scene concept / multi-image fusion / storyboard set}
+            Subject: {person / product / character / building / object}
+            Key identity traits: {face, hairstyle, outfit, product shape, material, color, logo, props}
+            Reference images: {none / @image1 / @image2, and what to preserve: subject, style, composition, or color}
+            Composition: {close-up / half body / full body / top view / low angle / centered / rule of thirds / negative space}
+            Scene: {place, time, background elements, spatial depth}
+            Lighting: {natural light, studio light, backlight, soft light, neon, low key, high key}
+            Style: {realistic photography / commercial poster / Chinese style / anime / 3D / graphic design / UI concept}
+            Text and layout: {whether text is needed, title, logo, layout position; write "no text" when not needed}
+            Output parameters: {ratio, resolution, number of images}
+            Negative constraints: avoid facial drift, hand errors, wrong product structure, garbled text, watermark, low clarity, unrelated elements.
+            """),
+        ["builtin-ai-coding-golden"] = new(
+            "AI coding default agent template",
+            "AI Coding",
+            "General agent",
+            """
+            Act as an AI coding agent inside the current repository and complete the task with minimal necessary changes.
+
+            User request:
+            {original user request}
+
+            First classify the task:
+            root-cause analysis / bug fix / feature add / UI change / refactor plan / code review / build or configuration issue.
+
+            Execution rules:
+            1. Read the relevant code before making assumptions.
+            2. Say which files you will inspect and why.
+            3. If the request is ambiguous, make the smallest reasonable assumption from the existing code.
+            4. Modify only files directly related to the task.
+            5. Do not do opportunistic refactors or add dependencies.
+            6. Do not modify config, lock files, or build scripts unless required.
+            7. Do not remove existing features or change established interactions unless explicitly requested.
+            8. Check the diff after each change and keep unrelated edits out.
+
+            Verification:
+            Run the relevant type check, lint, build, unit test, or focused test. If a check cannot run, explain why.
+
+            Final response:
+            task type, root cause or approach, changed files, summary, verification, risks, unfinished items.
+            """),
+        ["builtin-ai-coding-root-cause"] = new(
+            "AI coding root-cause only",
+            "AI Coding",
+            "Root-cause analysis",
+            """
+            This turn is analysis only. Do not modify any files.
+
+            Problem:
+            {bug symptom}
+
+            Tasks:
+            1. Read relevant entry points, routing, state management, conditional rendering, lifecycle code, and service calls.
+            2. Identify the three most likely code paths causing the symptom.
+            3. Separate deterministic causes, intermittent causes, and symptoms that are not root causes.
+            4. Do not edit files, create files, or run destructive commands.
+            5. Do not conclude from guesses. Cite concrete files, functions, variables, and conditions.
+
+            Output:
+            conclusion, evidence chain, ranked likely causes, minimal fix recommendation, questions that need confirmation.
+            """),
+        ["builtin-ai-coding-minimal-bugfix"] = new(
+            "AI coding minimal bug fix",
+            "AI Coding",
+            "Bug fix",
+            """
+            Fix the following bug with the smallest safe change.
+
+            Bug:
+            {what the user sees}
+
+            Reproduction:
+            1. {step 1}
+            2. {step 2}
+            3. {step 3}
+
+            Expected:
+            {expected behavior}
+
+            Actual:
+            {actual behavior}
+
+            Constraints:
+            - Find the root cause before editing.
+            - Modify only directly related code.
+            - Do not refactor, add dependencies, or change public APIs.
+            - Do not change UI structure unless the UI structure is the cause.
+            - Do not change data structures unless necessary; explain compatibility if you do.
+
+            Verification:
+            Run {typecheck / test / build / lint command}.
+
+            Final output:
+            root cause, changed files, why this is minimal, verification result, edge risks.
+            """),
+        ["builtin-ai-coding-feature-add"] = new(
+            "AI coding feature add",
+            "AI Coding",
+            "Feature add",
+            """
+            Add the following feature to the existing project: {feature name}
+
+            Goal:
+            {one-sentence feature goal}
+
+            User interaction:
+            - Entry point: {page / button / menu}
+            - User action: {click / input / drag / shortcut}
+            - System feedback: {dialog / state change / save / error message}
+
+            Technical constraints:
+            - Keep the current stack and file organization.
+            - Reuse existing components, services, stores, and helpers first.
+            - Do not introduce new dependencies or rewrite unrelated modules.
+            - Do not change data formats unless explicitly requested.
+
+            Allowed files:
+            - {file / directory}
+
+            Forbidden files:
+            - {config / lock file / core module / unrelated directory}
+
+            Implementation:
+            1. Read relevant code and explain the current pattern.
+            2. Choose the smallest implementation plan and implement it.
+            3. Add necessary error handling.
+            4. Do not use fake data unless it is explicitly marked mock.
+
+            Acceptance:
+            - {criterion 1}
+            - {criterion 2}
+            - {criterion 3}
+
+            Output:
+            implementation plan, changed files, core logic, verification method.
+            """),
+        ["builtin-ai-coding-ui-change"] = new(
+            "AI coding UI change",
+            "AI Coding",
+            "UI change",
+            """
+            Modify the current UI exactly according to the request.
+
+            Target page / component:
+            {page name / component name / file path}
+
+            Changes:
+            1. {change 1}
+            2. {change 2}
+            3. {change 3}
+
+            Visual style:
+            - Style: {Windows 11 Fluent Design / Mica / Acrylic / clean light / dark}
+            - Primary color: {color}
+            - Corner radius: {8px / 12px / existing rule}
+            - Typography: keep the existing hierarchy.
+
+            Layout:
+            - Preserve the overall layout.
+            - Modify only {target area}.
+            - Do not move unrelated controls or delete existing entries.
+            - Do not introduce a new UI framework or change state-management logic.
+
+            Interaction:
+            - {button behavior}
+            - {input behavior}
+            - {hover / expand / collapse behavior}
+
+            Forbidden:
+            - No global style refactor.
+            - No route, store, or backend changes.
+            - No deletion of old logic.
+            - Do not split into many new files unless clearly necessary.
+
+            Acceptance:
+            page opens normally, existing features still work, UI matches the request, and {build command} passes.
+            """),
+        ["builtin-ai-coding-review"] = new(
+            "AI coding code review",
+            "AI Coding",
+            "Code review",
+            """
+            Review the current uncommitted changes. Do not modify files.
+
+            Focus:
+            1. Unrelated edits
+            2. Regression risk
+            3. Hidden destructive behavior
+            4. Type errors, async races, or state desync
+            5. Project structure and naming issues
+            6. Performance or security issues
+
+            Inspect especially:
+            - {critical module}
+            - {critical state}
+            - {critical interface}
+            - {critical UI interaction}
+
+            Output format:
+            Group by severity: blocking / high risk / medium risk / improvement / no issue.
+            Each issue must include file path, concrete location, why it matters, and recommended fix.
+            """),
+        ["builtin-skill-codex-skill"] = new(
+            "Skill system: Codex SKILL.md",
+            "Skill System",
+            "Codex Skill",
+            """
+            Design a practical Codex Skill.
+
+            Skill goal:
+            {what task this Skill should make Codex better at}
+
+            Triggers:
+            - Explicit keywords: {keywords}
+            - Task involves: {file types / tools / workflow}
+            - Non-applicable cases: {cases that should not trigger}
+
+            Directory:
+            skills/{skill-name}/
+            - SKILL.md
+            - scripts/ (optional reusable scripts)
+            - templates/ (optional templates)
+            - examples/ (optional input-output examples)
+            - references/ (optional short references)
+
+            SKILL.md requirements:
+            - name: {short name}
+            - description: one sentence describing capability, trigger, and boundary
+            - workflow: concrete steps
+            - inputs: required user or repository context
+            - outputs: artifact format
+            - tools: shell / browser / documents / spreadsheets / MCP if needed
+            - safety: forbidden actions and permission boundaries
+            - verification: how to check the result
+
+            Output:
+            skill summary, suggested directory, complete SKILL.md, optional scripts/templates, verification.
+            """),
+        ["builtin-skill-claude-skill"] = new(
+            "Skill system: Claude Skill",
+            "Skill System",
+            "Claude Skill",
+            """
+            Design a Claude Code Skill.
+
+            Skill name:
+            {skill-name}
+
+            Capability goal:
+            {what repeated task or expert workflow this Skill solves}
+
+            Trigger description:
+            Write one clear sentence explaining when Claude should use this Skill, without over-generalizing.
+
+            Workflow:
+            1. What context to read first
+            2. How to decide applicability
+            3. What steps to execute
+            4. Which scripts, templates, or external tools are needed
+            5. How to verify the result
+
+            Boundaries:
+            - Tasks it should not handle
+            - High-risk actions requiring user confirmation
+            - Files or data it must not modify
+
+            Artifact:
+            Output the complete Skill document and, when useful, a scripts / templates / examples file list.
+            """),
+        ["builtin-skill-antigravity-rules"] = new(
+            "Skill system: Antigravity Rules",
+            "Skill System",
+            "Antigravity Rules",
+            """
+            Design project Rules plus a Skill workflow for Google Antigravity.
+
+            Goal:
+            {what task class should be constrained or enhanced}
+
+            Agent mode:
+            - Planning Mode: {when planning is required}
+            - Fast Mode: {when fast execution is allowed}
+
+            Permission policy:
+            - Allowed directly: {safe commands / read-only operations}
+            - Requires review: {multi-file edits / dependencies / build config / delete / move}
+            - Forbidden: {destructive commands / out-of-scope directories / credential actions}
+
+            Artifacts:
+            Every non-trivial task should produce:
+            1. Task list
+            2. Implementation plan
+            3. Diff summary
+            4. Verification walkthrough
+            5. Risk notes
+
+            Skill workflow:
+            Define triggers, inputs, execution steps, checks, and rollback strategy.
+            """),
+        ["builtin-skill-authoring-checklist"] = new(
+            "Skill system: authoring checklist",
+            "Skill System",
+            "Design checklist",
+            """
+            Turn my request into a Skill design checklist.
+
+            Basic information:
+            - Name:
+            - One-sentence description:
+            - Target users:
+            - Platforms: Codex / Claude Code / Antigravity / general Agent
+
+            Triggers:
+            - Explicit trigger words:
+            - Implicit trigger scenarios:
+            - Cases that should not trigger:
+
+            Context requirements:
+            - Required files:
+            - Optional references:
+            - Information to ask the user for:
+
+            Flow:
+            1. Identify task
+            2. Read context
+            3. Select script / template
+            4. Execute or generate artifact
+            5. Verify
+            6. Report
+
+            Safety:
+            - Forbidden modifications:
+            - Requires confirmation:
+            - Forbidden commands:
+
+            Acceptance:
+            reusable, verifiable, precise trigger behavior, no permission overreach.
+            """),
+        ["builtin-skill-female-portrait-director"] = new(
+            "Female Portrait Prompt Director Skill",
+            "Skill",
+            "Built-in text-to-image",
+            """
+            [Built-in Skill Package]
+            name: female-portrait-director
+            description: Built-in text-to-image Skill for adult female portraits, fashion portraits, ecommerce try-on, Chinese fantasy style, lifestyle photography, studio retouching, reference-image preservation, prompt optimization, image reverse prompting, parameter recommendation, and safety rewrites.
+
+            Use this Skill to generate plain-text prompts for image models. Keep the output directly pasteable. Do not wrap the final prompt in Markdown or code fences.
+
+            Applicable tasks:
+            text-to-image, adult female portrait, portrait photography, outfit styling, ecommerce try-on, lifestyle photo, urban fashion, Chinese fantasy, vintage Hong Kong style, French casual style, new Chinese style, sports photo, travel photo, studio retouching, reference-image preservation, prompt optimization, image reverse prompting, parameter recommendation, safety rewrite.
+
+            Output requirements:
+            - State subject, age signal, outfit, body language, scene, composition, camera, lighting, style, quality details, and negative constraints.
+            - Preserve reference identity only when the user explicitly provides reference-image intent.
+            - Avoid underage, ambiguous-age, exploitative, or unsafe wording.
+            - Keep missing model parameters marked as "to be specified" instead of inventing them.
+            """)
+    };
+    private static readonly IReadOnlyDictionary<string, CommonPromptEnglishOverride> CommonPromptEnglishOverrides = new Dictionary<string, CommonPromptEnglishOverride>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["builtin-role"] = new("Role and task goal", "Role: you are a professional prompt optimizer. Preserve the user's intent and improve executability.", "Prompt engineering"),
+        ["builtin-format"] = new("Output format and acceptance criteria", "Output format: goal, background, constraints, steps, deliverables, acceptance criteria.", "Prompt engineering"),
+        ["builtin-privacy"] = new("Privacy and factual constraints", "Constraints: do not fabricate facts, do not expose private information, and do not add irrelevant small talk.", "Constraints"),
+        ["builtin-video"] = new("Video shot sequence", "Break the idea into 3-5 chronological shots. Include each shot's duration, subject, action, shot size, and transition.", "Video")
+    };
+    private static readonly IReadOnlyDictionary<string, OptimizationTargetEnglishOverride> OptimizationTargetEnglishOverrides = new Dictionary<string, OptimizationTargetEnglishOverride>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["builtin-academic-humanize-cn"] = new("Academic humanize", "Rewrite text into natural, restrained Chinese academic prose with less template-like AI phrasing.", "Academic writing"),
+        ["builtin-jimeng-seedance-director"] = new("Jimeng Director Skill", "Turn rough ideas into executable Jimeng / Seedance / Dreamina / Seedream video or image prompts.", "Video generation"),
+        ["builtin-comfyui-stable-diffusion"] = new("ComfyUI / Stable Diffusion", "Turn a request into positive prompts, negative prompts, and sampling-parameter fields for ComfyUI, Stable Diffusion WebUI, and diffusers.", "Text-to-image")
+    };
     private static readonly IReadOnlyList<ModelProviderPreset> ModelProviderPresets =
     [
         new("custom", "自定义 / OpenAI-compatible", string.Empty, string.Empty, [], "手动填写 OpenAI-compatible endpoint。"),
@@ -107,6 +745,7 @@ public sealed partial class CompactPromptWindow : Window
     private readonly OneDriveVaultCacheService _oneDriveVaultCacheService = new();
     private readonly WebDavHistorySyncService _webDavHistorySyncService = new();
     private readonly Dictionary<string, string> _originalLocalizedValues = new();
+    private readonly Dictionary<int, int> _localizedRootRevisions = new();
     private readonly DispatcherTimer _modelProbeTimer = new();
     private TrayIconService? _trayIconService;
     private TrayMenuWindow? _trayMenuWindow;
@@ -130,6 +769,7 @@ public sealed partial class CompactPromptWindow : Window
     private bool _syncingCommonPromptSearch;
     private bool _syncingDeepThinkingSelection;
     private bool _loadingSettings;
+    private bool _loadedLocalizationApplied;
     private bool _sidebarCollapsed;
     private bool _sidebarAutoCollapsed;
     private bool _sidebarManuallyExpanded;
@@ -148,6 +788,8 @@ public sealed partial class CompactPromptWindow : Window
     private bool _templateSearchRefreshQueued;
     private bool _historySearchRefreshQueued;
     private bool _commonPromptSearchRefreshQueued;
+    private bool _navigationRefreshQueued;
+    private bool _compactCommonPromptRefreshQueued;
     private bool _oneDriveSyncInProgress;
     private bool _webDavSyncInProgress;
     private bool _modelProbeDialogOpen;
@@ -164,7 +806,12 @@ public sealed partial class CompactPromptWindow : Window
     private int _optimizationTargetManagementPageIndex;
     private int _commonPromptPageIndex;
     private int _compactCommonPromptPageIndex;
+    private int _localizationRevision;
+    private int _contentLocalizedRevision = -1;
     private CancellationTokenSource? _outputTypewriterCts;
+    private string _currentExpandedPageName = "Home";
+    private string _currentCompactPageName = "Workbench";
+    private string? _pendingNavigationRefreshPageName;
     private string? _pendingDiffBasePrompt;
     private string? _pendingUserReply;
     private string? _currentConversationHistoryId;
@@ -182,6 +829,12 @@ public sealed partial class CompactPromptWindow : Window
         string Description);
 
     private sealed record TemplateSourceDefinition(string Source, string Title, string Description);
+
+    private sealed record BuiltInTemplateEnglishOverride(string Title, string Source, string Category, string? Text = null);
+
+    private sealed record CommonPromptEnglishOverride(string Title, string Text, string Category);
+
+    private sealed record OptimizationTargetEnglishOverride(string Title, string Description, string Category);
 
     private sealed record OptimizationCategoryChoice(string Value, string Title, string Description)
     {
@@ -206,6 +859,16 @@ public sealed partial class CompactPromptWindow : Window
         Primary,
         Constraint,
         Parameter
+    }
+
+    private enum PromptFieldCopyProfile
+    {
+        General,
+        ComfyStableDiffusion,
+        Veo,
+        Jimeng,
+        AiCoding,
+        AcademicHumanize
     }
 
     private sealed record PromptFieldCopyPlan(
@@ -282,6 +945,10 @@ public sealed partial class CompactPromptWindow : Window
 
         Closed += CompactPromptWindow_Closed;
         Content.KeyDown += Content_KeyDown;
+        if (Content is FrameworkElement root)
+        {
+            root.Loaded += Root_Loaded;
+        }
 
         LoadSettingsIntoUi();
         ApplyLocalization();
@@ -302,6 +969,20 @@ public sealed partial class CompactPromptWindow : Window
         ShowPage("Home");
         QueueResponsiveHomeLayout();
         ScheduleModelProbe();
+    }
+
+    private void Root_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (_loadedLocalizationApplied)
+        {
+            return;
+        }
+
+        _loadedLocalizationApplied = true;
+        ApplyLocalization();
+        RefreshTemplateViews();
+        RefreshCommonPromptsUi();
+        RefreshSkillManagementUi();
     }
 
     private void ShowForHotkey()
@@ -508,6 +1189,7 @@ public sealed partial class CompactPromptWindow : Window
         var showCommonPrompts = string.Equals(pageName, "CommonPrompts", StringComparison.OrdinalIgnoreCase);
         var targetPage = showCommonPrompts ? CompactCommonPromptPage : CompactWorkbenchPage;
         var wasVisible = targetPage.Visibility == Visibility.Visible;
+        _currentCompactPageName = showCommonPrompts ? "CommonPrompts" : "Workbench";
 
         CompactWorkbenchPage.Visibility = showCommonPrompts ? Visibility.Collapsed : Visibility.Visible;
         CompactCommonPromptPage.Visibility = showCommonPrompts ? Visibility.Visible : Visibility.Collapsed;
@@ -521,8 +1203,11 @@ public sealed partial class CompactPromptWindow : Window
 
         if (showCommonPrompts)
         {
-            RefreshCommonPromptsUi();
+            QueueCompactCommonPromptRefresh();
         }
+
+        EnsureLocalizedOnce(targetPage);
+        RefreshFieldCopyButtons();
     }
 
     private void NavigationButton_Click(object sender, RoutedEventArgs e)
@@ -537,6 +1222,7 @@ public sealed partial class CompactPromptWindow : Window
     private void ShowPage(string pageName)
     {
         var targetPage = GetExpandedPage(pageName) ?? HomePage;
+        var normalizedPageName = GetExpandedPage(pageName) is null ? "Home" : pageName;
         var wasVisible = targetPage.Visibility == Visibility.Visible;
 
         foreach (var page in GetExpandedPages())
@@ -549,32 +1235,11 @@ public sealed partial class CompactPromptWindow : Window
             AnimateElementIn(targetPage, 4, PageTransitionDurationMs);
         }
 
-        UpdateNavigationSelection(pageName);
-
-        if (pageName == "History")
-        {
-            RefreshHistoryUi();
-        }
-        else if (pageName == "Templates")
-        {
-            RefreshFavoritesUi();
-        }
-        else if (pageName == "Skills")
-        {
-            RefreshSkillManagementUi();
-        }
-        else if (pageName == "OptimizationTargets")
-        {
-            RefreshOptimizationTargetPickers();
-        }
-        else if (pageName == "Snippets")
-        {
-            RefreshCommonPromptsUi();
-        }
-        else if (pageName is "Models" or "Settings")
-        {
-            LoadSettingsIntoUi();
-        }
+        _currentExpandedPageName = normalizedPageName;
+        UpdateNavigationSelection(normalizedPageName);
+        EnsureLocalizedOnce(targetPage);
+        RefreshFieldCopyButtons();
+        QueueNavigationPageRefresh(normalizedPageName);
     }
 
     private FrameworkElement? GetExpandedPage(string pageName)
@@ -605,6 +1270,108 @@ public sealed partial class CompactPromptWindow : Window
         yield return ModelsPage;
         yield return SettingsPage;
         yield return HelpPage;
+    }
+
+    private void EnsureLocalizedOnce(FrameworkElement? element)
+    {
+        if (element is null || _contentLocalizedRevision == _localizationRevision)
+        {
+            return;
+        }
+
+        var objectId = System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(element);
+        if (_localizedRootRevisions.TryGetValue(objectId, out var revision)
+            && revision == _localizationRevision)
+        {
+            return;
+        }
+
+        LocalizeObject(element);
+        _localizedRootRevisions[objectId] = _localizationRevision;
+    }
+
+    private void QueueNavigationPageRefresh(string pageName)
+    {
+        if (!NeedsNavigationPageRefresh(pageName))
+        {
+            return;
+        }
+
+        _pendingNavigationRefreshPageName = pageName;
+        if (_navigationRefreshQueued)
+        {
+            return;
+        }
+
+        _navigationRefreshQueued = true;
+        if (!DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        {
+            _navigationRefreshQueued = false;
+            var pendingPage = _pendingNavigationRefreshPageName;
+            _pendingNavigationRefreshPageName = null;
+            if (string.IsNullOrWhiteSpace(pendingPage)
+                || !string.Equals(_currentExpandedPageName, pendingPage, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            RefreshNavigationPageData(pendingPage);
+        }))
+        {
+            _navigationRefreshQueued = false;
+            RefreshNavigationPageData(pageName);
+        }
+    }
+
+    private void QueueCompactCommonPromptRefresh()
+    {
+        if (_compactCommonPromptRefreshQueued)
+        {
+            return;
+        }
+
+        _compactCommonPromptRefreshQueued = true;
+        if (!DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        {
+            _compactCommonPromptRefreshQueued = false;
+            if (string.Equals(_currentCompactPageName, "CommonPrompts", StringComparison.OrdinalIgnoreCase))
+            {
+                RefreshCommonPromptsUi();
+            }
+        }))
+        {
+            _compactCommonPromptRefreshQueued = false;
+            RefreshCommonPromptsUi();
+        }
+    }
+
+    private static bool NeedsNavigationPageRefresh(string pageName)
+    {
+        return pageName is "History" or "Templates" or "Skills" or "OptimizationTargets" or "Snippets";
+    }
+
+    private void RefreshNavigationPageData(string pageName)
+    {
+        if (pageName == "History")
+        {
+            RefreshHistoryUi();
+        }
+        else if (pageName == "Templates")
+        {
+            RefreshFavoritesUi();
+        }
+        else if (pageName == "Skills")
+        {
+            RefreshSkillManagementUi();
+        }
+        else if (pageName == "OptimizationTargets")
+        {
+            RefreshOptimizationTargetPickers();
+        }
+        else if (pageName == "Snippets")
+        {
+            RefreshCommonPromptsUi();
+        }
     }
 
     private bool AreAnimationsEnabled()
@@ -674,38 +1441,73 @@ public sealed partial class CompactPromptWindow : Window
         }
     }
 
-    private void RefreshScene()
+    private void RefreshScene(string? mode = null)
     {
-        var target = L(FormatSelectedScenes());
+        var target = GetEffectiveModeDisplay(mode);
         SceneText.Text = $"{L("优化目标：")}{target}";
         BottomSceneText.Text = $"{L("优化目标：")}{target}";
         BottomLanguageText.Text = L("输出语言：中英双语");
-        RefreshFieldCopyButtons();
+        RefreshFieldCopyButtons(mode);
     }
 
-    private void RefreshFieldCopyButtons()
+    private void RefreshOptimizationTargetRuntimeUi(string? mode = null)
     {
-        var primary = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Primary);
-        var constraint = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Constraint);
-        var parameter = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Parameter);
-
-        ApplyFieldCopyButton(CompactFieldCopyPrimaryButton, primary);
-        ApplyFieldCopyButton(ExpandedFieldCopyPrimaryButton, primary);
-        ApplyFieldCopyButton(CompactFieldCopyConstraintButton, constraint);
-        ApplyFieldCopyButton(ExpandedFieldCopyConstraintButton, constraint);
-        ApplyFieldCopyButton(CompactFieldCopyParameterButton, parameter);
-        ApplyFieldCopyButton(ExpandedFieldCopyParameterButton, parameter);
+        var targetMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        RefreshScene(targetMode);
+        UpdateOptimizationModeDescription(targetMode);
+        RefreshFieldCopyButtonsNowAndQueued(targetMode);
     }
 
-    private void ApplyFieldCopyButton(Button? button, PromptFieldCopyPlan plan)
+    private void RefreshFieldCopyButtonsNowAndQueued(string? mode = null)
     {
+        var fieldMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        RefreshFieldCopyButtons(fieldMode);
+        if (!DispatcherQueue.TryEnqueue(() => RefreshFieldCopyButtons(_selectedMode)))
+        {
+            RefreshFieldCopyButtons(_selectedMode);
+        }
+
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => RefreshFieldCopyButtons(_selectedMode));
+    }
+
+    private void RefreshFieldCopyButtons(string? mode = null)
+    {
+        var fieldMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        var primary = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Primary, fieldMode);
+        var constraint = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Constraint, fieldMode);
+        var parameter = BuildPromptFieldCopyPlan(PromptFieldCopyKind.Parameter, fieldMode);
+
+        ApplyFieldCopyButton(CompactFieldCopyPrimaryButton, CompactFieldCopyPrimaryText, primary);
+        ApplyFieldCopyButton(ExpandedFieldCopyPrimaryButton, ExpandedFieldCopyPrimaryText, primary);
+        ApplyFieldCopyButton(CompactFieldCopyConstraintButton, CompactFieldCopyConstraintText, constraint);
+        ApplyFieldCopyButton(ExpandedFieldCopyConstraintButton, ExpandedFieldCopyConstraintText, constraint);
+        ApplyFieldCopyButton(CompactFieldCopyParameterButton, CompactFieldCopyParameterText, parameter);
+        ApplyFieldCopyButton(ExpandedFieldCopyParameterButton, ExpandedFieldCopyParameterText, parameter);
+    }
+
+    private void ApplyFieldCopyButton(Button? button, TextBlock? labelText, PromptFieldCopyPlan plan)
+    {
+        if (labelText is not null)
+        {
+            SetOriginal(labelText, nameof(TextBlock.Text), plan.ButtonText);
+            labelText.Text = L(plan.ButtonText);
+        }
+        else if (button is not null)
+        {
+            SetOriginal(button, nameof(ContentControl.Content), plan.ButtonText);
+            button.Content = L(plan.ButtonText);
+        }
+
         if (button is null)
         {
             return;
         }
 
-        button.Content = L(plan.ButtonText);
-        ToolTipService.SetToolTip(button, $"{L("复制")}{L(plan.Label)}");
+        var label = L(plan.Label);
+        var toolTipSource = $"复制{plan.Label}";
+        SetOriginal(button, "ToolTip", toolTipSource);
+        ToolTipService.SetToolTip(button, IsEnglishUi() ? $"{L("复制")} {label}" : L(toolTipSource));
+        button.InvalidateMeasure();
     }
 
     private async void OptimizeButton_Click(object sender, RoutedEventArgs e)
@@ -1299,7 +2101,7 @@ public sealed partial class CompactPromptWindow : Window
 
     private void CopyPromptField(PromptFieldCopyKind kind)
     {
-        var plan = BuildPromptFieldCopyPlan(kind);
+        var plan = BuildPromptFieldCopyPlan(kind, _selectedMode);
         var primarySource = plan.PreferEnglishOutput
             ? EnglishOutputBox.Text
             : GetChineseOutput();
@@ -1319,11 +2121,10 @@ public sealed partial class CompactPromptWindow : Window
             : "剪贴板暂时被占用，请再点一次复制");
     }
 
-    private PromptFieldCopyPlan BuildPromptFieldCopyPlan(PromptFieldCopyKind kind)
+    private PromptFieldCopyPlan BuildPromptFieldCopyPlan(PromptFieldCopyKind kind, string? mode = null)
     {
-        var selectedScenes = FormatSelectedScenes();
-        var effectiveMode = GetEffectiveMode();
-        if (IsComfyStableDiffusionMode(effectiveMode))
+        var profile = ResolveFieldCopyProfile(mode);
+        if (profile == PromptFieldCopyProfile.ComfyStableDiffusion)
         {
             return kind switch
             {
@@ -1339,7 +2140,7 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
-        if (IsVeoMode(selectedScenes, effectiveMode))
+        if (profile == PromptFieldCopyProfile.Veo)
         {
             return kind switch
             {
@@ -1355,7 +2156,7 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
-        if (IsJimengMode(selectedScenes, effectiveMode))
+        if (profile == PromptFieldCopyProfile.Jimeng)
         {
             return kind switch
             {
@@ -1371,7 +2172,7 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
-        if (IsAiCodingMode(selectedScenes, effectiveMode))
+        if (profile == PromptFieldCopyProfile.AiCoding)
         {
             return kind switch
             {
@@ -1387,7 +2188,7 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
-        if (IsAcademicHumanizeMode(selectedScenes, effectiveMode))
+        if (profile == PromptFieldCopyProfile.AcademicHumanize)
         {
             return kind switch
             {
@@ -1415,6 +2216,71 @@ public sealed partial class CompactPromptWindow : Window
                 ["参数", "平台参数", "生成参数", "Parameters"],
                 ["需要补充的信息", "输出", "Output"])
         };
+    }
+
+    private PromptFieldCopyProfile ResolveFieldCopyProfile(string? mode)
+    {
+        var selectedMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        var profile = ResolveFieldCopyProfileFromText(BuildFieldCopyStateText(selectedMode, includeVisibleStatus: false));
+        if (profile != PromptFieldCopyProfile.General)
+        {
+            return profile;
+        }
+
+        return ResolveFieldCopyProfileFromText(BuildFieldCopyStateText(selectedMode, includeVisibleStatus: true));
+    }
+
+    private string BuildFieldCopyStateText(string selectedMode, bool includeVisibleStatus)
+    {
+        var target = GetSelectedOptimizationTarget(selectedMode);
+        var parts = new List<string?>
+        {
+            selectedMode,
+            GetEffectiveMode(selectedMode),
+            GetEffectiveModeDisplay(selectedMode),
+            target?.Title,
+            target?.Category,
+            target?.Compatibility,
+            target?.TemplateSource
+        };
+
+        if (includeVisibleStatus)
+        {
+            parts.Add(SceneText?.Text);
+            parts.Add(BottomSceneText?.Text);
+        }
+
+        return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
+    }
+
+    private static PromptFieldCopyProfile ResolveFieldCopyProfileFromText(string stateText)
+    {
+        if (IsComfyStableDiffusionMode(stateText))
+        {
+            return PromptFieldCopyProfile.ComfyStableDiffusion;
+        }
+
+        if (IsVeoMode(stateText, stateText))
+        {
+            return PromptFieldCopyProfile.Veo;
+        }
+
+        if (IsJimengMode(stateText, stateText))
+        {
+            return PromptFieldCopyProfile.Jimeng;
+        }
+
+        if (IsAiCodingMode(stateText, stateText))
+        {
+            return PromptFieldCopyProfile.AiCoding;
+        }
+
+        if (IsAcademicHumanizeMode(stateText, stateText))
+        {
+            return PromptFieldCopyProfile.AcademicHumanize;
+        }
+
+        return PromptFieldCopyProfile.General;
     }
 
     private static string? ExtractPromptField(string source, IReadOnlyList<string> startLabels, IReadOnlyList<string> stopLabels)
@@ -2047,7 +2913,7 @@ Skill 文件：{skillPath}
             .Select(variable => new TextBox
             {
                 Header = variable,
-                PlaceholderText = $"填写 {variable}",
+                PlaceholderText = IsEnglishUi() ? $"Fill in {variable}" : $"填写 {variable}",
                 MinWidth = 480
             })
             .ToArray();
@@ -2057,7 +2923,9 @@ Skill 文件：{skillPath}
         };
         stack.Children.Add(new TextBlock
         {
-            Text = $"模板包含 {variables.Count} 个变量，填写后会插入到用户需求。",
+            Text = IsEnglishUi()
+                ? $"This template contains {variables.Count} variables. Filled values will be inserted into the user request."
+                : $"模板包含 {variables.Count} 个变量，填写后会插入到用户需求。",
             TextWrapping = TextWrapping.Wrap
         });
         foreach (var box in inputBoxes)
@@ -2067,7 +2935,7 @@ Skill 文件：{skillPath}
 
         var dialog = new ContentDialog
         {
-            Title = $"填写模板变量：{template.Title}",
+            Title = IsEnglishUi() ? $"Fill template variables: {template.Title}" : $"填写模板变量：{template.Title}",
             Content = new ScrollViewer
             {
                 Content = stack,
@@ -2573,28 +3441,28 @@ Skill 文件：{skillPath}
         await dialog.ShowAsync();
     }
 
-    private static string BuildModelSendAuditDetail(ModelSendAuditItem item)
+    private string BuildModelSendAuditDetail(ModelSendAuditItem item)
     {
         var builder = new StringBuilder();
         builder.AppendLine($"{item.CreatedAt:yyyy-MM-dd HH:mm:ss}");
-        builder.AppendLine($"状态：{(item.Succeeded ? "成功" : "失败")}");
+        builder.AppendLine($"{L("状态：")}{(item.Succeeded ? L("成功") : L("失败"))}");
         builder.AppendLine($"Provider：{item.Provider}");
-        builder.AppendLine($"模型：{item.Model}");
+        builder.AppendLine($"{L("模型：")}{item.Model}");
         builder.AppendLine($"Base URL：{item.BaseUrl}");
-        builder.AppendLine($"脱敏：{(item.Redacted ? "是" : "否")}");
-        builder.AppendLine($"附图：{item.ImageCount}");
+        builder.AppendLine($"{L("脱敏：")}{(item.Redacted ? L("是") : L("否"))}");
+        builder.AppendLine($"{L("附图：")}{item.ImageCount}");
         if (item.ImageFileNames.Count > 0)
         {
-            builder.AppendLine($"附件名：{string.Join(", ", item.ImageFileNames)}");
+            builder.AppendLine($"{L("附件名：")}{string.Join(", ", item.ImageFileNames)}");
         }
 
         if (!string.IsNullOrWhiteSpace(item.Error))
         {
-            builder.AppendLine($"错误：{item.Error}");
+            builder.AppendLine($"{L("错误：")}{item.Error}");
         }
 
         builder.AppendLine();
-        builder.AppendLine("发送文本：");
+        builder.AppendLine(L("发送文本："));
         builder.AppendLine(item.TextSent);
         return builder.ToString();
     }
@@ -3028,31 +3896,31 @@ Skill 文件：{skillPath}
     {
         var entries = new List<CommandPaletteItem>
         {
-            new("首页", "切换到主工作台", () => { ShowPage("Home"); return Task.CompletedTask; }),
-            new("历史记录", "恢复历史会话并继续编辑", () => { ShowPage("History"); return Task.CompletedTask; }),
-            new("我的模板", "管理用户模板", () => { ShowPage("Templates"); return Task.CompletedTask; }),
-            new("Skill 管理", "挂载、导入、编辑和删除 Skill", () => { ShowPage("Skills"); return Task.CompletedTask; }),
-            new("常用提示词", "管理常用提示词", () => { ShowPage("Snippets"); return Task.CompletedTask; }),
-            new("模型管理", "配置模型 Provider", () => { ShowPage("Models"); return Task.CompletedTask; }),
-            new("新会话", "清空当前会话和输出", () => { NewSessionButton_Click(this, new RoutedEventArgs()); return Task.CompletedTask; }),
-            new("生成优化提示词", "使用当前需求生成提示词", async () => await GenerateOptimizedPromptAsync(null)),
-            new("挂载 Skill", "选择包含 SKILL.md 的目录", () => { MountSkillButton_Click(this, new RoutedEventArgs()); return Task.CompletedTask; }),
-            new("导入 Skill 包", "导入包含 SKILL.md 和可选清单/示例的包", () => { ImportSkillPackageButton_Click(this, new RoutedEventArgs()); return Task.CompletedTask; }),
-            new("发送审计", "查看最近发给模型的文本和附件记录", async () => await ShowSendAuditDialogAsync())
+            new(L("首页"), L("切换到主工作台"), () => { ShowPage("Home"); return Task.CompletedTask; }),
+            new(L("历史记录"), L("恢复历史会话并继续编辑"), () => { ShowPage("History"); return Task.CompletedTask; }),
+            new(L("我的模板"), L("管理用户模板"), () => { ShowPage("Templates"); return Task.CompletedTask; }),
+            new(L("Skill 管理"), L("挂载、导入、编辑和删除 Skill"), () => { ShowPage("Skills"); return Task.CompletedTask; }),
+            new(L("常用提示词"), L("管理常用提示词"), () => { ShowPage("Snippets"); return Task.CompletedTask; }),
+            new(L("模型管理"), L("配置模型 Provider"), () => { ShowPage("Models"); return Task.CompletedTask; }),
+            new(L("新会话"), L("清空当前会话和输出"), () => { NewSessionButton_Click(this, new RoutedEventArgs()); return Task.CompletedTask; }),
+            new(L("生成优化提示词"), L("使用当前需求生成提示词"), async () => await GenerateOptimizedPromptAsync(null)),
+            new(L("挂载 Skill"), L("选择包含 SKILL.md 的目录"), () => { MountSkillButton_Click(this, new RoutedEventArgs()); return Task.CompletedTask; }),
+            new(L("导入 Skill 包"), L("导入包含 SKILL.md 和可选清单/示例的包"), () => { ImportSkillPackageButton_Click(this, new RoutedEventArgs()); return Task.CompletedTask; }),
+            new(L("发送审计"), L("查看最近发给模型的文本和附件记录"), async () => await ShowSendAuditDialogAsync())
         };
 
         entries.AddRange(GetTemplateCatalogForSource(_selectedTemplateSource)
             .Take(80)
             .Select(template => new CommandPaletteItem(
-                $"模板：{template.Title}",
-                $"{template.Source} / {template.Category}",
+                $"{L("模板：")}{LocalizeTemplateItem(template).Title}",
+                $"{LocalizeTemplateItem(template).Source} / {LocalizeTemplateItem(template).Category}",
                 async () => await InsertFavoriteTemplateAsync(template))));
 
         entries.AddRange(_commonPromptService.Load()
             .Take(60)
             .Select(item => new CommandPaletteItem(
-                $"常用提示词：{item.Title}",
-                item.Category,
+                $"{L("常用提示词：")}{LocalizeCommonPromptItem(item).Title}",
+                LocalizeCommonPromptItem(item).Category,
                 () =>
                 {
                     SetUserInput(AppendLine(GetUserInput(), item.Text));
@@ -3074,7 +3942,7 @@ Skill 文件：{skillPath}
                 if (item is not null)
                 {
                     yield return new CommandPaletteItem(
-                        $"历史：{item.Title}",
+                        $"{L("历史：")}{item.Title}",
                         $"{item.Mode} / {item.Scene}",
                         () =>
                         {
@@ -3089,8 +3957,8 @@ Skill 文件：{skillPath}
                 if (item is not null)
                 {
                     yield return new CommandPaletteItem(
-                        $"常用提示词：{item.Title}",
-                        item.Category,
+                        $"{L("常用提示词：")}{LocalizeCommonPromptItem(item).Title}",
+                        LocalizeCommonPromptItem(item).Category,
                         () =>
                         {
                             SetUserInput(AppendLine(GetUserInput(), item.Text));
@@ -3106,8 +3974,8 @@ Skill 文件：{skillPath}
                 if (item is not null)
                 {
                     yield return new CommandPaletteItem(
-                        $"模板：{item.Title}",
-                        $"{item.Source} / {item.Category}",
+                        $"{L("模板：")}{LocalizeTemplateItem(item).Title}",
+                        $"{LocalizeTemplateItem(item).Source} / {LocalizeTemplateItem(item).Category}",
                         async () => await InsertFavoriteTemplateAsync(item));
                 }
             }
@@ -3117,8 +3985,8 @@ Skill 文件：{skillPath}
                 if (item is not null)
                 {
                     yield return new CommandPaletteItem(
-                        $"优化目标：{item.Title}",
-                        $"{item.Category} / {item.TemplateSource}",
+                        $"{L("优化目标：")}{LocalizeOptimizationTargetDisplay(item).Title}",
+                        $"{LocalizeOptimizationTargetDisplay(item).Category} / {item.TemplateSource}",
                         () =>
                         {
                             var mode = MakeOptimizationTargetMode(item.Id);
@@ -3129,7 +3997,7 @@ Skill 文件：{skillPath}
                             }
 
                             ApplySelectedMode(mode, save: true);
-                            SetStatus($"已切换优化目标：{item.Title}");
+                            SetStatus($"{L("已切换优化目标")}{StatusSeparator}{LocalizeOptimizationTargetTitle(item)}");
                             return Task.CompletedTask;
                         });
                 }
@@ -3247,7 +4115,7 @@ Skill 文件：{skillPath}
         PersistSettingsFromUi(showStatus: false);
         RefreshModelDisplayText();
         RefreshWorkflowModelBox();
-        SetModelProbeStatus($"{L("已套用提供商预设")}：{preset.DisplayName} · {preset.RecommendedModel}");
+        SetModelProbeStatus($"{L("已套用提供商预设")}{StatusSeparator}{L(preset.DisplayName)} · {preset.RecommendedModel}");
         ScheduleModelProbe();
     }
 
@@ -3340,7 +4208,7 @@ Skill 文件：{skillPath}
         RefreshModelDisplayText();
         RefreshWorkflowModelBox();
         RefreshModelCapabilityText();
-        SetStatus($"已切换模型：{GetProviderMenuLabel(preset)} {modelId}");
+        SetStatus($"{L("已切换模型")}{StatusSeparator}{GetProviderMenuLabel(preset)} {modelId}");
         ScheduleModelProbe();
     }
 
@@ -3384,7 +4252,7 @@ Skill 文件：{skillPath}
         PersistSettingsFromUi(showStatus: false);
         RefreshWorkflowModelBox();
         RefreshModelCapabilityText();
-        SetModelProbeStatus($"{L("已选择模型")}：{modelId}");
+        SetModelProbeStatus($"{L("已选择模型")}{StatusSeparator}{modelId}");
     }
 
     private void WorkflowModelBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -3405,7 +4273,7 @@ Skill 文件：{skillPath}
         SelectDetectedModel(modelId);
         RefreshModelDisplayText();
         RefreshModelCapabilityText();
-        SetStatus($"{L("已切换模型")}：{modelId}");
+        SetStatus($"{L("已切换模型")}{StatusSeparator}{modelId}");
     }
 
     private void LanguageBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -3500,7 +4368,7 @@ Skill 文件：{skillPath}
         {
             ClearDetectedModels();
             SetModelProbeStatus(L("Base URL 格式不正确"));
-            await ShowModelProbeErrorOnceAsync(BuildModelProbeSignature(baseUrl, apiKey), "Base URL 格式不正确，请填写 http 或 https 开头的 OpenAI-compatible 地址。", showErrors);
+            await ShowModelProbeErrorOnceAsync(BuildModelProbeSignature(baseUrl, apiKey), L("Base URL 格式不正确，请填写 http 或 https 开头的 OpenAI-compatible 地址。"), showErrors);
             return;
         }
 
@@ -3535,8 +4403,8 @@ Skill 文件：{skillPath}
         catch (Exception ex) when (probeVersion == _modelProbeVersion)
         {
             ClearDetectedModels();
-            var message = NormalizeModelProbeError(ex);
-            SetModelProbeStatus($"{L("模型 endpoint 不可用")}：{message}");
+            var message = LocalizeModelProbeError(NormalizeModelProbeError(ex));
+            SetModelProbeStatus($"{L("模型 endpoint 不可用")}{StatusSeparator}{message}");
             await ShowModelProbeErrorOnceAsync(signature, message, showErrors);
         }
     }
@@ -3556,7 +4424,8 @@ Skill 文件：{skillPath}
                 var item = new ComboBoxItem
                 {
                     Content = FormatModelLabelWithTags(providerId, model.Id),
-                    Tag = model.Id
+                    Tag = model.Id,
+                    DataContext = model.OwnedBy
                 };
                 ToolTipService.SetToolTip(item, BuildModelCapabilityTooltip(providerId, model.Id, model.OwnedBy));
 
@@ -3576,6 +4445,27 @@ Skill 文件：{skillPath}
         }
 
         RefreshModelCapabilityText();
+    }
+
+    private void RelocalizeDetectedModelBox()
+    {
+        if (DetectedModelBox is null)
+        {
+            return;
+        }
+
+        var providerId = GetCurrentProviderIdFromSettingsOrUi();
+        foreach (var item in DetectedModelBox.Items.OfType<ComboBoxItem>())
+        {
+            var modelId = item.Tag?.ToString();
+            if (string.IsNullOrWhiteSpace(modelId))
+            {
+                continue;
+            }
+
+            item.Content = FormatModelLabelWithTags(providerId, modelId);
+            ToolTipService.SetToolTip(item, BuildModelCapabilityTooltip(providerId, modelId, item.DataContext as string));
+        }
     }
 
     private void ClearDetectedModels()
@@ -3719,9 +4609,9 @@ Skill 文件：{skillPath}
         return key ?? string.Empty;
     }
 
-    private static string GetProviderMenuLabel(ModelProviderPreset preset)
+    private string GetProviderMenuLabel(ModelProviderPreset preset)
     {
-        return preset.Id switch
+        var label = preset.Id switch
         {
             "deepseek" => "DeepSeek",
             "openai" => "OpenAI",
@@ -3733,6 +4623,7 @@ Skill 文件：{skillPath}
             "kimi" => "Kimi",
             _ => preset.DisplayName
         };
+        return L(label);
     }
 
     private void SelectProviderPresetForBaseUrl(string? baseUrl)
@@ -3825,6 +4716,26 @@ Skill 文件：{skillPath}
             ? "请求超时，请检查网络、Base URL 或代理。"
             : ex.Message;
         return message.Length > 900 ? $"{message[..900]}..." : message;
+    }
+
+    private string LocalizeModelProbeError(string message)
+    {
+        if (!IsEnglishUi() || string.IsNullOrWhiteSpace(message))
+        {
+            return message;
+        }
+
+        if (message.StartsWith("模型列表请求失败：", StringComparison.Ordinal))
+        {
+            return "Model list request failed: " + message["模型列表请求失败：".Length..].TrimStart();
+        }
+
+        return message switch
+        {
+            "请求超时，请检查网络、Base URL 或代理。" => "Request timed out. Check the network, Base URL, or proxy.",
+            "Base URL 格式不正确，请填写 http 或 https 开头的 OpenAI-compatible 地址。" => "The Base URL format is invalid. Enter an OpenAI-compatible URL that starts with http or https.",
+            _ => message
+        };
     }
 
     private void PersistSettingsFromUi(bool showStatus)
@@ -5770,17 +6681,17 @@ Skill 文件：{skillPath}
 
     private void OptimizationCategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyOptimizationCategoryFromCombo(OptimizationCategoryBox);
+        ApplyOptimizationCategorySelection(sender as ComboBox);
     }
 
     private void CompactOptimizationCategoryBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyOptimizationCategoryFromCombo(CompactOptimizationCategoryBox);
+        ApplyOptimizationCategorySelection(sender as ComboBox);
     }
 
-    private void ApplyOptimizationCategoryFromCombo(ComboBox comboBox)
+    private void ApplyOptimizationCategorySelection(ComboBox? comboBox)
     {
-        if (!_uiReady || _syncingModeSelection || comboBox.SelectedItem is not OptimizationCategoryChoice category)
+        if (!_uiReady || _syncingModeSelection || comboBox?.SelectedItem is not OptimizationCategoryChoice category)
         {
             return;
         }
@@ -5801,25 +6712,47 @@ Skill 文件：{skillPath}
 
         _selectedMode = nextMode;
         _syncingModeSelection = true;
-        SetModeSelectionState(_selectedMode);
-        _syncingModeSelection = false;
+        try
+        {
+            SetModeSelectionState(_selectedMode);
+        }
+        finally
+        {
+            _syncingModeSelection = false;
+        }
 
         SelectTemplateSourceForMode(_selectedMode);
         RefreshModelDisplayText();
         RefreshScene();
         RefreshTemplateViews();
         SaveUiSettings();
-        SetStatus($"{L("已切换优化目标")}：{category.Title}");
+        SetStatus($"{L("已切换优化目标")}{StatusSeparator}{category.Title}");
+        RefreshFieldCopyButtonsNowAndQueued(_selectedMode);
     }
 
     private void OptimizationModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ApplyModeChoiceFromCombo(OptimizationModeBox);
+        ApplyModeChoiceSelection(sender as ComboBox);
     }
 
-    private void ApplyModeChoiceFromCombo(ComboBox comboBox)
+    private void CompactModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_uiReady || _syncingModeSelection || comboBox.SelectedItem is not OptimizationModeChoice choice)
+        ApplyModeChoiceSelection(sender as ComboBox);
+    }
+
+    private void OptimizationTargetPicker_DropDownClosed(object sender, object e)
+    {
+        if (!_uiReady || _syncingModeSelection)
+        {
+            return;
+        }
+
+        RefreshOptimizationTargetRuntimeUi(_selectedMode);
+    }
+
+    private void ApplyModeChoiceSelection(ComboBox? comboBox)
+    {
+        if (!_uiReady || _syncingModeSelection || comboBox?.SelectedItem is not OptimizationModeChoice choice)
         {
             return;
         }
@@ -5833,15 +6766,22 @@ Skill 文件：{skillPath}
 
         _selectedMode = requestedMode;
         _syncingModeSelection = true;
-        SetModeSelectionState(_selectedMode);
-        _syncingModeSelection = false;
+        try
+        {
+            SetModeSelectionState(_selectedMode);
+        }
+        finally
+        {
+            _syncingModeSelection = false;
+        }
 
         SelectTemplateSourceForMode(_selectedMode);
         RefreshModelDisplayText();
         RefreshScene();
         RefreshTemplateViews();
         SaveUiSettings();
-        SetStatus($"{L("已切换优化目标")}：{choice.Category} / {choice.Title}");
+        SetStatus($"{L("已切换优化目标")}{StatusSeparator}{FormatOptimizationStatusPath(choice.Category, choice.Title)}");
+        RefreshFieldCopyButtonsNowAndQueued(requestedMode);
     }
 
     private bool TryApplySuggestedOptimizationTarget(string userRequest)
@@ -5876,7 +6816,8 @@ Skill 文件：{skillPath}
         RefreshScene();
         RefreshTemplateViews();
         SaveUiSettings();
-        SetStatus($"{L("已根据需求建议优化目标")}：{suggestion.Value.DisplayName}（{suggestion.Value.Reason}）");
+        SetStatus($"{L("已根据需求建议优化目标")}{StatusSeparator}{LocalizeOptimizationText(suggestion.Value.DisplayName)}{StatusParenthetical(LocalizeOptimizationSuggestionReason(suggestion.Value.Reason))}");
+        RefreshFieldCopyButtonsNowAndQueued(_selectedMode);
         return true;
     }
 
@@ -5947,11 +6888,6 @@ Skill 文件：{skillPath}
     {
         MovePage(ref _optimizationTargetManagementPageIndex, 1);
         RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(_selectedMode), moveToSelected: false);
-    }
-
-    private void CompactModeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        ApplyModeChoiceFromCombo(CompactModeBox);
     }
 
     private async void CompactTemplateBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -6167,10 +7103,19 @@ Skill 文件：{skillPath}
         }
     }
 
-    private static void UpdatePager(Button previousButton, TextBlock pagerText, Button nextButton, int pageIndex, int totalPages, int totalCount)
+    private void UpdatePager(Button previousButton, TextBlock pagerText, Button nextButton, int pageIndex, int totalPages, int totalCount)
     {
         previousButton.IsEnabled = totalCount > 0 && pageIndex > 0;
         nextButton.IsEnabled = totalCount > 0 && pageIndex + 1 < totalPages;
+        if (IsEnglishUi())
+        {
+            var itemLabel = totalCount == 1 ? "item" : "items";
+            pagerText.Text = totalCount == 0
+                ? $"0 {itemLabel}"
+                : $"{pageIndex + 1} / {totalPages} · {totalCount} {itemLabel}";
+            return;
+        }
+
         pagerText.Text = totalCount == 0
             ? "0 条"
             : $"{pageIndex + 1} / {totalPages} · {totalCount} 条";
@@ -6293,11 +7238,9 @@ Skill 文件：{skillPath}
         var visibleTemplates = templates
             .Where(template => _selectedTemplateCategory == "全部" || string.Equals(template.Category, _selectedTemplateCategory, StringComparison.OrdinalIgnoreCase))
             .Where(template => string.IsNullOrWhiteSpace(search)
-                || template.Title.Contains(search, StringComparison.OrdinalIgnoreCase)
-                || template.Category.Contains(search, StringComparison.OrdinalIgnoreCase)
-                || template.Text.Contains(search, StringComparison.OrdinalIgnoreCase))
+                || MatchesTemplateSearch(template, search))
             .ToArray();
-        var pageItems = GetPageItems(visibleTemplates, ref _quickTemplatePageIndex, out var totalPages);
+        var pageItems = LocalizeTemplateItems(GetPageItems(visibleTemplates, ref _quickTemplatePageIndex, out var totalPages));
 
         _syncingTemplateSelection = true;
         SetLocalizedListItemsKeepingSelection(TemplateCategoryList, categories, _selectedTemplateCategory);
@@ -6317,7 +7260,7 @@ Skill 文件：{skillPath}
 
         _selectedTemplateSource = NormalizeTemplateSource(_selectedTemplateSource);
         var choices = TemplateSourceDefinitions
-            .Select(source => new TemplateSourceChoice(source.Source, L(source.Title), L(source.Description)))
+            .Select(source => new TemplateSourceChoice(source.Source, LocalizeChoiceText(source.Title), LocalizeChoiceText(source.Description)))
             .ToArray();
 
         _syncingTemplateSelection = true;
@@ -6365,7 +7308,9 @@ Skill 文件：{skillPath}
         }
 
         return GetMountedSkillTemplates()
-            .FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
+            .Where(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase))
+            .Select(LocalizeTemplateItem)
+            .FirstOrDefault();
     }
 
     private void RefreshMountedSkillQuickList(bool moveToSelected = true)
@@ -6380,20 +7325,22 @@ Skill 文件：{skillPath}
         {
             MovePageToItem(mountedSkills, _selectedMountedSkillId, ref _mountedSkillPageIndex, template => template.Id);
         }
-        var pageItems = GetPageItems(mountedSkills, ref _mountedSkillPageIndex, out var totalPages);
+        var rawPageItems = GetPageItems(mountedSkills, ref _mountedSkillPageIndex, out var totalPages);
+        var pageItems = LocalizeTemplateItems(rawPageItems);
         MountedSkillQuickList.ItemsSource = pageItems;
         PromptTemplateCatalogItem? selected = null;
         if (!string.IsNullOrWhiteSpace(_selectedMountedSkillId))
         {
-            selected = mountedSkills
+            var rawSelected = mountedSkills
                 .FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
-            if (selected is null)
+            if (rawSelected is null)
             {
                 _selectedMountedSkillId = null;
                 MountedSkillQuickList.SelectedItem = null;
             }
             else
             {
+                selected = LocalizeTemplateItem(rawSelected);
                 MountedSkillQuickList.SelectedItem = pageItems.FirstOrDefault(template => string.Equals(template.Id, _selectedMountedSkillId, StringComparison.OrdinalIgnoreCase));
             }
         }
@@ -6423,6 +7370,17 @@ Skill 文件：{skillPath}
         }
 
         selected ??= MountedSkillQuickList?.SelectedItem as PromptTemplateCatalogItem;
+        selected = selected is null ? null : LocalizeTemplateItem(selected);
+        if (IsEnglishUi())
+        {
+            MountedSkillStatusText.Text = mountedSkills.Count == 0
+                ? "Current Skill: none mounted"
+                : selected is null
+                    ? $"Available Skills: {mountedSkills.Count}. Please choose one."
+                    : $"Current Skill: {selected.Title}";
+            return;
+        }
+
         MountedSkillStatusText.Text = mountedSkills.Count == 0
             ? "当前 Skill：未挂载"
             : selected is null
@@ -6438,11 +7396,15 @@ Skill 文件：{skillPath}
         }
 
         var choices = mountedSkills
-            .Select(skill => new CompactSkillChoice(
-                skill.Id,
-                skill.Title,
-                string.IsNullOrWhiteSpace(skill.Category) ? L("挂载 Skill") : skill.Category,
-                skill))
+            .Select(skill =>
+            {
+                var localized = LocalizeTemplateItem(skill);
+                return new CompactSkillChoice(
+                    localized.Id,
+                    localized.Title,
+                    string.IsNullOrWhiteSpace(localized.Category) ? L("挂载 Skill") : localized.Category,
+                    localized);
+            })
             .Prepend(new CompactSkillChoice(string.Empty, L("不使用 Skill"), L("仅按当前优化目标生成"), null))
             .ToArray();
 
@@ -6480,8 +7442,8 @@ Skill 文件：{skillPath}
 
         MountedSkillQuickList.SelectedItem = string.IsNullOrWhiteSpace(skillId)
             ? null
-            : GetMountedSkillTemplates()
-                .FirstOrDefault(template => string.Equals(template.Id, skillId, StringComparison.OrdinalIgnoreCase));
+            : (MountedSkillQuickList.ItemsSource as IEnumerable<PromptTemplateCatalogItem>)
+                ?.FirstOrDefault(template => string.Equals(template.Id, skillId, StringComparison.OrdinalIgnoreCase));
     }
 
     private void RefreshCompactTemplatePicker()
@@ -6498,7 +7460,7 @@ Skill 文件：{skillPath}
             .ToArray();
 
         _syncingTemplateSelection = true;
-        CompactTemplateBox.ItemsSource = templates;
+        CompactTemplateBox.ItemsSource = LocalizeTemplateItems(templates);
         CompactTemplateBox.SelectedItem = null;
         CompactTemplateBox.PlaceholderText = templates.Length == 0 ? L("暂无对应模板") : L("选择目标对应模板");
         _syncingTemplateSelection = false;
@@ -6523,7 +7485,7 @@ Skill 文件：{skillPath}
             .Where(template => string.IsNullOrWhiteSpace(userCategory) || userCategory == "全部" || string.Equals(template.Category, userCategory, StringComparison.OrdinalIgnoreCase))
             .ToArray();
         MovePageToItem(visibleTemplates, selectedId, ref _userTemplatePageIndex, template => template.Id);
-        var pageItems = GetPageItems(visibleTemplates, ref _userTemplatePageIndex, out var totalPages);
+        var pageItems = LocalizeTemplateItems(GetPageItems(visibleTemplates, ref _userTemplatePageIndex, out var totalPages));
 
         FavoritesBox.ItemsSource = pageItems;
         FavoritesBox.SelectedItem = selectedId is null
@@ -6553,7 +7515,7 @@ Skill 文件：{skillPath}
                 || string.Equals(template.Category, selectedCategory, StringComparison.OrdinalIgnoreCase))
             .ToArray();
         MovePageToItem(visibleTemplates, selectedId, ref _skillManagementPageIndex, template => template.Id);
-        var pageItems = GetPageItems(visibleTemplates, ref _skillManagementPageIndex, out var totalPages);
+        var pageItems = LocalizeTemplateItems(GetPageItems(visibleTemplates, ref _skillManagementPageIndex, out var totalPages));
 
         SkillList.ItemsSource = pageItems;
         SkillList.SelectedItem = selectedId is null
@@ -6586,8 +7548,313 @@ Skill 文件：{skillPath}
     private LocalizedChoice[] BuildLocalizedChoices(IEnumerable<string> items)
     {
         return items
-            .Select(item => new LocalizedChoice(item, L(item)))
+            .Select(item => new LocalizedChoice(item, LocalizeChoiceText(item)))
             .ToArray();
+    }
+
+    private string LocalizeChoiceText(string text)
+    {
+        if (!IsEnglishUi())
+        {
+            return L(text);
+        }
+
+        return text switch
+        {
+            "全部" => "All",
+            "我的模板" => "My Templates",
+            "用户导入、自建分类" => "User-imported and custom categories",
+            "开源角色提示词库" => "Open-source role prompt library",
+            "通用、写作、提示词工程" => "General, writing, prompt engineering",
+            "文生图、角色、构图" => "Text-to-image, character, composition",
+            "正负提示词、采样参数、节点字段" => "Positive/negative prompts, sampling parameters, node fields",
+            "电影镜头、对白、分镜" => "Cinematic shots, dialogue, storyboards",
+            "短视频、产品、首尾帧" => "Short videos, products, first-last frames",
+            "Codex、Claude Code、反重力" => "Codex, Claude Code, Antigravity",
+            "未分类" => "Uncategorized",
+            "用户导入" => "User imported",
+            "提示词工程" => "Prompt engineering",
+            "语言与润色" => "Language and editing",
+            "写作" => "Writing",
+            "总结" => "Summarization",
+            "约束" => "Constraints",
+            "视频" => "Video",
+            "画质" => "Image quality",
+            "角色" => "Character",
+            "构图" => "Composition",
+            "背景" => "Background",
+            "图生图" => "Img2img",
+            "电影镜头" => "Cinematic shot",
+            "对白短剧" => "Dialogue scene",
+            "时间戳分镜" => "Timestamp storyboard",
+            "通用短视频" => "General short video",
+            "电商产品" => "Ecommerce product",
+            "首尾帧过渡" => "Keyframe transition",
+            "导演分镜" => "Director storyboard",
+            "引用素材" => "Reference assets",
+            "短剧对白" => "Short drama dialogue",
+            "宣发" => "Promotion",
+            "文生图" => "Text-to-image",
+            "通用角色" => "General roles",
+            "通用 Agent" => "General agent",
+            "根因分析" => "Root-cause analysis",
+            "Bug 修复" => "Bug fix",
+            "新增功能" => "Feature add",
+            "UI 修改" => "UI change",
+            "代码审查" => "Code review",
+            "内置文生图" => "Built-in text-to-image",
+            "设计规范" => "Design checklist",
+            "AI编程" => "AI Coding",
+            "AI 编程" => "AI Coding",
+            "Skill体系" => "Skill System",
+            _ => L(text)
+        };
+    }
+
+    private bool IsEnglishUi()
+    {
+        return _languagePack.Code.StartsWith("en", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string StatusSeparator => IsEnglishUi() ? ": " : "：";
+
+    private string StatusParenthetical(string text)
+    {
+        return string.IsNullOrWhiteSpace(text)
+            ? string.Empty
+            : IsEnglishUi() ? $" ({text})" : $"（{text}）";
+    }
+
+    private PromptTemplateCatalogItem LocalizeTemplateItem(PromptTemplateCatalogItem template)
+    {
+        if (template.IsUserTemplate)
+        {
+            return template with
+            {
+                Source = L(template.Source),
+                Category = string.IsNullOrWhiteSpace(template.Category) ? L("未分类") : L(template.Category)
+            };
+        }
+
+        if (IsEnglishUi() && BuiltInTemplateEnglishOverrides.TryGetValue(template.Id, out var builtIn))
+        {
+            return template with
+            {
+                Title = builtIn.Title,
+                Source = builtIn.Source,
+                Category = builtIn.Category,
+                Text = string.IsNullOrWhiteSpace(builtIn.Text) ? template.Text : builtIn.Text
+            };
+        }
+
+        if (IsEnglishUi()
+            && string.Equals(template.Source, "prompts.chat", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(template.Category, "通用角色", StringComparison.OrdinalIgnoreCase))
+        {
+            return template with { Category = "General roles" };
+        }
+
+        return template with
+        {
+            Title = L(template.Title),
+            Source = L(template.Source),
+            Category = string.IsNullOrWhiteSpace(template.Category) ? L("未分类") : L(template.Category)
+        };
+    }
+
+    private PromptTemplateCatalogItem[] LocalizeTemplateItems(IEnumerable<PromptTemplateCatalogItem> templates)
+    {
+        return templates.Select(LocalizeTemplateItem).ToArray();
+    }
+
+    private bool MatchesTemplateSearch(PromptTemplateCatalogItem template, string search)
+    {
+        if (template.Title.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || template.Source.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || template.Category.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || template.Text.Contains(search, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (!IsEnglishUi())
+        {
+            return false;
+        }
+
+        var localized = LocalizeTemplateItem(template);
+        return localized.Title.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || localized.Source.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || localized.Category.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || localized.Text.Contains(search, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private CommonPromptItem LocalizeCommonPromptItem(CommonPromptItem item)
+    {
+        if (IsEnglishUi() && CommonPromptEnglishOverrides.TryGetValue(item.Id, out var builtIn))
+        {
+            return item with
+            {
+                Title = builtIn.Title,
+                Text = builtIn.Text,
+                Category = builtIn.Category
+            };
+        }
+
+        return item with
+        {
+            Title = L(item.Title),
+            Category = string.IsNullOrWhiteSpace(item.Category) ? L("未分类") : L(item.Category)
+        };
+    }
+
+    private bool MatchesCommonPromptSearch(CommonPromptItem item, string search)
+    {
+        if (item.Title.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.Category.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || item.Text.Contains(search, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (!IsEnglishUi())
+        {
+            return false;
+        }
+
+        var localized = LocalizeCommonPromptItem(item);
+        return localized.Title.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || localized.Category.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || localized.Text.Contains(search, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string LocalizeOptimizationText(string text)
+    {
+        if (!IsEnglishUi())
+        {
+            return L(text);
+        }
+
+        return text switch
+        {
+            "通用大模型" => "General LLM",
+            "通用 LLM" => "General LLM",
+            "普通聊天模型、论文润色和通用提示词" => "General chat models, academic rewriting, and prompt optimization",
+            "文生图" => "Text-to-image",
+            "通用文生图" => "General text-to-image",
+            "通用文生图、ComfyUI、Stable Diffusion 等图片模型" => "General image models, ComfyUI, Stable Diffusion, and related workflows",
+            "主体、风格、镜头、光线和负面约束" => "Subject, style, camera, lighting, and negative constraints",
+            "文生视频" => "Text-to-video",
+            "即梦、Seedance、Veo 等视频模型" => "Jimeng, Seedance, Veo, and related video models",
+            "即梦" => "Jimeng",
+            "即梦 / Seedance" => "Jimeng / Seedance",
+            "短视频、产品、首尾帧和分镜" => "Short video, products, first-last-frame transitions, and storyboards",
+            "电影镜头、对白、音效和时间轴" => "Cinematic shots, dialogue, sound design, and timelines",
+            "Agent" => "Agent",
+            "AI 编程" => "AI Coding",
+            "AI 编程、仓库任务和 Skill 工作流" => "AI coding, repository tasks, and Skill workflows",
+            "Codex、Claude Code、反重力和仓库任务" => "Codex, Claude Code, Antigravity, and repository tasks",
+            "自定义" => "Custom",
+            "自定义平台" => "Custom platform",
+            "手动填写模型、平台或目标名称" => "Manually enter a model, platform, or target name",
+            "手动填写平台或目标名称" => "Manually enter a platform or target name",
+            "聊天、总结、改写和普通提示词优化" => "Chat, summarization, rewriting, and general prompt optimization",
+            "论文去AI味" => "Academic humanize",
+            "中文论文自然化、降模板腔" => "Naturalize Chinese academic writing and reduce template-like phrasing",
+            "用户导入的优化目标分类" => "User-imported target category",
+            _ => L(text)
+        };
+    }
+
+    private string FormatOptimizationStatusPath(string? category, string? title)
+    {
+        var localizedCategory = string.IsNullOrWhiteSpace(category)
+            ? string.Empty
+            : LocalizeOptimizationText(category.Trim());
+        var localizedTitle = string.IsNullOrWhiteSpace(title)
+            ? string.Empty
+            : LocalizeOptimizationText(title.Trim());
+
+        if (string.IsNullOrWhiteSpace(localizedCategory))
+        {
+            return localizedTitle;
+        }
+
+        if (string.IsNullOrWhiteSpace(localizedTitle)
+            || string.Equals(localizedCategory, localizedTitle, StringComparison.OrdinalIgnoreCase))
+        {
+            return localizedCategory;
+        }
+
+        return $"{localizedCategory} / {localizedTitle}";
+    }
+
+    private string LocalizeOptimizationStatusPayload(string payload)
+    {
+        if (!IsEnglishUi() || string.IsNullOrWhiteSpace(payload))
+        {
+            return payload;
+        }
+
+        var parts = payload.Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length switch
+        {
+            0 => payload,
+            1 => LocalizeOptimizationText(parts[0]),
+            _ => string.Join(" / ", parts.Select(LocalizeOptimizationText))
+        };
+    }
+
+    private string LocalizeOptimizationSuggestionReason(string reason)
+    {
+        if (!IsEnglishUi())
+        {
+            return L(reason);
+        }
+
+        return reason switch
+        {
+            "命中 Veo 视频模型关键词" => "matched Veo video model keywords",
+            "命中短视频或即梦/Seedance 关键词" => "matched short-video or Jimeng/Seedance keywords",
+            "命中文生图或 SD 工作流关键词" => "matched text-to-image or SD workflow keywords",
+            "命中论文自然化关键词" => "matched academic humanization keywords",
+            "命中代码/仓库任务关键词" => "matched coding or repository task keywords",
+            _ => L(reason)
+        };
+    }
+
+    private string LocalizeOptimizationTargetTitle(OptimizationTargetItem target)
+    {
+        return IsEnglishUi() && OptimizationTargetEnglishOverrides.TryGetValue(target.Id, out var builtIn)
+            ? builtIn.Title
+            : L(target.Title);
+    }
+
+    private string LocalizeOptimizationTargetDescription(OptimizationTargetItem target)
+    {
+        return IsEnglishUi() && OptimizationTargetEnglishOverrides.TryGetValue(target.Id, out var builtIn)
+            ? builtIn.Description
+            : L(FallbackText(target.Description, target.Compatibility));
+    }
+
+    private OptimizationTargetItem LocalizeOptimizationTargetDisplay(OptimizationTargetItem target)
+    {
+        if (!IsEnglishUi() || !OptimizationTargetEnglishOverrides.TryGetValue(target.Id, out var builtIn))
+        {
+            return target with
+            {
+                Title = L(target.Title),
+                Description = L(target.Description),
+                Category = L(target.Category)
+            };
+        }
+
+        return target with
+        {
+            Title = builtIn.Title,
+            Description = builtIn.Description,
+            Category = builtIn.Category
+        };
     }
 
     private static string GetChoiceValue(object? item)
@@ -6687,7 +7954,7 @@ Skill 文件：{skillPath}
         var allItems = _commonPromptService.Load().ToArray();
         var items = string.IsNullOrWhiteSpace(_commonPromptSearchText)
             ? allItems
-            : _commonPromptService.Search(_commonPromptSearchText, 200).ToArray();
+            : allItems.Where(item => MatchesCommonPromptSearch(item, _commonPromptSearchText)).Take(200).ToArray();
         var categories = allItems
             .Select(item => string.IsNullOrWhiteSpace(item.Category) ? "未分类" : item.Category)
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -6713,8 +7980,12 @@ Skill 文件：{skillPath}
             .ToArray();
         MovePageToItem(visibleItems, selectedId, ref _commonPromptPageIndex, item => item.Id);
         MovePageToItem(visibleItems, selectedId, ref _compactCommonPromptPageIndex, item => item.Id);
-        var commonPageItems = GetPageItems(visibleItems, ref _commonPromptPageIndex, out var commonTotalPages);
-        var compactPageItems = GetPageItems(visibleItems, ref _compactCommonPromptPageIndex, out var compactTotalPages);
+        var commonPageItems = GetPageItems(visibleItems, ref _commonPromptPageIndex, out var commonTotalPages)
+            .Select(LocalizeCommonPromptItem)
+            .ToArray();
+        var compactPageItems = GetPageItems(visibleItems, ref _compactCommonPromptPageIndex, out var compactTotalPages)
+            .Select(LocalizeCommonPromptItem)
+            .ToArray();
 
         CommonPromptList.ItemsSource = commonPageItems;
         CommonPromptList.SelectedItem = selectedId is null
@@ -6814,6 +8085,7 @@ Skill 文件：{skillPath}
         RefreshOptimizationModeChoices(targets);
         RefreshOptimizationTargetLists(targets, selectedId, moveToSelected: true);
         SyncModeSelectionBoxes(_selectedMode);
+        RefreshFieldCopyButtons();
     }
 
     private void RefreshOptimizationTargetLists(IReadOnlyList<OptimizationTargetItem> targets, string? selectedId, bool moveToSelected)
@@ -6823,7 +8095,9 @@ Skill 文件：{skillPath}
             MovePageToItem(targets, selectedId, ref _optimizationTargetManagementPageIndex, target => target.Id);
         }
 
-        var managementPageItems = GetPageItems(targets, ref _optimizationTargetManagementPageIndex, out var managementTotalPages);
+        var managementPageItems = GetPageItems(targets, ref _optimizationTargetManagementPageIndex, out var managementTotalPages)
+            .Select(LocalizeOptimizationTargetDisplay)
+            .ToArray();
         OptimizationTargetManagementList.ItemsSource = managementPageItems;
 
         OptimizationTargetManagementList.SelectedItem = string.IsNullOrWhiteSpace(selectedId)
@@ -6855,12 +8129,12 @@ Skill 文件：{skillPath}
     {
         var choices = new List<OptimizationModeChoice>
         {
-            new("通用 LLM", "通用大模型", "通用 LLM", "聊天、总结、改写和普通提示词优化"),
-            new("论文去AI味", "通用大模型", "论文去AI味", "中文论文自然化、降模板腔"),
-            new("文生图", "文生图", "通用文生图", "主体、风格、镜头、光线和负面约束"),
-            new("即梦", "文生视频", "即梦 / Seedance", "短视频、产品、首尾帧和分镜"),
-            new("Veo 3", "文生视频", "Veo 3", "电影镜头、对白、音效和时间轴"),
-            new("AI编程", "Agent", "AI 编程", "Codex、Claude Code、反重力和仓库任务"),
+            new("通用 LLM", "通用大模型", LocalizeOptimizationText("通用 LLM"), LocalizeOptimizationText("聊天、总结、改写和普通提示词优化")),
+            new("论文去AI味", "通用大模型", LocalizeOptimizationText("论文去AI味"), LocalizeOptimizationText("中文论文自然化、降模板腔")),
+            new("文生图", "文生图", LocalizeOptimizationText("通用文生图"), LocalizeOptimizationText("主体、风格、镜头、光线和负面约束")),
+            new("即梦", "文生视频", LocalizeOptimizationText("即梦 / Seedance"), LocalizeOptimizationText("短视频、产品、首尾帧和分镜")),
+            new("Veo 3", "文生视频", "Veo 3", LocalizeOptimizationText("电影镜头、对白、音效和时间轴")),
+            new("AI编程", "Agent", LocalizeOptimizationText("AI 编程"), LocalizeOptimizationText("Codex、Claude Code、反重力和仓库任务")),
         };
 
         foreach (var target in targets)
@@ -6873,18 +8147,18 @@ Skill 文件：{skillPath}
             choices.Add(new OptimizationModeChoice(
                 MakeOptimizationTargetMode(target.Id),
                 GetOptimizationModeCategory(target),
-                target.Title,
-                FallbackText(target.Description, target.Compatibility)));
+                LocalizeOptimizationTargetTitle(target),
+                LocalizeOptimizationTargetDescription(target)));
         }
 
-        choices.Add(new OptimizationModeChoice("自定义", "自定义", "自定义平台", "手动填写模型、平台或目标名称"));
+        choices.Add(new OptimizationModeChoice("自定义", "自定义", LocalizeOptimizationText("自定义平台"), LocalizeOptimizationText("手动填写模型、平台或目标名称")));
         return choices
             .GroupBy(choice => choice.Value, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .ToArray();
     }
 
-    private static IReadOnlyList<OptimizationCategoryChoice> BuildOptimizationCategoryChoices(IReadOnlyList<OptimizationModeChoice> modes)
+    private IReadOnlyList<OptimizationCategoryChoice> BuildOptimizationCategoryChoices(IReadOnlyList<OptimizationModeChoice> modes)
     {
         var descriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -6907,8 +8181,10 @@ Skill 文件：{skillPath}
             .ThenBy(category => category, StringComparer.OrdinalIgnoreCase)
             .Select(category => new OptimizationCategoryChoice(
                 category,
-                category,
-                descriptions.TryGetValue(category, out var description) ? description : "用户导入的优化目标分类"))
+                LocalizeOptimizationText(category),
+                descriptions.TryGetValue(category, out var description)
+                    ? LocalizeOptimizationText(description)
+                    : LocalizeOptimizationText("用户导入的优化目标分类")))
             .ToArray();
     }
 
@@ -6950,6 +8226,7 @@ Skill 文件：{skillPath}
     {
         RefreshOptimizationTargetLists(_optimizationTargetService.Load(), GetOptimizationTargetId(mode), moveToSelected: true);
         SyncModeSelectionBoxes(mode);
+        RefreshOptimizationTargetRuntimeUi(mode);
     }
 
     private void SyncCompactModeBox()
@@ -7029,10 +8306,13 @@ Skill 文件：{skillPath}
         if (OptimizationModeDescriptionText is not null)
         {
             var capabilityText = BuildOptimizationModeCapabilityText(mode);
+            var separator = IsEnglishUi() ? ": " : "：";
             OptimizationModeDescriptionText.Text = choice is null
-                ? "按类别选择模型目标。"
-                : $"{choice.Category} / {choice.Title}：{choice.Description}{Environment.NewLine}{capabilityText}";
+                ? L("按类别选择模型目标。")
+                : $"{LocalizeOptimizationText(choice.Category)} / {choice.Title}{separator}{choice.Description}{Environment.NewLine}{capabilityText}";
         }
+
+        RefreshFieldCopyButtons(mode);
     }
 
     private string BuildOptimizationModeCapabilityText(string mode)
@@ -7041,35 +8321,35 @@ Skill 文件：{skillPath}
             ?? (string.Equals(mode, "自定义", StringComparison.OrdinalIgnoreCase) ? CustomModeBox.Text.Trim() : mode);
         if (IsComfyStableDiffusionMode(effectiveMode))
         {
-            return "能力标签：中文输入、英文同步、正向/反向/参数复制、适合 ComfyUI / SD WebUI；未接入 workflow API。";
+            return L("能力标签：中文输入、英文同步、正向/反向/参数复制、适合 ComfyUI / SD WebUI；未接入 workflow API。");
         }
 
         if (IsVeoMode(string.Empty, effectiveMode))
         {
-            return "能力标签：英文导演提示词、镜头/约束/时长复制、适合 Veo；未自动提交到视频平台。";
+            return L("能力标签：英文导演提示词、镜头/约束/时长复制、适合 Veo；未自动提交到视频平台。");
         }
 
         if (IsJimengMode(string.Empty, effectiveMode))
         {
-            return "能力标签：中文短视频结构、分镜/约束/参数复制、适合即梦 / Seedance；未自动上传平台。";
+            return L("能力标签：中文短视频结构、分镜/约束/参数复制、适合即梦 / Seedance；未自动上传平台。");
         }
 
         if (IsAiCodingMode(string.Empty, effectiveMode))
         {
-            return "能力标签：任务/约束/验证复制、适合 Codex / Claude Code / Cursor；不自动读取仓库上下文。";
+            return L("能力标签：任务/约束/验证复制、适合 Codex / Claude Code / Cursor；不自动读取仓库上下文。");
         }
 
         if (IsAcademicHumanizeMode(string.Empty, effectiveMode))
         {
-            return "能力标签：中文论文自然化、禁用词/输出规则复制；不自动导入 Word / PDF。";
+            return L("能力标签：中文论文自然化、禁用词/输出规则复制；不自动导入 Word / PDF。");
         }
 
         if (effectiveMode.Contains("文生图", StringComparison.Ordinal))
         {
-            return "能力标签：中文结构化、英文同步、负面约束；建议具体平台优先选择 ComfyUI / Stable Diffusion。";
+            return L("能力标签：中文结构化、英文同步、负面约束；建议具体平台优先选择 ComfyUI / Stable Diffusion。");
         }
 
-        return "能力标签：中文主输出、英文同步、聊天式补充、常用提示词收藏。";
+        return L("能力标签：中文主输出、英文同步、聊天式补充、常用提示词收藏。");
     }
 
     private void SelectTemplateSourceForMode(string mode)
@@ -7158,15 +8438,41 @@ Skill 文件：{skillPath}
     {
         _settings = _settingsService.Load();
         _languagePack = _localizationService.Load(_settings.Ui.LanguageCode, _settings.Ui.MountedLanguagePackPath);
-        Title = L("啊拼 / AI Quick Prompt");
+        _localizationRevision++;
+        _contentLocalizedRevision = -1;
+        _localizedRootRevisions.Clear();
         RefreshTemplateSourcePicker();
+        RefreshOptimizationTargetPickers(GetOptimizationTargetId(_selectedMode));
         LocalizeObject(Content as DependencyObject);
+        _contentLocalizedRevision = _localizationRevision;
         RefreshRuntimeLocalizedText();
+        RefreshBrandText();
+    }
+
+    private void RefreshBrandText()
+    {
+        var title = IsEnglishUi() ? "AI Quick Prompt" : "啊拼";
+        var subtitle = IsEnglishUi() ? "AIPIN" : "AI Quick Prompt";
+        Title = title;
+        TopBrandTitleText.Text = title;
+        TopBrandSubtitleText.Text = subtitle;
+        AboutBrandTitleText.Text = title;
     }
 
     private void LocalizeObject(DependencyObject? root)
     {
+        LocalizeObject(root, new HashSet<int>());
+    }
+
+    private void LocalizeObject(DependencyObject? root, ISet<int> visited)
+    {
         if (root is null)
+        {
+            return;
+        }
+
+        var objectId = System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(root);
+        if (!visited.Add(objectId))
         {
             return;
         }
@@ -7226,10 +8532,42 @@ Skill 文件：{skillPath}
             ToolTipService.SetToolTip(element, L(GetOriginal(element, "ToolTip", toolTip)));
         }
 
+        LocalizeXamlContentChildren(root, visited);
+
         var childCount = VisualTreeHelper.GetChildrenCount(root);
         for (var i = 0; i < childCount; i++)
         {
-            LocalizeObject(VisualTreeHelper.GetChild(root, i));
+            LocalizeObject(VisualTreeHelper.GetChild(root, i), visited);
+        }
+    }
+
+    private void LocalizeXamlContentChildren(DependencyObject root, ISet<int> visited)
+    {
+        switch (root)
+        {
+            case Panel panel:
+                foreach (var child in panel.Children.OfType<DependencyObject>())
+                {
+                    LocalizeObject(child, visited);
+                }
+
+                break;
+            case Border { Child: DependencyObject child }:
+                LocalizeObject(child, visited);
+                break;
+            case ScrollViewer { Content: DependencyObject content }:
+                LocalizeObject(content, visited);
+                break;
+            case ContentControl { Content: DependencyObject content }:
+                LocalizeObject(content, visited);
+                break;
+            case ItemsControl itemsControl:
+                foreach (var item in itemsControl.Items.OfType<DependencyObject>())
+                {
+                    LocalizeObject(item, visited);
+                }
+
+                break;
         }
     }
 
@@ -7241,13 +8579,30 @@ Skill 文件：{skillPath}
         }
     }
 
+    private void SetOriginal(object target, string propertyName, string sourceValue)
+    {
+        var key = $"{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(target)}:{propertyName}";
+        _originalLocalizedValues[key] = sourceValue;
+    }
+
     private string GetOriginal(object target, string propertyName, string currentValue)
     {
         var key = $"{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(target)}:{propertyName}";
+        var sourceValue = _localizationService.GetSourceText(currentValue);
         if (!_originalLocalizedValues.TryGetValue(key, out var original))
         {
-            original = currentValue;
+            original = sourceValue;
             _originalLocalizedValues[key] = original;
+        }
+        else
+        {
+            var normalizedOriginal = _localizationService.GetSourceText(original);
+            if (!string.Equals(normalizedOriginal, original, StringComparison.Ordinal)
+                || string.Equals(original, currentValue, StringComparison.Ordinal))
+            {
+                original = normalizedOriginal;
+                _originalLocalizedValues[key] = original;
+            }
         }
 
         return original;
@@ -7255,7 +8610,358 @@ Skill 文件：{skillPath}
 
     private string L(string text)
     {
-        return _languagePack.Translate(text);
+        var translated = _languagePack.Translate(text);
+        if (!IsEnglishUi() || !string.Equals(translated, text, StringComparison.Ordinal))
+        {
+            return translated;
+        }
+
+        return TranslateEnglishFallback(text);
+    }
+
+    private string TranslateEnglishFallback(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        if (text.StartsWith("本段对话已锁定优化目标：", StringComparison.Ordinal))
+        {
+            var detail = text["本段对话已锁定优化目标：".Length..]
+                .Replace("。要切换目标请先点“新会话”。", string.Empty, StringComparison.Ordinal);
+            return "This conversation is locked to target: " + LocalizeOptimizationStatusPayload(detail) + ". Start a new session to change target.";
+        }
+
+        if (text.StartsWith("没有找到可复制的", StringComparison.Ordinal))
+        {
+            var label = text["没有找到可复制的".Length..].Replace("；请先生成当前优化目标的结构化输出", string.Empty, StringComparison.Ordinal);
+            return $"No copyable {L(label)} found. Generate structured output for the current target first.";
+        }
+
+        if (text.EndsWith("为空，无法收藏", StringComparison.Ordinal))
+        {
+            return $"{L(text[..^"为空，无法收藏".Length])} is empty and cannot be favorited";
+        }
+
+        if (text.EndsWith("为空，无法插入", StringComparison.Ordinal))
+        {
+            return $"{L(text[..^"为空，无法插入".Length])} is empty and cannot be inserted";
+        }
+
+        if (text.StartsWith("已收藏到常用提示词：", StringComparison.Ordinal))
+        {
+            return "Saved to common prompts: " + text["已收藏到常用提示词：".Length..];
+        }
+
+        if (text.StartsWith("收藏失败：", StringComparison.Ordinal))
+        {
+            return "Favorite failed: " + text["收藏失败：".Length..];
+        }
+
+        if (text.StartsWith("已导出：", StringComparison.Ordinal))
+        {
+            return "Exported: " + text["已导出：".Length..];
+        }
+
+        if (text.StartsWith("导出失败：", StringComparison.Ordinal))
+        {
+            return "Export failed: " + text["导出失败：".Length..];
+        }
+
+        if (text.StartsWith("已挂载 Skill：", StringComparison.Ordinal))
+        {
+            return "Mounted Skill: " + text["已挂载 Skill：".Length..];
+        }
+
+        if (text.StartsWith("挂载 Skill 失败：", StringComparison.Ordinal))
+        {
+            return "Failed to mount Skill: " + text["挂载 Skill 失败：".Length..];
+        }
+
+        if (text.StartsWith("已导入 Skill 包：", StringComparison.Ordinal))
+        {
+            return "Imported Skill package: " + text["已导入 Skill 包：".Length..];
+        }
+
+        if (text.StartsWith("导入 Skill 包失败：", StringComparison.Ordinal))
+        {
+            return "Failed to import Skill package: " + text["导入 Skill 包失败：".Length..];
+        }
+
+        if (text.StartsWith("已保存为模板：", StringComparison.Ordinal))
+        {
+            return "Saved as template: " + text["已保存为模板：".Length..];
+        }
+
+        if (text.StartsWith("已更新模板：", StringComparison.Ordinal))
+        {
+            return "Updated template: " + text["已更新模板：".Length..];
+        }
+
+        if (text.StartsWith("保存模板失败：", StringComparison.Ordinal))
+        {
+            return "Failed to save template: " + text["保存模板失败：".Length..];
+        }
+
+        if (text.StartsWith("已插入模板：", StringComparison.Ordinal))
+        {
+            return "Inserted template: " + text["已插入模板：".Length..];
+        }
+
+        if (text.StartsWith("已进入历史继续编辑：", StringComparison.Ordinal))
+        {
+            return "Continuing from history: " + text["已进入历史继续编辑：".Length..];
+        }
+
+        if (text.StartsWith("导入剪贴板失败：", StringComparison.Ordinal))
+        {
+            return "Failed to import clipboard: " + text["导入剪贴板失败：".Length..];
+        }
+
+        if (text.StartsWith("粘贴图片失败：", StringComparison.Ordinal))
+        {
+            return "Failed to paste image: " + text["粘贴图片失败：".Length..];
+        }
+
+        if (text.StartsWith("图片 OCR 失败：", StringComparison.Ordinal))
+        {
+            return "Image OCR failed: " + text["图片 OCR 失败：".Length..];
+        }
+
+        if (text.StartsWith("窗口 OCR 失败：", StringComparison.Ordinal))
+        {
+            return "Window OCR failed: " + text["窗口 OCR 失败：".Length..];
+        }
+
+        if (text.StartsWith("区域 OCR 失败：", StringComparison.Ordinal))
+        {
+            return "Region OCR failed: " + text["区域 OCR 失败：".Length..];
+        }
+
+        if (text.StartsWith("附图失败：", StringComparison.Ordinal))
+        {
+            return "Image attachment failed: " + text["附图失败：".Length..];
+        }
+
+        if (text.StartsWith("截图附图失败：", StringComparison.Ordinal))
+        {
+            return "Screenshot attachment failed: " + text["截图附图失败：".Length..];
+        }
+
+        if (text.StartsWith("已插入常用提示词：", StringComparison.Ordinal))
+        {
+            return "Inserted common prompt: " + text["已插入常用提示词：".Length..];
+        }
+
+        if (text.StartsWith("已切换优化目标：", StringComparison.Ordinal))
+        {
+            return "Switched target: " + LocalizeOptimizationStatusPayload(text["已切换优化目标：".Length..]);
+        }
+
+        if (text.StartsWith("已检测到建议路径：", StringComparison.Ordinal))
+        {
+            return "Suggested path detected: " + text["已检测到建议路径：".Length..]
+                .Replace("。确认后可手动同步。", ". Confirm it before syncing manually.", StringComparison.Ordinal);
+        }
+
+        if (text.StartsWith("已选择同步文件夹：", StringComparison.Ordinal))
+        {
+            return "Selected sync folder: " + text["已选择同步文件夹：".Length..]
+                .Replace("。只有手动同步时才会写入加密快照。", ". Encrypted snapshots are written only when you sync manually.", StringComparison.Ordinal);
+        }
+
+        if (text.StartsWith("选择同步文件夹失败：", StringComparison.Ordinal))
+        {
+            return "Failed to choose sync folder: " + text["选择同步文件夹失败：".Length..];
+        }
+
+        if (text.StartsWith("OneDrive 文件夹同步完成：", StringComparison.Ordinal))
+        {
+            return "OneDrive folder sync completed: " + text["OneDrive 文件夹同步完成：".Length..]
+                .Replace("导入 ", "imported ", StringComparison.Ordinal)
+                .Replace(" 条，导出 ", " records, exported ", StringComparison.Ordinal)
+                .Replace(" 条加密历史。", " encrypted history records. ", StringComparison.Ordinal);
+        }
+
+        if (text.StartsWith("已导入 OneDrive 同步快照：", StringComparison.Ordinal))
+        {
+            return "Imported OneDrive sync snapshot: " + text["已导入 OneDrive 同步快照：".Length..]
+                .Replace(" 条。", " records.", StringComparison.Ordinal);
+        }
+
+        if (text.Equals("同步目录中没有可导入的新历史快照。", StringComparison.Ordinal))
+        {
+            return "No new history snapshot is available in the sync folder.";
+        }
+
+        if (text.StartsWith("OneDrive 文件夹同步失败：", StringComparison.Ordinal))
+        {
+            return "OneDrive folder sync failed: " + text["OneDrive 文件夹同步失败：".Length..];
+        }
+
+        if (text.StartsWith("WebDAV 连接成功：", StringComparison.Ordinal))
+        {
+            return "WebDAV connection succeeded: " + text["WebDAV 连接成功：".Length..];
+        }
+
+        if (text.StartsWith("WebDAV 同步完成：", StringComparison.Ordinal))
+        {
+            return "WebDAV sync completed: " + text["WebDAV 同步完成：".Length..]
+                .Replace("导入 ", "imported ", StringComparison.Ordinal)
+                .Replace(" 条，导出 ", " records, exported ", StringComparison.Ordinal)
+                .Replace(" 条加密历史。", " encrypted history records.", StringComparison.Ordinal);
+        }
+
+        if (text.StartsWith("已导入 WebDAV 同步快照：", StringComparison.Ordinal))
+        {
+            return "Imported WebDAV sync snapshot: " + text["已导入 WebDAV 同步快照：".Length..]
+                .Replace(" 条。", " records.", StringComparison.Ordinal);
+        }
+
+        if (text.Equals("WebDAV 远端没有可导入的新历史快照。", StringComparison.Ordinal))
+        {
+            return "No new history snapshot is available on the WebDAV remote.";
+        }
+
+        if (text.StartsWith("WebDAV 同步失败：", StringComparison.Ordinal))
+        {
+            return "WebDAV sync failed: " + text["WebDAV 同步失败：".Length..];
+        }
+
+        if (text.StartsWith("已清除 ", StringComparison.Ordinal))
+        {
+            return text.Replace("已清除 ", "Cleared ", StringComparison.Ordinal)
+                .Replace(" 个历史/临时文件", " history/temp files", StringComparison.Ordinal)
+                .Replace(" 个收藏文件", " favorite files", StringComparison.Ordinal);
+        }
+
+        if (text.StartsWith("已插入", StringComparison.Ordinal) && text.EndsWith("到当前窗口", StringComparison.Ordinal))
+        {
+            return "Inserted " + L(text["已插入".Length..^"到当前窗口".Length]) + " into the current window";
+        }
+
+        if (text.StartsWith("已复制", StringComparison.Ordinal) && text.EndsWith("；没有记录到目标窗口，需手动粘贴", StringComparison.Ordinal))
+        {
+            return "Copied " + L(text["已复制".Length..^"；没有记录到目标窗口，需手动粘贴".Length]) + "; no target window was recorded, so paste it manually";
+        }
+
+        if (text.StartsWith("已新建常用提示词：", StringComparison.Ordinal))
+        {
+            return "Created common prompt: " + text["已新建常用提示词：".Length..];
+        }
+
+        if (text.StartsWith("已更新常用提示词：", StringComparison.Ordinal))
+        {
+            return "Updated common prompt: " + text["已更新常用提示词：".Length..];
+        }
+
+        if (text.StartsWith("已删除常用提示词：", StringComparison.Ordinal))
+        {
+            return "Deleted common prompt: " + text["已删除常用提示词：".Length..];
+        }
+
+        if (text.StartsWith("已挂载到当前优化目标：", StringComparison.Ordinal))
+        {
+            return "Mounted to current target: " + text["已挂载到当前优化目标：".Length..];
+        }
+
+        if (text.StartsWith("小窗口已选择 Skill：", StringComparison.Ordinal))
+        {
+            return "Mini window selected Skill: " + text["小窗口已选择 Skill：".Length..];
+        }
+
+        if (text.StartsWith("搜索索引刷新失败：", StringComparison.Ordinal))
+        {
+            return "Failed to refresh search index: " + text["搜索索引刷新失败：".Length..];
+        }
+
+        if (text.StartsWith("补充需求失败，已使用本地补充：", StringComparison.Ordinal))
+        {
+            return "Failed to supplement the request; local supplement was used: " + text["补充需求失败，已使用本地补充：".Length..];
+        }
+
+        return text switch
+        {
+            "正在生成..." => "Generating...",
+            "没有可补充的优化结果" => "No optimized result to supplement",
+            "没有可复制的结果" => "No result to copy",
+            "已复制中文提示词" => "Chinese prompt copied",
+            "已复制英文提示词" => "English prompt copied",
+            "剪贴板暂时被占用，请再点一次复制" => "Clipboard is busy. Click copy again.",
+            "已复制优化后的提示词" => "Optimized prompt copied",
+            "已应用放大编辑内容" => "Expanded edits applied",
+            "没有可导出的结果" => "No result to export",
+            "已取消导出" => "Export canceled",
+            "内置模板不能编辑" => "Built-in templates cannot be edited",
+            "请先填写模板内容" => "Fill in the template content first",
+            "已取消保存模板" => "Template save canceled",
+            "已取消编辑模板" => "Template edit canceled",
+            "请选择要载入的模板" => "Choose a template to load",
+            "已取消插入模板" => "Template insertion canceled",
+            "请选择要删除的模板" => "Choose a template to delete",
+            "内置模板不能删除" => "Built-in templates cannot be deleted",
+            "已删除模板" => "Template deleted",
+            "删除模板失败" => "Failed to delete template",
+            "请选择要删除的历史记录" => "Choose a history record to delete",
+            "已删除历史记录" => "History record deleted",
+            "正在导入剪贴板..." => "Importing clipboard...",
+            "没有读取到剪贴板文本" => "No clipboard text found",
+            "正在选择图片..." => "Choosing image...",
+            "已取消图片 OCR" => "Image OCR canceled",
+            "正在识别图片文字..." => "Recognizing image text...",
+            "没有记录到目标窗口，请用快捷键呼出后再试" => "No target window was recorded. Bring up AIPIN with the hotkey and try again.",
+            "正在截取目标窗口..." => "Capturing target window...",
+            "正在识别窗口文字..." => "Recognizing window text...",
+            "正在准备区域 OCR..." => "Preparing region OCR...",
+            "已取消区域 OCR" => "Region OCR canceled",
+            "正在识别区域文字..." => "Recognizing region text...",
+            "已取消附图" => "Image attachment canceled",
+            "正在选择截图区域..." => "Choosing screenshot region...",
+            "已取消截图附图" => "Screenshot attachment canceled",
+            "快捷键无效或已被其他程序占用，请换一个组合" => "The hotkey is invalid or already used by another app. Choose another combination.",
+            "设置已保存" => "Settings saved",
+            "设置已保存，模型关闭时使用本地结构化" => "Settings saved. Local structuring is used when the model is disabled.",
+            "没有找到可清除的历史记录" => "No history records to clear",
+            "当前没有本地收藏文件" => "No local favorite files",
+            "没有可插入的提示词" => "No prompt to insert",
+            "剪贴板暂时被占用，无法插入" => "Clipboard is busy. Cannot insert.",
+            "已插入到当前窗口" => "Inserted into the current window",
+            "已复制提示词；没有记录到目标窗口，需手动粘贴" => "Prompt copied; no target window was recorded, so paste it manually",
+            "没有可插入的英文提示词" => "No English prompt to insert",
+            "剪贴板暂时被占用，无法插入英文提示词" => "Clipboard is busy. Cannot insert English prompt.",
+            "已插入英文提示词到当前窗口" => "Inserted English prompt into the current window",
+            "已复制英文提示词；没有记录到目标窗口，需手动粘贴" => "English prompt copied; no target window was recorded, so paste it manually",
+            "已复制当前提示词" => "Current prompt copied",
+            "已插入常用提示词" => "Common prompt inserted",
+            "请输入常用提示词内容。" => "Enter common prompt content.",
+            "已取消新建常用提示词" => "New common prompt canceled",
+            "已取消编辑常用提示词" => "Common prompt edit canceled",
+            "请选择要插入的常用提示词" => "Choose a common prompt to insert",
+            "请选择要删除的常用提示词" => "Choose a common prompt to delete",
+            "没有找到要删除的常用提示词" => "No common prompt found to delete",
+            "小窗口已取消 Skill" => "Mini window Skill cleared",
+            "没有找到开源项目引用文档" => "Open-source reference document not found",
+            "OCR 已在设置中关闭" => "OCR is disabled in Settings",
+            "没有读取到文本" => "No text was read",
+            "正在补充需求..." => "Supplementing request...",
+            "深度思考：提示词摘要" => "Deep thinking: prompt summary",
+            "提示词摘要" => "Prompt summary",
+            "流式输出" => "Streaming output",
+            "图片输入：可能支持" => "Image input: likely supported",
+            "图片输入：未标记" => "Image input: not marked",
+            "中文友好" => "Chinese-friendly",
+            "英文友好" => "English-friendly",
+            "自定义 / OpenAI-compatible" => "Custom / OpenAI-compatible",
+            "GLM / 智谱" => "GLM / Zhipu",
+            "豆包" => "Doubao",
+            "豆包 / 火山方舟" => "Doubao / Volcengine Ark",
+            "自定义 Provider" => "Custom provider",
+            "模型 endpoint 不可用" => "Model endpoint unavailable",
+            "Base URL 格式不正确，请填写 http 或 https 开头的 OpenAI-compatible 地址。" => "The Base URL format is invalid. Enter an OpenAI-compatible URL that starts with http or https.",
+            "请求超时，请检查网络、Base URL 或代理。" => "Request timed out. Check the network, Base URL, or proxy.",
+            _ => text
+        };
     }
 
     private void RefreshAboutUi()
@@ -7289,12 +8995,12 @@ Skill 文件：{skillPath}
         BottomModelText.Text = $"{L("当前模型：")}{L(currentModel)}";
         TopModelText.Text = $"{L("当前模型：")}{L(currentModel)}";
         RefreshModelCapabilityText();
+        RelocalizeDetectedModelBox();
         RefreshWorkflowModelBox();
     }
 
     private string BuildCurrentModelDisplayText()
     {
-        _settings = _settingsService.Load();
         if (!_settings.Model.Enabled)
         {
             return "本地结构化";
@@ -7307,7 +9013,7 @@ Skill 文件：{skillPath}
         }
 
         var provider = DetectProviderName(_settings.Model.BaseUrl, model);
-        return string.IsNullOrWhiteSpace(provider) ? model : $"{provider} {model}";
+        return string.IsNullOrWhiteSpace(provider) ? model : $"{L(provider)} {model}";
     }
 
     private void RefreshModelCapabilityText()
@@ -7388,7 +9094,7 @@ Skill 文件：{skillPath}
         return tags;
     }
 
-    private static string FormatModelLabelWithTags(string providerId, string model)
+    private string FormatModelLabelWithTags(string providerId, string model)
     {
         if (string.IsNullOrWhiteSpace(model))
         {
@@ -7402,6 +9108,7 @@ Skill 文件：{skillPath}
                 && !tag.StartsWith("中文", StringComparison.Ordinal)
                 && !tag.StartsWith("英文", StringComparison.Ordinal)
                 && !string.Equals(tag, "图片输入：未标记", StringComparison.Ordinal))
+            .Select(L)
             .ToArray();
         return tags.Length == 0 ? model : $"{model}  [{string.Join(" · ", tags)}]";
     }
@@ -8974,20 +10681,45 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
         return IsOptimizationTargetMode(mode) ? mode![7..].Trim() : null;
     }
 
-    private string GetEffectiveMode()
+    private string GetEffectiveMode(string? mode = null)
     {
-        var target = GetSelectedOptimizationTarget();
+        var selectedMode = mode ?? _selectedMode;
+        var target = GetSelectedOptimizationTarget(selectedMode);
         if (target is not null)
         {
             return target.Title;
         }
 
-        if (_selectedMode == "自定义" && !string.IsNullOrWhiteSpace(CustomModeBox.Text))
+        if (string.Equals(selectedMode, "自定义", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(selectedMode, _selectedMode, StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(CustomModeBox.Text))
         {
             return CustomModeBox.Text.Trim();
         }
 
-        return _selectedMode;
+        return selectedMode;
+    }
+
+    private string GetEffectiveModeDisplay(string? mode = null)
+    {
+        var selectedMode = mode ?? _selectedMode;
+        var target = GetSelectedOptimizationTarget(selectedMode);
+        if (target is not null)
+        {
+            return LocalizeOptimizationTargetTitle(target);
+        }
+
+        if (string.Equals(selectedMode, "自定义", StringComparison.OrdinalIgnoreCase))
+        {
+            var customMode = string.Equals(selectedMode, _selectedMode, StringComparison.OrdinalIgnoreCase)
+                ? CustomModeBox.Text.Trim()
+                : string.Empty;
+            return string.IsNullOrWhiteSpace(customMode)
+                ? LocalizeOptimizationText("自定义")
+                : customMode;
+        }
+
+        return LocalizeOptimizationText(selectedMode);
     }
 
     private string GetPrimaryPromptLanguage()

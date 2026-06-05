@@ -154,8 +154,8 @@
             </Button>
             <Image Grid.Column="1" Width="34" Height="34" Source="Assets/logo.png" Stretch="Uniform" VerticalAlignment="Center" />
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="0">
-                <TextBlock Text="啊拼" FontSize="17" FontWeight="SemiBold" />
-                <TextBlock Text="AI Quick Prompt" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="TopBrandTitleText" Text="啊拼" FontSize="17" FontWeight="SemiBold" />
+                <TextBlock x:Name="TopBrandSubtitleText" Text="AI Quick Prompt" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
             <Button Grid.Column="3" Style="{StaticResource IconButtonStyle}" Click="CommandPaletteButton_Click" ToolTipService.ToolTip="命令面板" AutomationProperties.Name="命令面板" AccessKey="F">
                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE721;" FontSize="16" />
@@ -232,7 +232,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="42" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="54" />
+                                        <ColumnDefinition Width="0" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="34" Height="34" CornerRadius="17" Background="{ThemeResource ControlFillColorSecondaryBrush}">
                                         <Image Source="Assets/logo.png" Width="28" Height="28" Stretch="Uniform" />
@@ -240,7 +240,6 @@
                                     <Border Grid.Column="1" CornerRadius="12" Padding="12,9" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                                         <TextBlock Text="好的，把你想优化的需求发给我；我会边聊天边整理成下面的当前提示词和优化后提示词。" TextWrapping="Wrap" />
                                     </Border>
-                                    <TextBlock Grid.Column="2" Text="10:18" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" FontSize="12" />
                                 </Grid>
                             </StackPanel>
                         </ScrollViewer>
@@ -348,7 +347,7 @@
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7C1;" FontSize="18" />
                             <TextBlock Text="优化目标" Style="{StaticResource SectionTitleStyle}" />
                         </StackPanel>
-                        <ComboBox x:Name="CompactOptimizationCategoryBox" Grid.Row="1" Header="大类" HorizontalAlignment="Stretch" SelectionChanged="CompactOptimizationCategoryBox_SelectionChanged">
+                        <ComboBox x:Name="CompactOptimizationCategoryBox" Grid.Row="1" Header="大类" HorizontalAlignment="Stretch" SelectionChanged="CompactOptimizationCategoryBox_SelectionChanged" DropDownClosed="OptimizationTargetPicker_DropDownClosed">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Spacing="1">
@@ -358,7 +357,7 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <ComboBox x:Name="CompactModeBox" Grid.Row="2" Header="目标" HorizontalAlignment="Stretch" SelectionChanged="CompactModeBox_SelectionChanged">
+                        <ComboBox x:Name="CompactModeBox" Grid.Row="2" Header="目标" HorizontalAlignment="Stretch" SelectionChanged="CompactModeBox_SelectionChanged" DropDownClosed="OptimizationTargetPicker_DropDownClosed">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Spacing="1" MinWidth="220">
@@ -442,21 +441,30 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                        <Grid ColumnSpacing="8">
+                        <Grid ColumnSpacing="8" RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="英语提示词" Style="{StaticResource SectionTitleStyle}" />
-                            <Button x:Name="CompactFieldCopyPrimaryButton" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="正向" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段" />
-                            <Button x:Name="CompactFieldCopyConstraintButton" Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="反向" Click="CopyComfyNegativeButton_Click" ToolTipService.ToolTip="复制当前目标的约束字段" />
-                            <Button x:Name="CompactFieldCopyParameterButton" Grid.Column="3" Style="{StaticResource FluentButtonStyle}" Content="参数" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段" />
-                            <Button Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
-                            <Button Grid.Column="5" Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
+                            <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
+                            <Button Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
+                            <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                <Button x:Name="CompactFieldCopyPrimaryButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段">
+                                    <TextBlock x:Name="CompactFieldCopyPrimaryText" Text="正向" />
+                                </Button>
+                                <Button x:Name="CompactFieldCopyConstraintButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyNegativeButton_Click" ToolTipService.ToolTip="复制当前目标的约束字段">
+                                    <TextBlock x:Name="CompactFieldCopyConstraintText" Text="反向" />
+                                </Button>
+                                <Button x:Name="CompactFieldCopyParameterButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段">
+                                    <TextBlock x:Name="CompactFieldCopyParameterText" Text="参数" />
+                                </Button>
+                            </StackPanel>
                         </Grid>
                         <Border Grid.Row="1" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="12">
                             <Grid>
@@ -654,7 +662,7 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="42" />
                                                 <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="54" />
+                                                <ColumnDefinition Width="0" />
                                             </Grid.ColumnDefinitions>
                                             <Border Width="34" Height="34" CornerRadius="17" Background="{ThemeResource ControlFillColorSecondaryBrush}">
                                                 <Image Source="Assets/logo.png" Width="28" Height="28" Stretch="Uniform" />
@@ -662,7 +670,6 @@
                                             <Border Grid.Column="1" CornerRadius="12" Padding="12,9" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                                                 <TextBlock Text="好的，把你想优化的需求发给我；我会边聊天边整理成下面的当前提示词和优化后提示词。" TextWrapping="Wrap" />
                                             </Border>
-                                            <TextBlock Grid.Column="2" Text="10:18" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" FontSize="12" />
                                         </Grid>
                                     </StackPanel>
                                 </ScrollViewer>
@@ -830,6 +837,7 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
                                     <TextBlock Text="英语提示词" Style="{StaticResource SectionTitleStyle}" VerticalAlignment="Center" />
@@ -837,13 +845,21 @@
                                         <Button Style="{StaticResource IconButtonStyle}" Click="ExpandEnglishOutputButton_Click" ToolTipService.ToolTip="放大">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE740;" FontSize="15" />
                                         </Button>
-                                        <Button x:Name="ExpandedFieldCopyPrimaryButton" Style="{StaticResource FluentButtonStyle}" Content="正向" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段" />
-                                        <Button x:Name="ExpandedFieldCopyConstraintButton" Style="{StaticResource FluentButtonStyle}" Content="反向" Click="CopyComfyNegativeButton_Click" ToolTipService.ToolTip="复制当前目标的约束字段" />
-                                        <Button x:Name="ExpandedFieldCopyParameterButton" Style="{StaticResource FluentButtonStyle}" Content="参数" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段" />
                                         <Button Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
                                         <Button Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
                                     </StackPanel>
-                                    <Border Grid.Row="2" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="10">
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                        <Button x:Name="ExpandedFieldCopyPrimaryButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段">
+                                            <TextBlock x:Name="ExpandedFieldCopyPrimaryText" Text="正向" />
+                                        </Button>
+                                        <Button x:Name="ExpandedFieldCopyConstraintButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyNegativeButton_Click" ToolTipService.ToolTip="复制当前目标的约束字段">
+                                            <TextBlock x:Name="ExpandedFieldCopyConstraintText" Text="反向" />
+                                        </Button>
+                                        <Button x:Name="ExpandedFieldCopyParameterButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段">
+                                            <TextBlock x:Name="ExpandedFieldCopyParameterText" Text="参数" />
+                                        </Button>
+                                    </StackPanel>
+                                    <Border Grid.Row="3" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="10">
                                         <Grid>
                                             <TextBox
                                                 x:Name="EnglishOutputBox"
@@ -895,7 +911,7 @@
                                         <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE76B;" FontSize="15" />
                                     </Button>
                                 </Grid>
-                                <ComboBox x:Name="OptimizationCategoryBox" Header="大类" PlaceholderText="选择大类" HorizontalAlignment="Stretch" SelectionChanged="OptimizationCategoryBox_SelectionChanged">
+                                <ComboBox x:Name="OptimizationCategoryBox" Header="大类" PlaceholderText="选择大类" HorizontalAlignment="Stretch" SelectionChanged="OptimizationCategoryBox_SelectionChanged" DropDownClosed="OptimizationTargetPicker_DropDownClosed">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Spacing="1" MinWidth="260">
@@ -905,7 +921,7 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
-                                <ComboBox x:Name="OptimizationModeBox" Header="目标" PlaceholderText="选择目标" HorizontalAlignment="Stretch" SelectionChanged="OptimizationModeBox_SelectionChanged">
+                                <ComboBox x:Name="OptimizationModeBox" Header="目标" PlaceholderText="选择目标" HorizontalAlignment="Stretch" SelectionChanged="OptimizationModeBox_SelectionChanged" DropDownClosed="OptimizationTargetPicker_DropDownClosed">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Spacing="1" MinWidth="260">
@@ -1468,7 +1484,7 @@
                     <Border Style="{StaticResource CardBorderStyle}">
                         <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="560">
                             <Image Width="112" Height="112" Source="Assets/logo.png" Stretch="Uniform" />
-                            <TextBlock Text="啊拼" Style="{StaticResource PageTitleStyle}" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="AboutBrandTitleText" Text="啊拼" Style="{StaticResource PageTitleStyle}" HorizontalAlignment="Center" />
                             <TextBlock x:Name="VersionTextBlock" Text="版本号：" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Center" />
                             <TextBlock Text="© 夏语工作室 版权所有" FontWeight="SemiBold" HorizontalAlignment="Center" />
                             <TextBlock Text="该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat、Female Portrait Prompt Director Skill 开源项目以及其他开源软件。" Style="{StaticResource MutedTextStyle}" TextAlignment="Center" />
