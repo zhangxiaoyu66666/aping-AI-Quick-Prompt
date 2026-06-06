@@ -504,7 +504,7 @@
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8A5;" FontSize="22" />
                             <StackPanel Grid.Column="1" Spacing="2">
                                 <TextBlock Text="常用提示词" Style="{StaticResource PageTitleStyle}" />
-                                <TextBlock Text="左键复制，右键编辑或删除。" Style="{StaticResource MutedTextStyle}" />
+                                <TextBlock Text="左键复制，选中后可插入或按此改写。" Style="{StaticResource MutedTextStyle}" />
                             </StackPanel>
                             <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" Click="ExpandButton_Click" ToolTipService.ToolTip="展开工作台">
                                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE740;" FontSize="16" />
@@ -518,7 +518,7 @@
                             </Grid.ColumnDefinitions>
                             <ComboBox x:Name="CompactCommonPromptCategoryFilterBox" Header="分类筛选" SelectionChanged="CompactCommonPromptCategoryFilterBox_SelectionChanged" />
                             <TextBox x:Name="CompactCommonPromptSearchBox" Grid.Column="1" Header="搜索" PlaceholderText="标题、分类或内容" TextChanged="CommonPromptSearchBox_TextChanged" />
-                            <TextBlock Grid.Column="2" Text="点击条目复制完整提示词；需要改内容时右键打开菜单。" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Bottom" />
+                            <TextBlock Grid.Column="2" Text="点击条目复制完整提示词；选中后可插入或按此改写。" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Bottom" />
                         </Grid>
                         <ListView x:Name="CompactCommonPromptList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="CompactCommonPromptList_ItemClick" RightTapped="CompactCommonPromptList_RightTapped" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListView.ItemTemplate>
@@ -547,20 +547,22 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="新建常用提示词" Click="SaveCommonPromptButton_Click" />
                             <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="插入到用户需求" Click="CompactInsertCommonPromptButton_Click" />
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Button Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="按此改写" Click="CompactRewriteWithCommonPromptButton_Click" ToolTipService.ToolTip="用选中的收藏提示词改写当前输入或输出" />
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <TextBlock x:Name="CompactCommonPromptStatusText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
                                 <Button x:Name="CompactCommonPromptPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" Click="CompactCommonPromptPreviousPageButton_Click" />
                                 <TextBlock x:Name="CompactCommonPromptPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
                                 <Button x:Name="CompactCommonPromptNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" Click="CompactCommonPromptNextPageButton_Click" />
                             </StackPanel>
-                            <Button Grid.Column="3" Style="{StaticResource FluentButtonStyle}" Content="导入 JSON" Click="ImportCommonPromptsJsonButton_Click" />
-                            <Button Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Content="导出 JSON" Click="ExportCommonPromptsJsonButton_Click" />
+                            <Button Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Content="导入 JSON" Click="ImportCommonPromptsJsonButton_Click" />
+                            <Button Grid.Column="5" Style="{StaticResource FluentButtonStyle}" Content="导出 JSON" Click="ExportCommonPromptsJsonButton_Click" />
                         </Grid>
                     </Grid>
                 </Border>
@@ -1281,7 +1283,7 @@
                                 <ComboBox x:Name="CommonPromptCategoryFilterBox" Header="分类筛选" SelectionChanged="CommonPromptCategoryFilterBox_SelectionChanged" />
                                 <StackPanel Grid.Column="1" Spacing="4">
                                     <TextBox x:Name="CommonPromptSearchBox" Header="搜索" PlaceholderText="搜索标题、分类或内容" TextChanged="CommonPromptSearchBox_TextChanged" />
-                                    <TextBlock Text="点击“新建常用提示词”打开小窗口。列表只显示摘要，点击条目会快速复制完整提示词。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
+                                    <TextBlock Text="点击条目会快速复制完整提示词；选中后可插入到用户需求，或用它改写当前输入 / 输出。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                             <ListView x:Name="CommonPromptList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="CommonPromptList_ItemClick" RightTapped="CommonPromptList_RightTapped" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -1311,11 +1313,13 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="新建常用提示词" Click="SaveCommonPromptButton_Click" />
                                 <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="插入到用户需求" Click="InsertCommonPromptButton_Click" />
-                                <Grid Grid.Column="2" ColumnSpacing="10">
+                                <Button Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="按此改写" Click="RewriteWithCommonPromptButton_Click" ToolTipService.ToolTip="用选中的收藏提示词改写当前输入或输出" />
+                                <Grid Grid.Column="3" ColumnSpacing="10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />

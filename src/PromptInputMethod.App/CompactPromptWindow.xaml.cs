@@ -4474,9 +4474,12 @@ Skill 文件：{skillPath}
         var flyout = new MenuFlyout();
         var editItem = new MenuFlyoutItem { Text = L("编辑") };
         editItem.Click += async (_, _) => await SaveCommonPromptWithDialogAsync(item);
+        var rewriteItem = new MenuFlyoutItem { Text = L("按此改写") };
+        rewriteItem.Click += (_, _) => RewriteWithCommonPrompt(item, owner == CompactCommonPromptList);
         var deleteItem = new MenuFlyoutItem { Text = L("删除") };
         deleteItem.Click += (_, _) => DeleteCommonPrompt(item);
         flyout.Items.Add(editItem);
+        flyout.Items.Add(rewriteItem);
         flyout.Items.Add(deleteItem);
         flyout.ShowAt(owner, e.GetPosition(owner));
         e.Handled = true;
@@ -4495,6 +4498,17 @@ Skill 文件：{skillPath}
         ShowPage("Home");
     }
 
+    private void RewriteWithCommonPromptButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (CommonPromptList.SelectedItem is not CommonPromptItem item)
+        {
+            SetStatus("请选择用于改写的收藏提示词");
+            return;
+        }
+
+        RewriteWithCommonPrompt(item, compact: false);
+    }
+
     private void CompactInsertCommonPromptButton_Click(object sender, RoutedEventArgs e)
     {
         if (CompactCommonPromptList.SelectedItem is not CommonPromptItem item)
@@ -4506,6 +4520,92 @@ Skill 文件：{skillPath}
         SetUserInput(AppendLine(GetUserInput(), item.Text));
         SetStatus($"已插入常用提示词：{item.Title}");
         ShowCompactPage("Workbench");
+    }
+
+    private void CompactRewriteWithCommonPromptButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (CompactCommonPromptList.SelectedItem is not CommonPromptItem item)
+        {
+            SetStatus("请选择用于改写的收藏提示词");
+            return;
+        }
+
+        RewriteWithCommonPrompt(item, compact: true);
+    }
+
+    private void RewriteWithCommonPrompt(CommonPromptItem item, bool compact)
+    {
+        var subject = GetRewriteSubjectText();
+        if (string.IsNullOrWhiteSpace(subject))
+        {
+            SetStatus("请先输入要改写的内容，或先生成一个提示词结果");
+            if (compact)
+            {
+                ShowCompactPage("Workbench");
+                InputBox.Focus(FocusState.Programmatic);
+            }
+            else
+            {
+                ShowPage("Home");
+                ExpandedInputBox.Focus(FocusState.Programmatic);
+            }
+
+            return;
+        }
+
+        SetUserInput(BuildCommonPromptRewriteRequest(item, subject));
+        SetStatus($"已按收藏提示词生成改写请求：{item.Title}。检查后点击发送");
+        if (compact)
+        {
+            ShowCompactPage("Workbench");
+            InputBox.Focus(FocusState.Programmatic);
+        }
+        else
+        {
+            ShowPage("Home");
+            ExpandedInputBox.Focus(FocusState.Programmatic);
+        }
+    }
+
+    private string GetRewriteSubjectText()
+    {
+        var input = GetUserInput().Trim();
+        if (!string.IsNullOrWhiteSpace(input))
+        {
+            return input;
+        }
+
+        var chineseOutput = GetChineseOutput().Trim();
+        if (!string.IsNullOrWhiteSpace(chineseOutput))
+        {
+            return chineseOutput;
+        }
+
+        var englishOutput = EnglishOutputBox.Text.Trim();
+        return string.IsNullOrWhiteSpace(englishOutput) ? string.Empty : englishOutput;
+    }
+
+    private static string BuildCommonPromptRewriteRequest(CommonPromptItem item, string subject)
+    {
+        var category = string.IsNullOrWhiteSpace(item.Category) ? "未分类" : item.Category.Trim();
+        return $"""
+        请根据下面这条收藏提示词的写法、结构、语气和约束，改写“待改写内容”。
+
+        要求：
+        1. 保留待改写内容的真实意图和事实，不要编造新信息。
+        2. 优先复用收藏提示词的输出结构、字段顺序、风格和限制。
+        3. 如果收藏提示词是模板或规则，请把待改写内容代入模板，而不是解释模板。
+        4. 只输出改写后的最终提示词，不要输出分析过程。
+
+        【收藏提示词】
+        标题：{item.Title.Trim()}
+        分类：{category}
+        正文：
+        {item.Text.Trim()}
+
+        【待改写内容】
+        {subject.Trim()}
+        """;
     }
 
     private void DeleteCommonPromptButton_Click(object sender, RoutedEventArgs e)
