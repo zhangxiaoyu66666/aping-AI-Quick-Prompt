@@ -1,7 +1,7 @@
 param(
     [string]$Configuration = "Release",
     [string]$Platform = "x64",
-    [string]$Version = "1.0.4.0",
+    [string]$Version = "1.0.6.0",
     [string]$Publisher = "CN=XiaYu Studio",
     [string]$PackageName = "XiaYuStudio.AIQuickPrompt",
     [string]$OutputRoot = "artifacts\msix",
@@ -98,7 +98,7 @@ try {
 "@
     Set-Content -LiteralPath $manifestPath -Value $manifest -Encoding UTF8
 
-    $packagePath = Join-Path $packageRoot "AI-Quick-Prompt-1.0.4-$architecture.msix"
+    $packagePath = Join-Path $packageRoot "AI-Quick-Prompt-1.0.6-$architecture.msix"
     if (Test-Path $packagePath) {
         Remove-Item -LiteralPath $packagePath -Force
     }
@@ -123,8 +123,8 @@ try {
 
     $passwordText = [Guid]::NewGuid().ToString("N")
     $password = ConvertTo-SecureString $passwordText -AsPlainText -Force
-    $pfxPath = Join-Path $certDir "AI-Quick-Prompt-1.0.4-sideloading.pfx"
-    $cerPath = Join-Path $certDir "AI-Quick-Prompt-1.0.4-sideloading.cer"
+    $pfxPath = Join-Path $certDir "AI-Quick-Prompt-1.0.6-sideloading.pfx"
+    $cerPath = Join-Path $certDir "AI-Quick-Prompt-1.0.6-sideloading.cer"
     Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $password | Out-Null
     Export-Certificate -Cert $cert -FilePath $cerPath | Out-Null
 

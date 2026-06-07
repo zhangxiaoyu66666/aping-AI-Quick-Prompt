@@ -23,6 +23,13 @@ PromptBar is a Windows desktop prompt workbench built with WinUI 3 and .NET 8. I
 - Do not edit generated `bin/`, `obj/`, `.vs/`, build artifacts, local user settings, or OCR diagnostics.
 - Do not commit API keys, local model provider credentials, screenshots containing secrets, or user prompt history.
 
+## Git And GitHub Rules
+
+- Do not push to GitHub, create a GitHub release, upload release assets, open a pull request, or perform any other remote publishing action unless the human explicitly asks for that exact remote action in the current turn.
+- Do not infer permission to push from phrases such as "commit", "save", "GitHub workspace", "sync code", "publish later", or from having successfully created a local commit.
+- When the user asks to commit, make the local commit only, then stop and report the commit hash plus remaining working-tree state.
+- If remote publication might be useful but was not explicitly requested, ask first or leave it as a clear next step.
+
 ## Build And Verification
 
 Use Visual Studio MSBuild for the WinUI app:

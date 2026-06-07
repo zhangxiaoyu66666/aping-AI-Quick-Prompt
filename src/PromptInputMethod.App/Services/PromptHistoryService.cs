@@ -21,11 +21,6 @@ public sealed class PromptHistoryService
         return items;
     }
 
-    public IReadOnlyList<PromptHistoryItem> LoadForSync(int limit = int.MaxValue)
-    {
-        return _database.LoadHistory(limit);
-    }
-
     public IReadOnlyList<PromptHistoryItem> Search(string query, int limit = 100)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -119,23 +114,6 @@ public sealed class PromptHistoryService
         }
 
         return removed;
-    }
-
-    public int ImportForSync(IEnumerable<PromptHistoryItem> items)
-    {
-        var existing = LoadForSync()
-            .ToDictionary(item => item.Id, StringComparer.Ordinal);
-        var materialized = items
-            .Where(remote => !existing.TryGetValue(remote.Id, out var local)
-                || remote.EffectiveUpdatedAt > local.EffectiveUpdatedAt)
-            .ToArray();
-        if (materialized.Length > 0)
-        {
-            _database.ImportHistory(materialized);
-            InvalidateRecentCache();
-        }
-
-        return materialized.Length;
     }
 
     public int Clear()

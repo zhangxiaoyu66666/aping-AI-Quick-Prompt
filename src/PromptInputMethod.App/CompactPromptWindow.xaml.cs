@@ -18,7 +18,6 @@ using PromptInputMethod.Core.Prompt;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -65,6 +64,7 @@ public sealed partial class CompactPromptWindow : Window
         new("ComfyUI / Stable Diffusion", "ComfyUI / Stable Diffusion", "正负提示词、采样参数、节点字段"),
         new("Veo 3", "Veo 3", "电影镜头、对白、分镜"),
         new("即梦 / Seedance", "即梦 / Seedance", "短视频、产品、首尾帧"),
+        new("短剧工作台", "短剧工作台", "三视图、角色资产、连续分镜"),
         new("AI编程", "AI编程", "Codex、Claude Code、反重力")
     ];
     private static readonly IReadOnlyDictionary<string, BuiltInTemplateEnglishOverride> BuiltInTemplateEnglishOverrides = new Dictionary<string, BuiltInTemplateEnglishOverride>(StringComparer.OrdinalIgnoreCase)
@@ -305,6 +305,46 @@ public sealed partial class CompactPromptWindow : Window
             Captions: {Chinese / bilingual / none, position and style}
             Negative constraints: avoid lip-sync mismatch, identity drift, stiff expressions, extra characters, garbled lines, abrupt cuts.
             """),
+        ["builtin-short-drama-guided-project"] = new(
+            "Short-drama guided project coach",
+            "Short Drama Workbench",
+            "Guided workflow"),
+        ["builtin-short-drama-starter"] = new(
+            "Start a comic or short-drama project from scratch",
+            "Short Drama Workbench",
+            "Beginner workflow"),
+        ["builtin-short-drama-script"] = new(
+            "Short-drama script",
+            "Short Drama Workbench",
+            "Script"),
+        ["builtin-short-drama-storyboard"] = new(
+            "Short-drama storyboard",
+            "Short Drama Workbench",
+            "Storyboard"),
+        ["builtin-short-drama-qa-revision"] = new(
+            "Short-drama QA and revision",
+            "Short Drama Workbench",
+            "QA and revision"),
+        ["builtin-short-drama-package"] = new(
+            "Short-drama delivery package",
+            "Short Drama Workbench",
+            "Package"),
+        ["builtin-short-drama-one-line-story"] = new(
+            "Short-drama one-line story and characters",
+            "Short Drama Workbench",
+            "Story and characters"),
+        ["builtin-short-drama-character-turnaround"] = new(
+            "Short-drama character turnaround sheet",
+            "Short Drama Workbench",
+            "Character assets"),
+        ["builtin-short-drama-master-shot"] = new(
+            "Short-drama 5-10 second master shot",
+            "Short Drama Workbench",
+            "Cinematography prompt"),
+        ["builtin-short-drama-next-segment"] = new(
+            "Short-drama continue next segment",
+            "Short Drama Workbench",
+            "Continuity"),
         ["builtin-jimeng-viral-promo"] = new(
             "Jimeng / Seedance viral promo template",
             "Jimeng / Seedance",
@@ -702,6 +742,7 @@ public sealed partial class CompactPromptWindow : Window
     {
         ["builtin-academic-humanize-cn"] = new("Academic humanize", "Rewrite text into natural, restrained Chinese academic prose with less template-like AI phrasing.", "Academic writing"),
         ["builtin-jimeng-seedance-director"] = new("Jimeng Director Skill", "Turn rough ideas into executable Jimeng / Seedance / Dreamina / Seedream video or image prompts.", "Video generation"),
+        ["builtin-ai-short-drama-workbench"] = new("AI Short Drama Director Workbench", "Step-by-step AI guidance from one idea to script, storyboard, character turnarounds, 5-10 second shots, next segments, and production packages.", "Video generation"),
         ["builtin-comfyui-stable-diffusion"] = new("ComfyUI / Stable Diffusion", "Turn a request into positive prompts, negative prompts, and sampling-parameter fields for ComfyUI, Stable Diffusion WebUI, and diffusers.", "Text-to-image")
     };
     private static readonly IReadOnlyList<ModelProviderPreset> ModelProviderPresets =
@@ -739,11 +780,6 @@ public sealed partial class CompactPromptWindow : Window
     private readonly LocalizationService _localizationService = new();
     private readonly AppDatabaseService _databaseService = new();
     private readonly OpenAiCompatibleClient _llmClient = new();
-    private readonly OneDriveLocalFolderService _oneDriveLocalFolderService = new();
-    private readonly OneDriveHistorySyncService _oneDriveHistorySyncService = new();
-    private readonly OneDriveClientLauncherService _oneDriveClientLauncherService = new();
-    private readonly OneDriveVaultCacheService _oneDriveVaultCacheService = new();
-    private readonly WebDavHistorySyncService _webDavHistorySyncService = new();
     private readonly Dictionary<string, string> _originalLocalizedValues = new();
     private readonly Dictionary<int, int> _localizedRootRevisions = new();
     private readonly DispatcherTimer _modelProbeTimer = new();
@@ -790,8 +826,6 @@ public sealed partial class CompactPromptWindow : Window
     private bool _commonPromptSearchRefreshQueued;
     private bool _navigationRefreshQueued;
     private bool _compactCommonPromptRefreshQueued;
-    private bool _oneDriveSyncInProgress;
-    private bool _webDavSyncInProgress;
     private bool _modelProbeDialogOpen;
     private bool _isGeneratingPrompt;
     private bool _isExiting;
@@ -816,6 +850,8 @@ public sealed partial class CompactPromptWindow : Window
     private string? _pendingUserReply;
     private string? _currentConversationHistoryId;
     private readonly List<PromptConversationMessage> _conversationMessages = new();
+    private readonly Stack<PromptTurnSnapshot> _turnSnapshots = new();
+    private PromptTurnSnapshot? _pendingTurnSnapshot;
     private int _modelProbeVersion;
     private string? _lastModelProbeFailureSignature;
     private LlmImageAttachment? _modelImageAttachment;
@@ -835,6 +871,23 @@ public sealed partial class CompactPromptWindow : Window
     private sealed record CommonPromptEnglishOverride(string Title, string Text, string Category);
 
     private sealed record OptimizationTargetEnglishOverride(string Title, string Description, string Category);
+
+    private sealed record PromptTurnSnapshot(
+        string EditableUserRequest,
+        string UserInput,
+        string CurrentPrompt,
+        string ChinesePrompt,
+        string EnglishPrompt,
+        string? PendingDiffBasePrompt,
+        string? PendingUserReply,
+        string? CurrentConversationHistoryId,
+        string? ConversationLockedMode,
+        string? ConversationLockedTargetLabel,
+        string? ConversationLockedCustomModeText,
+        string SelectedMode,
+        string CustomModeText,
+        string? SelectedMountedSkillId,
+        IReadOnlyList<PromptConversationMessage> ConversationMessages);
 
     private sealed record OptimizationCategoryChoice(string Value, string Title, string Description)
     {
@@ -866,6 +919,7 @@ public sealed partial class CompactPromptWindow : Window
         General,
         ComfyStableDiffusion,
         Veo,
+        ShortDrama,
         Jimeng,
         AiCoding,
         AcademicHumanize
@@ -959,7 +1013,6 @@ public sealed partial class CompactPromptWindow : Window
         RefreshTemplateViews();
         RefreshAboutUi();
         _uiReady = true;
-        QueueOneDriveStartupSnapshotProbe();
         QueueRefreshSearchIndex();
         RefreshScene();
         RefreshModelDisplayText();
@@ -1456,6 +1509,7 @@ public sealed partial class CompactPromptWindow : Window
         RefreshScene(targetMode);
         UpdateOptimizationModeDescription(targetMode);
         RefreshFieldCopyButtonsNowAndQueued(targetMode);
+        RefreshShortDramaWorkflowPanel(targetMode);
     }
 
     private void RefreshFieldCopyButtonsNowAndQueued(string? mode = null)
@@ -1548,6 +1602,8 @@ public sealed partial class CompactPromptWindow : Window
         var context = GetTargetWindowContext();
         var scene = _sceneDetector.Detect(context);
         var userRequest = string.IsNullOrWhiteSpace(overrideUserRequest) ? GetUserInput() : overrideUserRequest.Trim();
+        var turnSnapshot = _pendingTurnSnapshot ?? CreateTurnSnapshot(userRequest);
+        _pendingTurnSnapshot = null;
         if (overrideUserRequest is null)
         {
             TryApplySuggestedOptimizationTarget(userRequest);
@@ -1737,6 +1793,9 @@ public sealed partial class CompactPromptWindow : Window
         {
             SetStatus($"{L("保存历史失败：")}{ex.Message}");
         }
+
+        _turnSnapshots.Push(turnSnapshot);
+        RefreshTurnRollbackButtons();
     }
 
     private async void ChatSendButton_Click(object sender, RoutedEventArgs e)
@@ -1754,9 +1813,14 @@ public sealed partial class CompactPromptWindow : Window
             return;
         }
 
+        var defaultReply = BuildDefaultFollowUpRequest(current);
         var mergedRequest = string.IsNullOrWhiteSpace(current)
             ? addition
-            : $"上一版提示词：{current}{Environment.NewLine}{Environment.NewLine}用户补充：{FallbackText(addition, "请继续完善并追问缺失需求。")}";
+            : $"上一版提示词：{current}{Environment.NewLine}{Environment.NewLine}用户补充：{FallbackText(addition, defaultReply)}";
+        var editableRequest = string.IsNullOrWhiteSpace(addition)
+            ? defaultReply
+            : addition;
+        _pendingTurnSnapshot = CreateTurnSnapshot(editableRequest);
         _pendingDiffBasePrompt = string.IsNullOrWhiteSpace(current) ? null : current;
         _pendingUserReply = addition;
 
@@ -1767,6 +1831,169 @@ public sealed partial class CompactPromptWindow : Window
 
         SetUserInput(string.Empty);
         await GenerateOptimizedPromptAsync(mergedRequest);
+    }
+
+    private string BuildDefaultFollowUpRequest(string currentPrompt)
+    {
+        if (!string.IsNullOrWhiteSpace(currentPrompt) && IsShortDramaWorkbenchMode())
+        {
+            return """
+            请根据上一版输出中的【AI带做进度】和“建议点击”，自动推进短剧/漫剧工作流的下一步。
+            推进规则：
+            1. 如果只有想法或还在新手开做阶段，先扩成剧本。
+            2. 如果已经有剧本但还没有分镜，拆成分镜表。
+            3. 如果已经有分镜但缺角色资产，生成角色资产卡和三视图提示词。
+            4. 如果已经有分镜和角色资产，生成当前 5-10 秒镜头提示词。
+            5. 如果已经有当前镜头，承接上一段结尾继续下一段，不要重启故事。
+            6. 如果发现剧本不可视化、分镜不可拍、角色或场景不一致、镜头提示词缺景别/机位/声音/台词，先做质检返工。
+            7. 如果内容已经比较完整，整理制作交付包。
+            必须保持角色、服装、道具、场景、光线、画幅、站位、情绪状态和视觉风格连续。
+            """;
+        }
+
+        return "请继续完善并追问缺失需求。";
+    }
+
+    private void RollbackLastTurnButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isGeneratingPrompt)
+        {
+            SetStatus("正在生成中，请完成后再退回上一轮");
+            return;
+        }
+
+        if (_turnSnapshots.Count == 0)
+        {
+            SetStatus("没有可退回的上一轮");
+            return;
+        }
+
+        var snapshot = _turnSnapshots.Pop();
+        var historySaveError = RestoreTurnSnapshot(snapshot);
+        RefreshTurnRollbackButtons();
+        SetStatus(historySaveError is null
+            ? "已退回上一轮成果；上一轮用户需求已放回输入框，可修改后重新发送"
+            : $"已退回上一轮成果；上一轮用户需求已放回输入框，但保存历史失败：{historySaveError}");
+    }
+
+    private PromptTurnSnapshot CreateTurnSnapshot(string editableUserRequest)
+    {
+        return new PromptTurnSnapshot(
+            editableUserRequest.Trim(),
+            GetUserInput(),
+            CurrentPromptBox?.Text ?? string.Empty,
+            GetChineseOutput(),
+            EnglishOutputBox?.Text ?? CompactEnglishOutputBox?.Text ?? string.Empty,
+            _pendingDiffBasePrompt,
+            _pendingUserReply,
+            _currentConversationHistoryId,
+            _conversationLockedMode,
+            _conversationLockedTargetLabel,
+            _conversationLockedCustomModeText,
+            _selectedMode,
+            CustomModeBox?.Text ?? string.Empty,
+            _selectedMountedSkillId,
+            _conversationMessages.ToArray());
+    }
+
+    private string? RestoreTurnSnapshot(PromptTurnSnapshot snapshot)
+    {
+        CancelOutputTypewriter();
+        _pendingTurnSnapshot = null;
+        _pendingDiffBasePrompt = snapshot.PendingDiffBasePrompt;
+        _pendingUserReply = snapshot.PendingUserReply;
+        _currentConversationHistoryId = snapshot.CurrentConversationHistoryId;
+        _conversationLockedMode = snapshot.ConversationLockedMode;
+        _conversationLockedTargetLabel = snapshot.ConversationLockedTargetLabel;
+        _conversationLockedCustomModeText = snapshot.ConversationLockedCustomModeText;
+
+        _syncingModeSelection = true;
+        try
+        {
+            CustomModeBox.Text = snapshot.CustomModeText;
+        }
+        finally
+        {
+            _syncingModeSelection = false;
+        }
+
+        ApplySelectedMode(snapshot.SelectedMode, save: false);
+        _selectedMountedSkillId = snapshot.SelectedMountedSkillId;
+        RefreshMountedSkillQuickList();
+        SetUserInput(string.IsNullOrWhiteSpace(snapshot.EditableUserRequest) ? snapshot.UserInput : snapshot.EditableUserRequest);
+        SetCurrentPrompt(snapshot.CurrentPrompt);
+        SetChineseOutput(snapshot.ChinesePrompt);
+        SetEnglishOutput(snapshot.EnglishPrompt);
+        PromptDiffPanel.Visibility = Visibility.Collapsed;
+        PromptDiffBlock.Blocks.Clear();
+        RestoreConversationMessages(snapshot.ConversationMessages);
+
+        if (ExpandedShell.Visibility == Visibility.Visible)
+        {
+            ShowPage("Home");
+            ExpandedInputBox.Focus(FocusState.Programmatic);
+        }
+        else
+        {
+            ShowCompactPage("Workbench");
+            InputBox.Focus(FocusState.Programmatic);
+        }
+
+        return SaveRestoredConversationHistory(snapshot);
+    }
+
+    private void RestoreConversationMessages(IEnumerable<PromptConversationMessage> messages)
+    {
+        ChatMessagesPanel.Children.Clear();
+        CompactChatMessagesPanel.Children.Clear();
+        _conversationMessages.Clear();
+
+        foreach (var message in messages.Where(message => !string.IsNullOrWhiteSpace(message.Text)))
+        {
+            AddChatMessage(message.Text, message.IsUser, record: false, createdAt: message.CreatedAt, messageKind: message.Role);
+            _conversationMessages.Add(message);
+        }
+    }
+
+    private void RefreshTurnRollbackButtons()
+    {
+        var canRollback = _turnSnapshots.Count > 0;
+        if (CompactRollbackTurnButton is not null)
+        {
+            CompactRollbackTurnButton.IsEnabled = canRollback;
+        }
+
+        if (RollbackTurnButton is not null)
+        {
+            RollbackTurnButton.IsEnabled = canRollback;
+        }
+    }
+
+    private string? SaveRestoredConversationHistory(PromptTurnSnapshot snapshot)
+    {
+        if (string.IsNullOrWhiteSpace(_currentConversationHistoryId))
+        {
+            return null;
+        }
+
+        try
+        {
+            var historyItem = _historyService.Save(
+                BuildHistoryUserRequest(snapshot.UserInput),
+                snapshot.ChinesePrompt,
+                snapshot.EnglishPrompt,
+                FormatSelectedScenes(),
+                GetEffectiveMode(),
+                _conversationMessages.ToArray(),
+                _currentConversationHistoryId);
+            _currentConversationHistoryId = historyItem.Id;
+            RefreshHistoryUi();
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
     }
 
     private void SendKeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -1975,6 +2202,8 @@ public sealed partial class CompactPromptWindow : Window
     {
         _pendingDiffBasePrompt = null;
         _pendingUserReply = null;
+        _pendingTurnSnapshot = null;
+        _turnSnapshots.Clear();
         _conversationLockedMode = null;
         _conversationLockedTargetLabel = null;
         _conversationLockedCustomModeText = null;
@@ -1995,6 +2224,7 @@ public sealed partial class CompactPromptWindow : Window
         ChatMessagesPanel.Children.Clear();
         CompactChatMessagesPanel.Children.Clear();
         AddChatMessage(L("新的会话已开始。把你想优化的需求发给我，我会边聊天边更新当前提示词和优化后提示词。"), isUser: false);
+        RefreshTurnRollbackButtons();
         SetStatus("已开始新会话");
     }
 
@@ -2156,6 +2386,22 @@ public sealed partial class CompactPromptWindow : Window
             };
         }
 
+        if (profile == PromptFieldCopyProfile.ShortDrama)
+        {
+            return kind switch
+            {
+                PromptFieldCopyKind.Primary => new("剧本", "剧本字段", false,
+                    ["剧本", "短剧剧本", "Script", "Screenplay", "一句话剧情与角色", "One-sentence story and characters", "One-line story and characters", "Story and characters"],
+                    ["分镜", "分镜表", "Storyboard", "角色资产 / 三视图", "角色资产", "Character asset", "Character assets", "剧情目标", "Story goal", "当前镜头提示词", "Current shot prompt", "下一段承接", "Next-segment continuity", "质检返工", "QA/revision", "制作交付包", "需要补充的信息"]),
+                PromptFieldCopyKind.Constraint => new("分镜", "分镜字段", false,
+                    ["分镜", "分镜表", "Storyboard", "Shot list", "镜头表"],
+                    ["角色资产 / 三视图", "角色资产", "Character asset / turnaround sheet", "Character assets", "Turnaround sheet", "当前镜头提示词", "Current shot prompt", "下一段承接", "Next-segment continuity", "质检返工", "QA/revision", "制作交付包", "需要补充的信息"]),
+                _ => new("镜头", "当前镜头提示词字段", false,
+                    ["当前镜头提示词", "大师级运镜", "Current shot prompt", "Master camera movement", "5-10 second shot prompt"],
+                    ["下一段承接", "Next-segment continuity", "质检返工", "QA/revision", "制作交付包", "需要补充的信息", "Missing information"])
+            };
+        }
+
         if (profile == PromptFieldCopyProfile.Jimeng)
         {
             return kind switch
@@ -2263,6 +2509,11 @@ public sealed partial class CompactPromptWindow : Window
         if (IsVeoMode(stateText, stateText))
         {
             return PromptFieldCopyProfile.Veo;
+        }
+
+        if (IsShortDramaWorkbenchMode(stateText))
+        {
+            return PromptFieldCopyProfile.ShortDrama;
         }
 
         if (IsJimengMode(stateText, stateText))
@@ -3242,6 +3493,8 @@ Skill 文件：{skillPath}
     private void ApplyHistoryItemToWorkbench(PromptHistoryItem item, bool lockConversation)
     {
         ApplyHistoryMode(item, lockConversation);
+        _pendingTurnSnapshot = null;
+        _turnSnapshots.Clear();
         _pendingDiffBasePrompt = item.ChinesePrompt;
         _pendingUserReply = null;
         _currentConversationHistoryId = item.Id;
@@ -3251,18 +3504,8 @@ Skill 文件：{skillPath}
         SetEnglishOutput(item.EnglishPrompt);
         PromptDiffPanel.Visibility = Visibility.Collapsed;
         PromptDiffBlock.Blocks.Clear();
-        ChatMessagesPanel.Children.Clear();
-        CompactChatMessagesPanel.Children.Clear();
-        _conversationMessages.Clear();
-        var messages = item.Messages?.Where(message => !string.IsNullOrWhiteSpace(message.Text)).ToArray() ?? [];
-        if (messages.Length > 0)
-        {
-            foreach (var message in messages)
-            {
-                AddChatMessage(message.Text, message.IsUser, record: false, createdAt: message.CreatedAt, messageKind: message.Role);
-                _conversationMessages.Add(message);
-            }
-        }
+        RestoreConversationMessages(item.Messages ?? []);
+        RefreshTurnRollbackButtons();
 
         ShowPage("Home");
     }
@@ -4043,26 +4286,6 @@ Skill 文件：{skillPath}
         PersistSettingsFromUi(showStatus: false);
     }
 
-    private void OneDriveFolderPathBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (!_uiReady || _loadingSettings)
-        {
-            return;
-        }
-
-        UpdateOneDriveSyncUiState();
-    }
-
-    private void WebDavSettingsBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (!_uiReady || _loadingSettings)
-        {
-            return;
-        }
-
-        UpdateWebDavSyncUiState();
-    }
-
     private void SettingsControl_LostFocus(object sender, RoutedEventArgs e)
     {
         if (!_uiReady || _loadingSettings)
@@ -4769,9 +4992,6 @@ Skill 文件：{skillPath}
         _settings.Privacy.ModelExternalRequestsEnabled = ModelExternalRequestsEnabledBox.IsChecked == true;
         _settings.Privacy.ModelImageExternalRequestsEnabled = ModelImageExternalRequestsEnabledBox.IsChecked == true;
         _settings.Privacy.RedactBeforeModelSend = RedactBeforeModelSendBox.IsChecked == true;
-        UpdateOneDriveSyncSettingsFromUi();
-        UpdateWebDavSyncSettingsFromUi();
-
         if (!_hotkeyService.RegisterHotkey(_settings.Hotkey))
         {
             if (showStatus)
@@ -4783,705 +5003,11 @@ Skill 文件：{skillPath}
         }
 
         _settingsService.SaveUserSettings(_settings, ApiKeyBox.Password);
-        SaveWebDavPasswordFromUi();
         RefreshModelDisplayText();
-        UpdateOneDriveSyncUiState();
-        UpdateWebDavSyncUiState();
         if (showStatus)
         {
             SetStatus(_settings.Model.Enabled ? "设置已保存" : "设置已保存，模型关闭时使用本地结构化");
         }
-    }
-
-    private void UpdateOneDriveSyncSettingsFromUi()
-    {
-        if (OneDriveEnabledBox is null || OneDriveHistoryEnabledBox is null || OneDriveRememberVaultBox is null || OneDriveFolderPathBox is null)
-        {
-            return;
-        }
-
-        _settings.OneDriveSync.OneDriveEnabled = OneDriveEnabledBox.IsChecked == true;
-        _settings.OneDriveSync.HistorySyncEnabled = OneDriveHistoryEnabledBox.IsChecked == true;
-        _settings.OneDriveSync.RememberVaultOnThisDevice = OneDriveRememberVaultBox.IsChecked == true;
-        _settings.OneDriveSync.LocalFolderPath = OneDriveFolderPathBox.Text.Trim();
-        if (string.IsNullOrWhiteSpace(_settings.OneDriveSync.DeviceId))
-        {
-            _settings.OneDriveSync.DeviceId = Guid.NewGuid().ToString("N");
-        }
-    }
-
-    private void UpdateWebDavSyncSettingsFromUi()
-    {
-        if (WebDavEnabledBox is null || WebDavHistoryEnabledBox is null || WebDavRememberVaultBox is null || WebDavServerUrlBox is null || WebDavRemoteRootBox is null || WebDavUsernameBox is null)
-        {
-            return;
-        }
-
-        _settings.WebDavSync.WebDavEnabled = WebDavEnabledBox.IsChecked == true;
-        _settings.WebDavSync.HistorySyncEnabled = WebDavHistoryEnabledBox.IsChecked == true;
-        _settings.WebDavSync.RememberVaultOnThisDevice = WebDavRememberVaultBox.IsChecked == true;
-        _settings.WebDavSync.ServerUrl = WebDavServerUrlBox.Text.Trim();
-        _settings.WebDavSync.RemoteRootPath = string.IsNullOrWhiteSpace(WebDavRemoteRootBox.Text) ? "啊拼" : WebDavRemoteRootBox.Text.Trim();
-        _settings.WebDavSync.Username = WebDavUsernameBox.Text.Trim();
-        if (string.IsNullOrWhiteSpace(_settings.WebDavSync.CredentialTargetName))
-        {
-            _settings.WebDavSync.CredentialTargetName = "PromptInputMethod/WebDavPassword";
-        }
-
-        if (string.IsNullOrWhiteSpace(_settings.WebDavSync.DeviceId))
-        {
-            _settings.WebDavSync.DeviceId = Guid.NewGuid().ToString("N");
-        }
-    }
-
-    private void SaveWebDavPasswordFromUi()
-    {
-        if (WebDavPasswordBox is null || string.IsNullOrWhiteSpace(WebDavPasswordBox.Password))
-        {
-            return;
-        }
-
-        _credentialService.WriteSecret(_settings.WebDavSync.CredentialTargetName, WebDavPasswordBox.Password);
-    }
-
-    private void QueueOneDriveStartupSnapshotProbe()
-    {
-        if (!_settings.OneDriveSync.OneDriveEnabled || string.IsNullOrWhiteSpace(_settings.OneDriveSync.LocalFolderPath))
-        {
-            return;
-        }
-
-        _ = ProbeOneDriveSnapshotOnStartupAsync(_settings.OneDriveSync.LocalFolderPath, _settings.OneDriveSync.LastSyncAt);
-    }
-
-    private async Task ProbeOneDriveSnapshotOnStartupAsync(string syncRootPath, DateTimeOffset? lastSyncAt)
-    {
-        try
-        {
-            await Task.Delay(900).ConfigureAwait(false);
-            var manifest = await _oneDriveLocalFolderService.ReadJsonAsync<OneDriveSyncManifest>(
-                syncRootPath,
-                OneDriveSyncPaths.Manifest).ConfigureAwait(false);
-            if (manifest is null || (lastSyncAt is not null && manifest.UpdatedAt <= lastSyncAt.Value))
-            {
-                return;
-            }
-
-            DispatcherQueue.TryEnqueue(async () => await ShowOneDriveSnapshotDetectedDialogAsync(syncRootPath, manifest.UpdatedAt));
-        }
-        catch
-        {
-            // Startup probing is advisory only; manual sync remains available in Settings.
-        }
-    }
-
-    private async Task ShowOneDriveSnapshotDetectedDialogAsync(string syncRootPath, DateTimeOffset updatedAt)
-    {
-        if (!_uiReady || Content.XamlRoot is null)
-        {
-            return;
-        }
-
-        var localTime = updatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
-        var dialog = new ContentDialog
-        {
-            XamlRoot = Content.XamlRoot,
-            Title = L("检测到 OneDrive 同步快照更新"),
-            Content = $"{L("同步目录有较新的加密历史快照：")}{localTime}\n{syncRootPath}\n{L("打开设置后输入同步口令，再点击“导入同步快照”。")}",
-            PrimaryButtonText = L("打开设置"),
-            CloseButtonText = L("稍后"),
-            DefaultButton = ContentDialogButton.Primary
-        };
-
-        var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary)
-        {
-            ShowPage("Settings");
-            SetOneDriveStatus("检测到较新的 OneDrive 同步快照。输入同步口令后点击“导入同步快照”。");
-        }
-    }
-
-    private void OneDriveDetectFolderButton_Click(object sender, RoutedEventArgs e)
-    {
-        var detected = _oneDriveLocalFolderService.DetectDefaultSyncFolder();
-        if (string.IsNullOrWhiteSpace(detected))
-        {
-            SetOneDriveStatus("未检测到本机 OneDrive 文件夹，请手动选择同步目录。");
-            return;
-        }
-
-        OneDriveFolderPathBox.Text = detected;
-        UpdateOneDriveSyncSettingsFromUi();
-        _settingsService.SaveUserSettings(_settings, null);
-        UpdateOneDriveSyncUiState();
-        SetOneDriveStatus($"已检测到建议路径：{detected}。确认后可手动同步。");
-    }
-
-    private async void OneDriveChooseFolderButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var picker = new FolderPicker();
-            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
-            picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-            picker.FileTypeFilter.Add("*");
-            var folder = await picker.PickSingleFolderAsync();
-            if (folder is null)
-            {
-                SetOneDriveStatus("已取消选择 OneDrive 同步文件夹。");
-                return;
-            }
-
-            OneDriveFolderPathBox.Text = folder.Path;
-            UpdateOneDriveSyncSettingsFromUi();
-            _settingsService.SaveUserSettings(_settings, null);
-            UpdateOneDriveSyncUiState();
-            SetOneDriveStatus($"已选择同步文件夹：{folder.Path}。只有手动同步时才会写入加密快照。");
-        }
-        catch (Exception ex)
-        {
-            SetOneDriveStatus($"选择同步文件夹失败：{NormalizeOneDriveSyncError(ex)}");
-        }
-    }
-
-    private async void OneDrivePushButton_Click(object sender, RoutedEventArgs e)
-    {
-        await RunOneDriveOperationAsync("正在同步 OneDrive 文件夹历史快照...", async cancellationToken =>
-        {
-            EnsureOneDriveHistorySyncEnabled();
-            var syncRootPath = GetSelectedOneDriveSyncFolderPath();
-            var passphrase = OneDrivePassphraseBox.Password;
-            var pullResult = await _oneDriveHistorySyncService.PullEncryptedHistoryAsync(
-                syncRootPath,
-                passphrase,
-                _settings.OneDriveSync.RememberVaultOnThisDevice,
-                cancellationToken);
-            if (pullResult.ImportedHistoryCount > 0)
-            {
-                RefreshHistoryUi();
-            }
-
-            var pushResult = await _oneDriveHistorySyncService.PushEncryptedHistoryAsync(
-                syncRootPath,
-                passphrase,
-                GetAppVersionString(),
-                _settings.OneDriveSync.DeviceId,
-                _settings.OneDriveSync.RememberVaultOnThisDevice,
-                cancellationToken);
-            SaveOneDriveSyncState(pushResult);
-            OneDrivePassphraseBox.Password = string.Empty;
-            var launchResult = _oneDriveClientLauncherService.TryLaunchClient();
-            SetOneDriveStatus($"OneDrive 文件夹同步完成：导入 {pullResult.ImportedHistoryCount} 条，导出 {pushResult.UploadedHistoryCount} 条加密历史。{launchResult.Message}");
-            return pushResult;
-        });
-    }
-
-    private async void OneDrivePullButton_Click(object sender, RoutedEventArgs e)
-    {
-        await RunOneDriveOperationAsync("正在导入 OneDrive 同步快照...", async cancellationToken =>
-        {
-            EnsureOneDriveHistorySyncEnabled();
-            var syncRootPath = GetSelectedOneDriveSyncFolderPath();
-            var result = await _oneDriveHistorySyncService.PullEncryptedHistoryAsync(
-                syncRootPath,
-                OneDrivePassphraseBox.Password,
-                _settings.OneDriveSync.RememberVaultOnThisDevice,
-                cancellationToken);
-            SaveOneDriveSyncState(result);
-            OneDrivePassphraseBox.Password = string.Empty;
-            if (result.ImportedHistoryCount > 0)
-            {
-                RefreshHistoryUi();
-            }
-
-            SetOneDriveStatus(result.ImportedHistoryCount > 0
-                ? $"已导入 OneDrive 同步快照：{result.ImportedHistoryCount} 条。"
-                : "同步目录中没有可导入的新历史快照。");
-            return result;
-        });
-    }
-
-    private void OneDriveDisableButton_Click(object sender, RoutedEventArgs e)
-    {
-        UpdateOneDriveSyncSettingsFromUi();
-        if (!string.IsNullOrWhiteSpace(_settings.OneDriveSync.LocalFolderPath) && !string.IsNullOrWhiteSpace(_settings.OneDriveSync.VaultKeyId))
-        {
-            _oneDriveVaultCacheService.DeleteVaultKey(_settings.OneDriveSync.LocalFolderPath, _settings.OneDriveSync.VaultKeyId);
-        }
-
-        _settings.OneDriveSync.OneDriveEnabled = false;
-        _settings.OneDriveSync.VaultKeyId = string.Empty;
-        _settings.OneDriveSync.LastSyncAt = null;
-        _settingsService.SaveUserSettings(_settings, null);
-        LoadSettingsIntoUi();
-        SetOneDriveStatus("OneDrive 文件夹同步已关闭。本地历史记录和同步目录文件都不会删除。");
-    }
-
-    private async Task RunOneDriveOperationAsync(string busyStatus, Func<CancellationToken, Task<OneDriveHistorySyncResult?>> operation)
-    {
-        if (_oneDriveSyncInProgress)
-        {
-            SetOneDriveStatus("OneDrive 文件夹同步正在进行中，请稍等。");
-            return;
-        }
-
-        _oneDriveSyncInProgress = true;
-        UpdateOneDriveSyncUiState();
-        SetOneDriveStatus(busyStatus);
-        using var cts = new CancellationTokenSource();
-        try
-        {
-            _settings = _settingsService.Load();
-            UpdateOneDriveSyncSettingsFromUi();
-            _settingsService.SaveUserSettings(_settings, null);
-            await operation(cts.Token);
-        }
-        catch (Exception ex)
-        {
-            SetOneDriveStatus($"OneDrive 文件夹同步失败：{NormalizeOneDriveSyncError(ex)}");
-        }
-        finally
-        {
-            _oneDriveSyncInProgress = false;
-            UpdateOneDriveSyncUiState();
-        }
-    }
-
-    private void EnsureOneDriveHistorySyncEnabled()
-    {
-        if (!_settings.OneDriveSync.OneDriveEnabled)
-        {
-            throw new InvalidOperationException("请先启用 OneDrive 文件夹同步。");
-        }
-
-        if (!_settings.OneDriveSync.HistorySyncEnabled)
-        {
-            throw new InvalidOperationException("请先启用历史记录同步。");
-        }
-
-        if (string.IsNullOrWhiteSpace(GetSelectedOneDriveSyncFolderPath()))
-        {
-            throw new InvalidOperationException("请先选择 OneDrive 本地同步文件夹。");
-        }
-    }
-
-    private void SaveOneDriveSyncState(OneDriveHistorySyncResult result)
-    {
-        _settings.OneDriveSync.OneDriveEnabled = true;
-        _settings.OneDriveSync.LocalFolderPath = result.SyncRootPath;
-        if (!string.IsNullOrWhiteSpace(result.KeyId))
-        {
-            _settings.OneDriveSync.VaultKeyId = result.KeyId;
-        }
-
-        _settings.OneDriveSync.LastSyncAt = result.SyncedAt;
-        _settingsService.SaveUserSettings(_settings, null);
-    }
-
-    private void UpdateOneDriveSyncUiState()
-    {
-        if (OneDriveEnabledBox is null)
-        {
-            return;
-        }
-
-        var enabled = OneDriveEnabledBox.IsChecked == true;
-        var hasFolder = !string.IsNullOrWhiteSpace(OneDriveFolderPathBox?.Text);
-        var canOperate = enabled && hasFolder && !_oneDriveSyncInProgress;
-        if (OneDriveHistoryEnabledBox is not null)
-        {
-            OneDriveHistoryEnabledBox.IsEnabled = enabled && !_oneDriveSyncInProgress;
-        }
-
-        if (OneDriveRememberVaultBox is not null)
-        {
-            OneDriveRememberVaultBox.IsEnabled = enabled && !_oneDriveSyncInProgress;
-        }
-
-        if (OneDriveFolderPathBox is not null)
-        {
-            OneDriveFolderPathBox.IsEnabled = !_oneDriveSyncInProgress;
-        }
-
-        if (OneDrivePassphraseBox is not null)
-        {
-            OneDrivePassphraseBox.IsEnabled = canOperate;
-        }
-
-        if (OneDriveDetectFolderButton is not null)
-        {
-            OneDriveDetectFolderButton.IsEnabled = !_oneDriveSyncInProgress;
-        }
-
-        if (OneDriveChooseFolderButton is not null)
-        {
-            OneDriveChooseFolderButton.IsEnabled = !_oneDriveSyncInProgress;
-        }
-
-        if (OneDrivePushButton is not null)
-        {
-            OneDrivePushButton.IsEnabled = canOperate && OneDriveHistoryEnabledBox?.IsChecked == true;
-        }
-
-        if (OneDrivePullButton is not null)
-        {
-            OneDrivePullButton.IsEnabled = canOperate && OneDriveHistoryEnabledBox?.IsChecked == true;
-        }
-
-        if (OneDriveDisableButton is not null)
-        {
-            OneDriveDisableButton.IsEnabled = !_oneDriveSyncInProgress
-                && (enabled || !string.IsNullOrWhiteSpace(_settings.OneDriveSync.LocalFolderPath));
-        }
-
-        if (OneDriveSyncStatusText is not null && !_oneDriveSyncInProgress)
-        {
-            OneDriveSyncStatusText.Text = BuildOneDriveStatusText(enabled, hasFolder);
-        }
-    }
-
-    private string BuildOneDriveStatusText(bool enabled, bool hasFolder)
-    {
-        if (!enabled)
-        {
-            return L("OneDrive 文件夹同步未启用，当前使用本机默认数据目录。");
-        }
-
-        if (!hasFolder)
-        {
-            return L("请先检测或选择 OneDrive 本地同步文件夹。");
-        }
-
-        var folder = OneDriveFolderPathBox?.Text.Trim();
-        var syncedAt = _settings.OneDriveSync.LastSyncAt is null
-            ? L("尚未同步")
-            : _settings.OneDriveSync.LastSyncAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
-        return $"{L("同步目录：")}{folder}{L("；最后同步：")}{syncedAt}{L("。OneDrive 客户端负责跨设备同步。")}";
-    }
-
-    private void SetOneDriveStatus(string text)
-    {
-        var localized = L(text);
-        if (OneDriveSyncStatusText is not null)
-        {
-            OneDriveSyncStatusText.Text = localized;
-        }
-
-        SetStatus(localized);
-    }
-
-    private string GetSelectedOneDriveSyncFolderPath()
-    {
-        var path = OneDriveFolderPathBox?.Text.Trim();
-        return string.IsNullOrWhiteSpace(path) ? _settings.OneDriveSync.LocalFolderPath : path;
-    }
-
-    private static string GetAppVersionString()
-    {
-        return typeof(CompactPromptWindow).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-    }
-
-    private static string NormalizeOneDriveSyncError(Exception ex)
-    {
-        return ex switch
-        {
-            OperationCanceledException => "操作已取消。",
-            InvalidDataException invalidData => invalidData.Message,
-            ArgumentException argument => argument.Message,
-            InvalidOperationException invalidOperation => invalidOperation.Message,
-            _ => TrimStatusMessage(ex.Message)
-        };
-    }
-
-    private async void WebDavTestButton_Click(object sender, RoutedEventArgs e)
-    {
-        await RunWebDavOperationAsync("正在测试 WebDAV 连接...", async cancellationToken =>
-        {
-            var connection = BuildSelectedWebDavConnection();
-            await _webDavHistorySyncService.TestConnectionAsync(connection, cancellationToken);
-            SetWebDavStatus($"WebDAV 连接成功：{WebDavHistorySyncService.BuildRemoteScope(connection)}");
-            return null;
-        });
-    }
-
-    private async void WebDavPushButton_Click(object sender, RoutedEventArgs e)
-    {
-        await RunWebDavOperationAsync("正在同步 WebDAV 加密历史快照...", async cancellationToken =>
-        {
-            EnsureWebDavHistorySyncEnabled();
-            var connection = BuildSelectedWebDavConnection();
-            var passphrase = GetWebDavSyncPassphrase();
-            var pullResult = await _webDavHistorySyncService.PullEncryptedHistoryAsync(
-                connection,
-                passphrase,
-                _settings.WebDavSync.RememberVaultOnThisDevice,
-                cancellationToken);
-            if (pullResult.ImportedHistoryCount > 0)
-            {
-                RefreshHistoryUi();
-            }
-
-            var pushResult = await _webDavHistorySyncService.PushEncryptedHistoryAsync(
-                connection,
-                passphrase,
-                GetAppVersionString(),
-                _settings.WebDavSync.DeviceId,
-                _settings.WebDavSync.RememberVaultOnThisDevice,
-                cancellationToken);
-            SaveWebDavSyncState(pushResult);
-            WebDavPasswordBox.Password = string.Empty;
-            WebDavPassphraseBox.Password = string.Empty;
-            SetWebDavStatus($"WebDAV 同步完成：导入 {pullResult.ImportedHistoryCount} 条，导出 {pushResult.UploadedHistoryCount} 条加密历史。");
-            return pushResult;
-        });
-    }
-
-    private async void WebDavPullButton_Click(object sender, RoutedEventArgs e)
-    {
-        await RunWebDavOperationAsync("正在导入 WebDAV 加密历史快照...", async cancellationToken =>
-        {
-            EnsureWebDavHistorySyncEnabled();
-            var connection = BuildSelectedWebDavConnection();
-            var result = await _webDavHistorySyncService.PullEncryptedHistoryAsync(
-                connection,
-                GetWebDavSyncPassphrase(),
-                _settings.WebDavSync.RememberVaultOnThisDevice,
-                cancellationToken);
-            SaveWebDavSyncState(result);
-            WebDavPasswordBox.Password = string.Empty;
-            WebDavPassphraseBox.Password = string.Empty;
-            if (result.ImportedHistoryCount > 0)
-            {
-                RefreshHistoryUi();
-            }
-
-            SetWebDavStatus(result.ImportedHistoryCount > 0
-                ? $"已导入 WebDAV 同步快照：{result.ImportedHistoryCount} 条。"
-                : "WebDAV 远端没有可导入的新历史快照。");
-            return result;
-        });
-    }
-
-    private void WebDavDisableButton_Click(object sender, RoutedEventArgs e)
-    {
-        UpdateWebDavSyncSettingsFromUi();
-        var connection = BuildSelectedWebDavConnection(allowMissingPassword: true);
-        if (!string.IsNullOrWhiteSpace(_settings.WebDavSync.VaultKeyId))
-        {
-            _oneDriveVaultCacheService.DeleteVaultKey(WebDavHistorySyncService.BuildVaultCacheScope(connection), _settings.WebDavSync.VaultKeyId);
-        }
-
-        _credentialService.DeleteSecret(_settings.WebDavSync.CredentialTargetName);
-        _settings.WebDavSync.WebDavEnabled = false;
-        _settings.WebDavSync.VaultKeyId = string.Empty;
-        _settings.WebDavSync.LastSyncAt = null;
-        _settingsService.SaveUserSettings(_settings, null);
-        LoadSettingsIntoUi();
-        SetWebDavStatus("WebDAV 同步已关闭。本地历史记录和远端加密快照都不会删除。");
-    }
-
-    private async Task RunWebDavOperationAsync(string busyStatus, Func<CancellationToken, Task<WebDavHistorySyncResult?>> operation)
-    {
-        if (_webDavSyncInProgress)
-        {
-            SetWebDavStatus("WebDAV 同步正在进行中，请稍等。");
-            return;
-        }
-
-        _webDavSyncInProgress = true;
-        UpdateWebDavSyncUiState();
-        SetWebDavStatus(busyStatus);
-        using var cts = new CancellationTokenSource();
-        try
-        {
-            _settings = _settingsService.Load();
-            UpdateWebDavSyncSettingsFromUi();
-            _settingsService.SaveUserSettings(_settings, null);
-            SaveWebDavPasswordFromUi();
-            await operation(cts.Token);
-        }
-        catch (Exception ex)
-        {
-            SetWebDavStatus($"WebDAV 同步失败：{NormalizeWebDavSyncError(ex)}");
-        }
-        finally
-        {
-            _webDavSyncInProgress = false;
-            UpdateWebDavSyncUiState();
-        }
-    }
-
-    private void EnsureWebDavHistorySyncEnabled()
-    {
-        if (!_settings.WebDavSync.WebDavEnabled)
-        {
-            throw new InvalidOperationException("请先启用 WebDAV 同步。");
-        }
-
-        if (!_settings.WebDavSync.HistorySyncEnabled)
-        {
-            throw new InvalidOperationException("请先启用历史记录同步。");
-        }
-    }
-
-    private void SaveWebDavSyncState(WebDavHistorySyncResult result)
-    {
-        _settings.WebDavSync.WebDavEnabled = true;
-        if (!string.IsNullOrWhiteSpace(result.KeyId))
-        {
-            _settings.WebDavSync.VaultKeyId = result.KeyId;
-        }
-
-        _settings.WebDavSync.LastSyncAt = result.SyncedAt;
-        _settingsService.SaveUserSettings(_settings, null);
-    }
-
-    private void UpdateWebDavSyncUiState()
-    {
-        if (WebDavEnabledBox is null)
-        {
-            return;
-        }
-
-        var enabled = WebDavEnabledBox.IsChecked == true;
-        var hasServer = !string.IsNullOrWhiteSpace(WebDavServerUrlBox?.Text);
-        var hasUsername = !string.IsNullOrWhiteSpace(WebDavUsernameBox?.Text);
-        var canOperate = enabled && hasServer && hasUsername && !_webDavSyncInProgress;
-        if (WebDavHistoryEnabledBox is not null)
-        {
-            WebDavHistoryEnabledBox.IsEnabled = enabled && !_webDavSyncInProgress;
-        }
-
-        if (WebDavRememberVaultBox is not null)
-        {
-            WebDavRememberVaultBox.IsEnabled = enabled && !_webDavSyncInProgress;
-        }
-
-        if (WebDavServerUrlBox is not null)
-        {
-            WebDavServerUrlBox.IsEnabled = !_webDavSyncInProgress;
-        }
-
-        if (WebDavRemoteRootBox is not null)
-        {
-            WebDavRemoteRootBox.IsEnabled = !_webDavSyncInProgress;
-        }
-
-        if (WebDavUsernameBox is not null)
-        {
-            WebDavUsernameBox.IsEnabled = !_webDavSyncInProgress;
-        }
-
-        if (WebDavPasswordBox is not null)
-        {
-            WebDavPasswordBox.IsEnabled = canOperate;
-        }
-
-        if (WebDavPassphraseBox is not null)
-        {
-            WebDavPassphraseBox.IsEnabled = canOperate;
-        }
-
-        if (WebDavTestButton is not null)
-        {
-            WebDavTestButton.IsEnabled = canOperate;
-        }
-
-        if (WebDavPushButton is not null)
-        {
-            WebDavPushButton.IsEnabled = canOperate && WebDavHistoryEnabledBox?.IsChecked == true;
-        }
-
-        if (WebDavPullButton is not null)
-        {
-            WebDavPullButton.IsEnabled = canOperate && WebDavHistoryEnabledBox?.IsChecked == true;
-        }
-
-        if (WebDavDisableButton is not null)
-        {
-            WebDavDisableButton.IsEnabled = !_webDavSyncInProgress
-                && (enabled || !string.IsNullOrWhiteSpace(_settings.WebDavSync.ServerUrl));
-        }
-
-        if (WebDavSyncStatusText is not null && !_webDavSyncInProgress)
-        {
-            WebDavSyncStatusText.Text = BuildWebDavStatusText(enabled, hasServer, hasUsername);
-        }
-    }
-
-    private string BuildWebDavStatusText(bool enabled, bool hasServer, bool hasUsername)
-    {
-        if (!enabled)
-        {
-            return L("WebDAV 同步未启用，当前使用本机默认数据目录。");
-        }
-
-        if (!hasServer || !hasUsername)
-        {
-            return L("请先填写 WebDAV 服务器地址和用户名。");
-        }
-
-        var syncedAt = _settings.WebDavSync.LastSyncAt is null
-            ? L("尚未同步")
-            : _settings.WebDavSync.LastSyncAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
-        var remote = $"{WebDavServerUrlBox?.Text.Trim().TrimEnd('/')}/{(WebDavRemoteRootBox?.Text.Trim() ?? "啊拼").Trim('/')}";
-        return $"{L("远端目录：")}{remote}{L("；最后同步：")}{syncedAt}{L("。WebDAV 远端保存端到端加密快照。")}";
-    }
-
-    private void SetWebDavStatus(string text)
-    {
-        var localized = L(text);
-        if (WebDavSyncStatusText is not null)
-        {
-            WebDavSyncStatusText.Text = localized;
-        }
-
-        SetStatus(localized);
-    }
-
-    private WebDavConnectionSettings BuildSelectedWebDavConnection(bool allowMissingPassword = false)
-    {
-        var password = WebDavPasswordBox?.Password;
-        if (string.IsNullOrWhiteSpace(password))
-        {
-            password = _credentialService.ReadSecret(_settings.WebDavSync.CredentialTargetName);
-        }
-
-        if (string.IsNullOrWhiteSpace(password) && !allowMissingPassword)
-        {
-            throw new InvalidOperationException("请填写 WebDAV 应用密码。");
-        }
-
-        return new WebDavConnectionSettings(
-            WebDavServerUrlBox?.Text.Trim() ?? _settings.WebDavSync.ServerUrl,
-            string.IsNullOrWhiteSpace(WebDavRemoteRootBox?.Text) ? _settings.WebDavSync.RemoteRootPath : WebDavRemoteRootBox.Text.Trim(),
-            WebDavUsernameBox?.Text.Trim() ?? _settings.WebDavSync.Username,
-            password ?? string.Empty);
-    }
-
-    private string GetWebDavSyncPassphrase()
-    {
-        var passphrase = WebDavPassphraseBox?.Password;
-        if (!string.IsNullOrWhiteSpace(passphrase))
-        {
-            return passphrase;
-        }
-
-        return string.Empty;
-    }
-
-    private static string NormalizeWebDavSyncError(Exception ex)
-    {
-        return ex switch
-        {
-            OperationCanceledException => "操作已取消。",
-            InvalidDataException invalidData => invalidData.Message,
-            CryptographicException cryptographic => cryptographic.Message,
-            ArgumentException argument => argument.Message,
-            InvalidOperationException invalidOperation => invalidOperation.Message,
-            HttpRequestException http => TrimStatusMessage(http.Message),
-            _ => TrimStatusMessage(ex.Message)
-        };
     }
 
     private void ToggleSidebarButton_Click(object sender, RoutedEventArgs e)
@@ -6424,6 +5950,199 @@ Skill 文件：{skillPath}
             AnimateElementIn(TemplateSearchBox, 3, TabTransitionDurationMs);
             AnimateElementIn(TemplateBrowserGrid, 3, TabTransitionDurationMs);
         }
+
+        RefreshShortDramaWorkflowPanel(_selectedMode);
+    }
+
+    private void RefreshShortDramaWorkflowPanel(string? mode = null)
+    {
+        if (ShortDramaWorkflowPanel is null)
+        {
+            return;
+        }
+
+        var targetMode = string.IsNullOrWhiteSpace(mode) ? _selectedMode : mode;
+        var templateTabVisible = TemplateSourcePickerPanel is null || TemplateSourcePickerPanel.Visibility == Visibility.Visible;
+        ShortDramaWorkflowPanel.Visibility = templateTabVisible && ResolveFieldCopyProfile(targetMode) == PromptFieldCopyProfile.ShortDrama
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        if (ShortDramaWorkflowHintText is not null)
+        {
+            ShortDramaWorkflowHintText.Text = L("当前输出会作为连续性状态。");
+        }
+    }
+
+    private void ShortDramaWorkflowButton_Click(object sender, RoutedEventArgs e)
+    {
+        var step = (sender as FrameworkElement)?.Tag?.ToString() ?? string.Empty;
+        var request = BuildShortDramaWorkflowRequest(step);
+        if (string.IsNullOrWhiteSpace(request))
+        {
+            SetStatus("短剧流程阶段无效");
+            return;
+        }
+
+        SetUserInput(request);
+        if (ExpandedShell.Visibility == Visibility.Visible)
+        {
+            ShowPage("Home");
+            ExpandedInputBox.Focus(FocusState.Programmatic);
+        }
+        else
+        {
+            ShowCompactPage("Workbench");
+            InputBox.Focus(FocusState.Programmatic);
+        }
+
+        SetStatus($"{L("已准备短剧流程阶段")}{StatusSeparator}{L(GetShortDramaWorkflowStepName(step))}");
+    }
+
+    private string BuildShortDramaWorkflowRequest(string step)
+    {
+        var context = GetShortDramaWorkflowContext(step);
+        return step switch
+        {
+            "guide" => $"""
+            短剧工作台阶段：AI 手把手带做
+            请像短剧/漫剧导演助理一样判断当前项目进度，并告诉我下一步怎么做。不要一次性堆完整长文，优先给我可执行的下一步：当前阶段、已完成内容、缺失信息、建议点击的下一个流程按钮、下一条可直接发送给模型的短需求。
+
+            当前材料：
+            {context}
+            """,
+            "starter" => $"""
+            短剧工作台阶段：新手从 0 开做
+            我想做漫剧/短剧，但可能还不懂剧本、分镜、角色三视图和运镜。请像手把手教学一样，从下面题材或想法开始，带我完成第一轮：帮我确定作品类型、主角、冲突、第一段钩子、第一场剧本方向、下一步应该点击哪个流程按钮，并给出一条可以直接继续发送的短需求。
+
+            我的题材或想法：
+            {context}
+            """,
+            "script" => $"""
+            短剧工作台阶段：剧本
+            请把下面的想法或项目状态扩成可继续制作的短剧/漫剧剧本。输出：一句话梗概、人物表、三幕/三段结构、第一集或第一段剧本、对白、情绪节拍、每场戏的目的、结尾钩子、下一步分镜所需信息。不要直接跳到视频提示词。
+
+            想法或项目状态：
+            {context}
+            """,
+            "storyboard" => $"""
+            短剧工作台阶段：分镜
+            请把下面剧本拆成可生成的分镜表。每个分镜写：镜号、时长、画面内容、角色动作、对白/字幕、景别、机位、运镜、声音、转场、需要的角色/场景资产、是否需要三视图或参考图。最后告诉我下一步应该做三视图还是直接做单段运镜。
+
+            剧本或项目状态：
+            {context}
+            """,
+            "story" => $"""
+            短剧工作台阶段：一句话剧情与角色
+            请把下面创意扩展成短剧生产种子：Logline、核心冲突、主角功能、对手/阻力、关键配角、第一段 5-10 秒钩子、可连续方向。随后补出需要三视图的角色和外观锚点。
+
+            创意：
+            {context}
+            """,
+            "turnaround" => $"""
+            短剧工作台阶段：角色资产 / 三视图
+            请基于下面短剧状态，生成主角优先的角色资产卡：身份性格、成年设定、正面/侧面/背面全身设定图提示词、表情手势、禁止变化项。要求能直接指挥画图 AI 产出一致角色。
+
+            短剧状态：
+            {context}
+            """,
+            "shot" => $"""
+            短剧工作台阶段：5-10 秒大师级运镜
+            请基于下面短剧状态，生成当前段落的视频提示词：剧情目的、开场画面、主体场景、大师级运镜、表演调度、0-2/2-5/5-8/8-10 秒时间轴、台词字幕、声音、视觉风格、负面约束和下一段承接点。
+
+            短剧状态：
+            {context}
+            """,
+            "next" => $"""
+            短剧工作台阶段：继续下一段
+            请承接下面上一段成果，继续生成下一段 5-10 秒镜头。必须保持角色资产、服装道具、站位、场景、光线、画幅、情绪关系和镜头质感连续，不要重启故事。输出下一段镜头提示词和新的下一段承接。
+
+            上一段成果：
+            {context}
+            """,
+            "qa" => $"""
+            短剧工作台阶段：质检返工
+            请检查下面短剧/漫剧制作内容是否真的能继续生产。重点检查：剧本是否可视化、分镜是否可拍、角色资产是否足够画三视图、镜头提示词是否有景别/机位/运镜/声音/台词、下一段承接是否锁定人物和场景。输出问题清单、风险等级、逐项修正建议，并给出一版修正版内容。
+
+            待质检内容：
+            {context}
+            """,
+            "package" => $"""
+            短剧工作台阶段：交付包
+            请把下面已有成果整理成可以复制保存的短剧制作交付包。必须包含：项目一句话、角色资产、剧本摘要、分镜表、当前 5-10 秒视频提示词、下一段承接、待补充清单、可复制给图像模型的三视图提示词、可复制给视频模型的镜头提示词。不要新增没有依据的剧情。
+
+            已有成果：
+            {context}
+            """,
+            _ => string.Empty
+        };
+    }
+
+    private string GetShortDramaWorkflowContext(string step)
+    {
+        var input = GetUserInput();
+        if ((string.Equals(step, "guide", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(step, "starter", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(step, "script", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(step, "story", StringComparison.OrdinalIgnoreCase))
+            && !string.IsNullOrWhiteSpace(input))
+        {
+            return CompactShortDramaWorkflowContext(input);
+        }
+
+        var chineseOutput = GetChineseOutput();
+        if (!string.IsNullOrWhiteSpace(chineseOutput))
+        {
+            return CompactShortDramaWorkflowContext(chineseOutput);
+        }
+
+        var englishOutput = EnglishOutputBox?.Text;
+        if (string.IsNullOrWhiteSpace(englishOutput))
+        {
+            englishOutput = CompactEnglishOutputBox?.Text;
+        }
+
+        if (!string.IsNullOrWhiteSpace(englishOutput))
+        {
+            return CompactShortDramaWorkflowContext(englishOutput);
+        }
+
+        var currentPrompt = CurrentPromptBox?.Text;
+        if (!string.IsNullOrWhiteSpace(currentPrompt))
+        {
+            return CompactShortDramaWorkflowContext(currentPrompt);
+        }
+
+        return CompactShortDramaWorkflowContext(input);
+    }
+
+    private static string CompactShortDramaWorkflowContext(string? text)
+    {
+        var normalized = NormalizeThinkingText(text ?? string.Empty);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return "待补充";
+        }
+
+        const int maxLength = 420;
+        return normalized.Length <= maxLength ? normalized : $"{normalized[..maxLength].TrimEnd()}...";
+    }
+
+    private static string GetShortDramaWorkflowStepName(string step)
+    {
+        return step switch
+        {
+            "guide" => "AI带做",
+            "starter" => "新手开做",
+            "script" => "剧本",
+            "storyboard" => "分镜",
+            "story" => "剧情角色",
+            "turnaround" => "三视图",
+            "shot" => "运镜",
+            "next" => "下一段",
+            "qa" => "质检返工",
+            "package" => "交付包",
+            _ => "短剧流程"
+        };
     }
 
     private void TemplateCategoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -6826,6 +6545,12 @@ Skill 文件：{skillPath}
         var text = userRequest.Trim();
         var lower = text.ToLowerInvariant();
 
+        if (ContainsAny(text, "短剧工作台", "AI短剧", "短剧", "漫剧", "剧本", "分镜", "镜头表", "三视图", "角色资产", "角色卡", "继续下一段", "下一段", "一句话剧情", "剧情角色", "运镜提示词", "质检返工", "查漏修正", "交付包", "制作交付包", "制作包", "分支演出", "AI带做", "手把手", "带我做", "新手开做", "从0做", "不会分镜", "不会写分镜")
+            || ContainsAny(lower, "short drama", "screenplay", "script", "storyboard", "shot list", "turnaround", "character sheet", "qa", "revision", "production package", "galgame", "visual novel", "next segment", "guide me", "step by step", "beginner"))
+        {
+            return new(FindOptimizationTargetMode("builtin-ai-short-drama-workbench") ?? "即梦", "AI短剧导演工作台", "命中短剧工作台关键词");
+        }
+
         if (ContainsAny(lower, "veo", "veo3", "veo 3"))
         {
             return new("Veo 3", "Veo 3", "命中 Veo 视频模型关键词");
@@ -7047,24 +6772,9 @@ Skill 文件：{skillPath}
         AnimationEnabledBox.IsChecked = _settings.Ui.EnableAnimations;
         OcrEnabledBox.IsChecked = _settings.Privacy.OcrEnabled;
         SelectOcrProvider(_settings.Ocr.PreferredProvider);
-        OneDriveEnabledBox.IsChecked = _settings.OneDriveSync.OneDriveEnabled;
-        OneDriveHistoryEnabledBox.IsChecked = _settings.OneDriveSync.HistorySyncEnabled;
-        OneDriveRememberVaultBox.IsChecked = _settings.OneDriveSync.RememberVaultOnThisDevice;
-        OneDriveFolderPathBox.Text = _settings.OneDriveSync.LocalFolderPath;
-        OneDrivePassphraseBox.Password = string.Empty;
-        WebDavEnabledBox.IsChecked = _settings.WebDavSync.WebDavEnabled;
-        WebDavHistoryEnabledBox.IsChecked = _settings.WebDavSync.HistorySyncEnabled;
-        WebDavRememberVaultBox.IsChecked = _settings.WebDavSync.RememberVaultOnThisDevice;
-        WebDavServerUrlBox.Text = _settings.WebDavSync.ServerUrl;
-        WebDavRemoteRootBox.Text = string.IsNullOrWhiteSpace(_settings.WebDavSync.RemoteRootPath) ? "啊拼" : _settings.WebDavSync.RemoteRootPath;
-        WebDavUsernameBox.Text = _settings.WebDavSync.Username;
-        WebDavPasswordBox.Password = string.Empty;
-        WebDavPassphraseBox.Password = string.Empty;
         var languagePack = _localizationService.Load(_settings.Ui.LanguageCode, _settings.Ui.MountedLanguagePackPath);
         SelectLanguage(_settings.Ui.LanguageCode, languagePack.DisplayName, languagePack.SourcePath);
         ApplyUiSettings();
-        UpdateOneDriveSyncUiState();
-        UpdateWebDavSyncUiState();
         _loadingSettings = false;
         if (_uiReady)
         {
@@ -7221,6 +6931,7 @@ Skill 文件：{skillPath}
     {
         _selectedTemplateSource = NormalizeTemplateSource(_selectedTemplateSource);
         RefreshTemplateSourcePicker();
+        RefreshShortDramaWorkflowPanel(_selectedMode);
         var templates = GetTemplateCatalogForSource(_selectedTemplateSource).ToArray();
         var categories = templates
             .Select(template => template.Category)
@@ -7748,6 +7459,13 @@ Skill 文件：{skillPath}
             "即梦、Seedance、Veo 等视频模型" => "Jimeng, Seedance, Veo, and related video models",
             "即梦" => "Jimeng",
             "即梦 / Seedance" => "Jimeng / Seedance",
+            "短剧工作台" => "Short Drama Workbench",
+            "三视图、角色资产、连续分镜" => "Turnaround sheets, character assets, and continuous storyboards",
+            "AI短剧导演工作台" => "AI Short Drama Director Workbench",
+            "AI手把手带做漫剧/短剧、想法转剧本、剧本拆分镜、三视图资产、5-10 秒大师运镜、下一段承接、质检返工、交付包；不自动上传视频平台。" => "Step-by-step AI guidance for comics/short dramas: idea to script, script to storyboard, turnaround assets, 5-10 second master shots, next-segment continuity, QA/revision, and production packages; does not upload to video platforms.",
+            "AI手把手带做漫剧/短剧、想法转剧本、剧本拆分镜、三视图资产、5-10 秒大师运镜、下一段承接、交付包；不自动上传视频平台。" => "Step-by-step AI guidance for comics/short dramas: idea to script, script to storyboard, turnaround assets, 5-10 second master shots, next-segment continuity, and production packages; does not upload to video platforms.",
+            "AI手把手带做漫剧/短剧、一句话开做、三视图资产、5-10 秒大师运镜、下一段承接；不自动上传视频平台。" => "Step-by-step AI guidance for comics/short dramas, one-line start, turnaround assets, 5-10 second master shots, and next-segment continuity; does not upload to video platforms.",
+            "一句话剧情角色、三视图资产、5-10 秒大师运镜、下一段承接；不自动上传视频平台。" => "One-line story and characters, turnaround assets, 5-10 second master shots, and next-segment continuity; does not upload to video platforms.",
             "短视频、产品、首尾帧和分镜" => "Short video, products, first-last-frame transitions, and storyboards",
             "电影镜头、对白、音效和时间轴" => "Cinematic shots, dialogue, sound design, and timelines",
             "Agent" => "Agent",
@@ -7814,6 +7532,7 @@ Skill 文件：{skillPath}
 
         return reason switch
         {
+            "命中短剧工作台关键词" => "matched short-drama workbench keywords",
             "命中 Veo 视频模型关键词" => "matched Veo video model keywords",
             "命中短视频或即梦/Seedance 关键词" => "matched short-video or Jimeng/Seedance keywords",
             "命中文生图或 SD 工作流关键词" => "matched text-to-image or SD workflow keywords",
@@ -8329,6 +8048,11 @@ Skill 文件：{skillPath}
             return L("能力标签：英文导演提示词、镜头/约束/时长复制、适合 Veo；未自动提交到视频平台。");
         }
 
+        if (IsShortDramaWorkbenchMode(effectiveMode))
+        {
+            return L("能力标签：AI手把手带做漫剧/短剧、想法转剧本、剧本拆分镜、三视图资产、5-10 秒大师运镜、下一段承接、质检返工、交付包；不自动上传视频平台。");
+        }
+
         if (IsJimengMode(string.Empty, effectiveMode))
         {
             return L("能力标签：中文短视频结构、分镜/约束/参数复制、适合即梦 / Seedance；未自动上传平台。");
@@ -8389,6 +8113,11 @@ Skill 文件：{skillPath}
         if (mode.Contains("Veo", StringComparison.OrdinalIgnoreCase))
         {
             return "Veo 3";
+        }
+
+        if (IsShortDramaWorkbenchMode(mode))
+        {
+            return "短剧工作台";
         }
 
         if (mode.Contains("即梦", StringComparison.Ordinal) || mode.Contains("Seedance", StringComparison.OrdinalIgnoreCase))
@@ -8759,76 +8488,6 @@ Skill 文件：{skillPath}
             return "Switched target: " + LocalizeOptimizationStatusPayload(text["已切换优化目标：".Length..]);
         }
 
-        if (text.StartsWith("已检测到建议路径：", StringComparison.Ordinal))
-        {
-            return "Suggested path detected: " + text["已检测到建议路径：".Length..]
-                .Replace("。确认后可手动同步。", ". Confirm it before syncing manually.", StringComparison.Ordinal);
-        }
-
-        if (text.StartsWith("已选择同步文件夹：", StringComparison.Ordinal))
-        {
-            return "Selected sync folder: " + text["已选择同步文件夹：".Length..]
-                .Replace("。只有手动同步时才会写入加密快照。", ". Encrypted snapshots are written only when you sync manually.", StringComparison.Ordinal);
-        }
-
-        if (text.StartsWith("选择同步文件夹失败：", StringComparison.Ordinal))
-        {
-            return "Failed to choose sync folder: " + text["选择同步文件夹失败：".Length..];
-        }
-
-        if (text.StartsWith("OneDrive 文件夹同步完成：", StringComparison.Ordinal))
-        {
-            return "OneDrive folder sync completed: " + text["OneDrive 文件夹同步完成：".Length..]
-                .Replace("导入 ", "imported ", StringComparison.Ordinal)
-                .Replace(" 条，导出 ", " records, exported ", StringComparison.Ordinal)
-                .Replace(" 条加密历史。", " encrypted history records. ", StringComparison.Ordinal);
-        }
-
-        if (text.StartsWith("已导入 OneDrive 同步快照：", StringComparison.Ordinal))
-        {
-            return "Imported OneDrive sync snapshot: " + text["已导入 OneDrive 同步快照：".Length..]
-                .Replace(" 条。", " records.", StringComparison.Ordinal);
-        }
-
-        if (text.Equals("同步目录中没有可导入的新历史快照。", StringComparison.Ordinal))
-        {
-            return "No new history snapshot is available in the sync folder.";
-        }
-
-        if (text.StartsWith("OneDrive 文件夹同步失败：", StringComparison.Ordinal))
-        {
-            return "OneDrive folder sync failed: " + text["OneDrive 文件夹同步失败：".Length..];
-        }
-
-        if (text.StartsWith("WebDAV 连接成功：", StringComparison.Ordinal))
-        {
-            return "WebDAV connection succeeded: " + text["WebDAV 连接成功：".Length..];
-        }
-
-        if (text.StartsWith("WebDAV 同步完成：", StringComparison.Ordinal))
-        {
-            return "WebDAV sync completed: " + text["WebDAV 同步完成：".Length..]
-                .Replace("导入 ", "imported ", StringComparison.Ordinal)
-                .Replace(" 条，导出 ", " records, exported ", StringComparison.Ordinal)
-                .Replace(" 条加密历史。", " encrypted history records.", StringComparison.Ordinal);
-        }
-
-        if (text.StartsWith("已导入 WebDAV 同步快照：", StringComparison.Ordinal))
-        {
-            return "Imported WebDAV sync snapshot: " + text["已导入 WebDAV 同步快照：".Length..]
-                .Replace(" 条。", " records.", StringComparison.Ordinal);
-        }
-
-        if (text.Equals("WebDAV 远端没有可导入的新历史快照。", StringComparison.Ordinal))
-        {
-            return "No new history snapshot is available on the WebDAV remote.";
-        }
-
-        if (text.StartsWith("WebDAV 同步失败：", StringComparison.Ordinal))
-        {
-            return "WebDAV sync failed: " + text["WebDAV 同步失败：".Length..];
-        }
-
         if (text.StartsWith("已清除 ", StringComparison.Ordinal))
         {
             return text.Replace("已清除 ", "Cleared ", StringComparison.Ordinal)
@@ -8881,9 +8540,50 @@ Skill 文件：{skillPath}
             return "Failed to supplement the request; local supplement was used: " + text["补充需求失败，已使用本地补充：".Length..];
         }
 
+        if (text.StartsWith("已准备短剧流程阶段：", StringComparison.Ordinal))
+        {
+            return "Prepared short-drama workflow stage: " + L(text["已准备短剧流程阶段：".Length..]);
+        }
+
         return text switch
         {
             "正在生成..." => "Generating...",
+            "短剧流程" => "Short Drama Flow",
+            "剧情角色" => "Story",
+            "一句话企划" => "Story seed",
+            "一句话生成剧情、角色和第一段钩子" => "Generate story, characters, and the first hook from one line",
+            "AI带做漫剧/短剧" => "Guided Comic/Short Drama",
+            "AI带做" => "AI guide",
+            "下一步" => "Next step",
+            "AI 手把手判断当前阶段并给出下一步" => "Let AI identify the current stage and suggest the next step",
+            "新手开做" => "Start",
+            "从0到镜头" => "Idea to shot",
+            "从一个题材开始，AI 按步骤带你完成漫剧/短剧" => "Start from one premise; AI guides you through a comic or short-drama workflow",
+            "剧本" => "Script",
+            "剧情对白" => "Story/dialogue",
+            "把想法扩成短剧剧本、角色和对白" => "Expand an idea into a short-drama script, characters, and dialogue",
+            "分镜" => "Storyboard",
+            "镜头表" => "Shot list",
+            "把剧本拆成可生成的分镜表" => "Break the script into a generatable storyboard",
+            "三视图" => "Turnaround",
+            "角色资产" => "Assets",
+            "生成角色资产卡和正侧背三视图提示词" => "Generate character asset cards and front/side/back prompts",
+            "运镜" => "Shot",
+            "镜头" => "Shot",
+            "5-10 秒" => "5-10s",
+            "生成 5-10 秒短剧镜头和大师级运镜" => "Generate a 5-10s short-drama shot with master camera movement",
+            "下一段" => "Next",
+            "连续剧情" => "Continuity",
+            "承接上一段成果继续下一段" => "Continue the next segment from the previous result",
+            "质检返工" => "QA",
+            "查漏修正" => "Fix gaps",
+            "检查剧本、分镜、三视图和运镜问题并给修正版" => "Check script, storyboard, turnarounds, and shot prompts, then return a revised version",
+            "交付包" => "Package",
+            "复制整理" => "Copy-ready",
+            "整理剧本、分镜、三视图和镜头提示词交付包" => "Organize script, storyboard, turnarounds, and shot prompts into a package",
+            "当前输出会作为连续性状态。" => "The current output is used as continuity state.",
+            "短剧流程阶段无效" => "Invalid short-drama workflow stage",
+            "已准备短剧流程阶段" => "Prepared short-drama workflow stage",
             "没有可补充的优化结果" => "No optimized result to supplement",
             "没有可复制的结果" => "No result to copy",
             "已复制中文提示词" => "Chinese prompt copied",
@@ -8960,6 +8660,9 @@ Skill 文件：{skillPath}
             "模型 endpoint 不可用" => "Model endpoint unavailable",
             "Base URL 格式不正确，请填写 http 或 https 开头的 OpenAI-compatible 地址。" => "The Base URL format is invalid. Enter an OpenAI-compatible URL that starts with http or https.",
             "请求超时，请检查网络、Base URL 或代理。" => "Request timed out. Check the network, Base URL, or proxy.",
+            "能力标签：AI手把手带做漫剧/短剧、想法转剧本、剧本拆分镜、三视图资产、5-10 秒大师运镜、下一段承接、质检返工、交付包；不自动上传视频平台。" => "Capabilities: step-by-step AI guidance for comics/short dramas, idea to script, script to storyboard, turnaround assets, 5-10 second master shots, next-segment continuity, QA/revision, and production packages; does not upload to video platforms.",
+            "能力标签：AI手把手带做漫剧/短剧、想法转剧本、剧本拆分镜、三视图资产、5-10 秒大师运镜、下一段承接、交付包；不自动上传视频平台。" => "Capabilities: step-by-step AI guidance for comics/short dramas, idea to script, script to storyboard, turnaround assets, 5-10 second master shots, next-segment continuity, and production packages; does not upload to video platforms.",
+            "能力标签：AI手把手带做漫剧/短剧、一句话开做、三视图资产、5-10 秒大师运镜、下一段承接；不自动上传视频平台。" => "Capabilities: step-by-step AI guidance for comics/short dramas, one-line start, turnaround assets, 5-10 second master shots, and next-segment continuity; does not upload to video platforms.",
             _ => text
         };
     }
@@ -8976,6 +8679,7 @@ Skill 文件：{skillPath}
         RefreshModelDisplayText();
         RefreshAboutUi();
         RefreshPromptCountLabels();
+        RefreshShortDramaWorkflowPanel(_selectedMode);
     }
 
     private void RefreshPromptCountLabels()
@@ -9896,9 +9600,11 @@ Skill 文件：{skillPath}
             return "还可以补充任务类型、允许修改范围、禁止修改范围、项目技术栈、复现步骤、验证命令和验收标准。";
         }
 
-        if (prompt.Contains("Veo", StringComparison.OrdinalIgnoreCase) || prompt.Contains("即梦", StringComparison.Ordinal) || prompt.Contains("Seedance", StringComparison.OrdinalIgnoreCase))
+        if (prompt.Contains("Veo", StringComparison.OrdinalIgnoreCase) || prompt.Contains("即梦", StringComparison.Ordinal) || prompt.Contains("Seedance", StringComparison.OrdinalIgnoreCase) || IsShortDramaWorkbenchMode(prompt))
         {
-            return "还可以补充时长、画幅、主体动作、镜头运动、对白或字幕、BGM / 音效和首尾帧要求。";
+            return IsShortDramaWorkbenchMode(prompt)
+                ? "还可以补充一句话剧情、角色外貌锚点、目标平台、画幅、第一段钩子、对白、BGM / 音效和上一段结尾。"
+                : "还可以补充时长、画幅、主体动作、镜头运动、对白或字幕、BGM / 音效和首尾帧要求。";
         }
 
         return prompt.Contains("文生图", StringComparison.Ordinal)
@@ -9913,9 +9619,11 @@ Skill 文件：{skillPath}
             return "可能缺失：任务类型、代码范围、禁止修改项、复现步骤、技术栈、验证命令、验收标准、是否允许改文件。";
         }
 
-        if (prompt.Contains("Veo", StringComparison.OrdinalIgnoreCase) || prompt.Contains("即梦", StringComparison.Ordinal) || prompt.Contains("Seedance", StringComparison.OrdinalIgnoreCase))
+        if (prompt.Contains("Veo", StringComparison.OrdinalIgnoreCase) || prompt.Contains("即梦", StringComparison.Ordinal) || prompt.Contains("Seedance", StringComparison.OrdinalIgnoreCase) || IsShortDramaWorkbenchMode(prompt))
         {
-            return "可能缺失：时长、画幅比例、主体动作、镜头运动、对白或字幕、BGM / 音效、首尾帧或连续性约束。";
+            return IsShortDramaWorkbenchMode(prompt)
+                ? "可能缺失：一句话剧情、角色外貌锚点、目标平台、画幅比例、第一段钩子、对白或字幕、BGM / 音效、上一段结尾和连续性锁定。"
+                : "可能缺失：时长、画幅比例、主体动作、镜头运动、对白或字幕、BGM / 音效、首尾帧或连续性约束。";
         }
 
         return prompt.Contains("文生图", StringComparison.Ordinal)
@@ -10768,8 +10476,10 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
     private static bool IsVideoMode(string selectedScenes, string effectiveMode)
     {
         return IsVeoMode(selectedScenes, effectiveMode)
+            || IsShortDramaWorkbenchMode(effectiveMode)
             || IsJimengMode(selectedScenes, effectiveMode)
-            || selectedScenes.Contains("视频", StringComparison.Ordinal);
+            || selectedScenes.Contains("视频", StringComparison.Ordinal)
+            || selectedScenes.Contains("短剧", StringComparison.Ordinal);
     }
 
     private bool IsVeoMode()
@@ -10781,6 +10491,28 @@ The following English prompt mirrors the finalized primary-language prompt. Mach
     {
         return selectedScenes.Contains("Veo", StringComparison.OrdinalIgnoreCase)
             || effectiveMode.Contains("Veo", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsShortDramaWorkbenchMode()
+    {
+        return IsShortDramaWorkbenchMode($"{FormatSelectedScenes()} {GetEffectiveMode()} {_selectedMode}");
+    }
+
+    private static bool IsShortDramaWorkbenchMode(string text)
+    {
+        return text.Contains("短剧工作台", StringComparison.Ordinal)
+            || text.Contains("AI短剧", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("短剧导演", StringComparison.Ordinal)
+            || text.Contains("一句话剧情", StringComparison.Ordinal)
+            || text.Contains("剧情角色", StringComparison.Ordinal)
+            || text.Contains("三视图", StringComparison.Ordinal)
+            || text.Contains("角色资产", StringComparison.Ordinal)
+            || text.Contains("继续下一段", StringComparison.Ordinal)
+            || text.Contains("builtin-ai-short-drama-workbench", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("Short Drama Workbench", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("short-drama", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("galgame", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("visual novel", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsJimengMode(string selectedScenes, string effectiveMode)

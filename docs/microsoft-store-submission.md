@@ -2,7 +2,7 @@
 
 This guide is for the `microsoft-store` branch of 啊拼 / AI Quick Prompt.
 
-The public GitHub branch stays GPL and local-first. The Microsoft Store branch may keep Store-only or cloud-service features, but those features must be testable, documented, and kept out of the public GitHub branch unless intentionally released.
+The public GitHub branch stays GPL and local-first. Any Store-only feature must be testable, documented, and kept out of the public GitHub branch unless intentionally released.
 
 ## Official Submission Facts
 
@@ -69,7 +69,7 @@ or:
 -PfxPath "<path-to-pfx>" -PfxPassword "<password>"
 ```
 
-Do not commit certificates, PFX files, passwords, Partner Center secrets, cloud credentials, or private package IDs that you do not want public.
+Do not commit certificates, PFX files, passwords, Partner Center secrets, service credentials, or private package IDs that you do not want public.
 
 ## Store Listing Checklist
 
@@ -84,7 +84,7 @@ Recommended Partner Center fields:
 | Field | Suggested value |
 | --- | --- |
 | Category | Productivity |
-| Pricing | Free for first Store submission, unless Store-only paid/cloud features are already implemented and testable. |
+| Pricing | Free for first Store submission, unless Store-only paid features are already implemented and testable. |
 | Markets | Start with China and English-speaking markets, then expand after first certification pass. |
 | Age rating | Complete IARC honestly. Current app has no game content, no gambling, no user-generated public sharing, no built-in adult content. |
 | Privacy policy URL | `https://github.com/zhangxiaoyu66666/aping-AI-Quick-Prompt/blob/main/docs/privacy.md` or a dedicated website privacy page. |
@@ -108,7 +108,7 @@ Avoid showing:
 - API keys or endpoint secrets.
 - Private prompt history.
 - Third-party copyrighted screenshots.
-- Unreleased Store-only cloud features unless they ship in the submitted package and are testable.
+- Unreleased Store-only features unless they ship in the submitted package and are testable.
 
 ## Certification Notes
 
@@ -121,7 +121,7 @@ No account is required for basic use. The app can run without an API key using l
 
 The app declares runFullTrust because it provides desktop workflows: tray entry, global hotkey, local OCR worker process, clipboard integration, screenshot/region OCR, and foreground-window context capture. OCR is local by default. Images and prompt text are sent to a model provider only when the user explicitly sends a request and model egress is enabled.
 
-If Store-only cloud features are enabled in this branch, provide a demo account or test instructions here.
+If Store-only online features are enabled in this branch, provide a demo account or test instructions here.
 ```
 
 ## Final Pre-Submission Checks

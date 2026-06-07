@@ -294,6 +294,7 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Button Style="{StaticResource FluentButtonStyle}" ToolTipService.ToolTip="上传图片">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -321,7 +322,10 @@
                                     </Button>
                                     <ToggleButton x:Name="CompactDeepThinkingToggle" Grid.Column="2" Style="{StaticResource SceneChipStyle}" Content="深度思考" Checked="DeepThinkingToggle_Changed" Unchecked="DeepThinkingToggle_Changed" ToolTipService.ToolTip="按当前内置 Provider / 模型标签启用原生深度思考；不支持时显示提示词式思考摘要。" />
                                     <TextBlock Grid.Column="3" x:Name="CompactChatStatusText" Text="可连续补充需求；点“新会话”切换优化目标。" FontSize="12" TextTrimming="CharacterEllipsis" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
-                                    <Button Grid.Column="4" Style="{StaticResource PrimaryActionButtonStyle}" Click="ChatSendButton_Click">
+                                    <Button x:Name="CompactRollbackTurnButton" Grid.Column="4" Style="{StaticResource IconButtonStyle}" Click="RollbackLastTurnButton_Click" IsEnabled="False" ToolTipService.ToolTip="退回上一轮成果，并把上一轮用户需求放回输入框修改" AutomationProperties.Name="退回上一轮">
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7A7;" FontSize="16" />
+                                    </Button>
+                                    <Button Grid.Column="5" Style="{StaticResource PrimaryActionButtonStyle}" Click="ChatSendButton_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="9">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE724;" FontSize="18" />
                                             <TextBlock Text="发送" />
@@ -722,6 +726,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Button Style="{StaticResource FluentButtonStyle}" ToolTipService.ToolTip="上传图片">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -749,7 +754,10 @@
                                             </Button>
                                             <ToggleButton x:Name="DeepThinkingToggle" Grid.Column="2" Style="{StaticResource SceneChipStyle}" Content="深度思考" Checked="DeepThinkingToggle_Changed" Unchecked="DeepThinkingToggle_Changed" ToolTipService.ToolTip="按当前内置 Provider / 模型标签启用原生深度思考；不支持时显示提示词式思考摘要。" />
                                             <TextBlock x:Name="ExpandedStatusText" Grid.Column="3" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
-                                            <Button Grid.Column="4" Style="{StaticResource PrimaryActionButtonStyle}" Click="ChatSendButton_Click">
+                                            <Button x:Name="RollbackTurnButton" Grid.Column="4" Style="{StaticResource IconButtonStyle}" Click="RollbackLastTurnButton_Click" IsEnabled="False" ToolTipService.ToolTip="退回上一轮成果，并把上一轮用户需求放回输入框修改" AutomationProperties.Name="退回上一轮">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7A7;" FontSize="16" />
+                                            </Button>
+                                            <Button Grid.Column="5" Style="{StaticResource PrimaryActionButtonStyle}" Click="ChatSendButton_Click">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE724;" FontSize="16" />
                                                     <TextBlock Text="发送" />
@@ -974,6 +982,77 @@
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
+                                </StackPanel>
+                                <StackPanel x:Name="ShortDramaWorkflowPanel" Visibility="Collapsed" Spacing="8">
+                                    <TextBlock Text="AI带做漫剧/短剧" Style="{StaticResource SectionTitleStyle}" />
+                                    <Grid RowSpacing="8" ColumnSpacing="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Row="0" Grid.Column="0" Style="{StaticResource FluentButtonStyle}" Tag="guide" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="AI 手把手判断当前阶段并给出下一步">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="AI带做" FontWeight="SemiBold" />
+                                                <TextBlock Text="下一步" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Tag="starter" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="从一个题材开始，AI 按步骤带你完成漫剧/短剧">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="新手开做" FontWeight="SemiBold" />
+                                                <TextBlock Text="从0到镜头" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="1" Grid.Column="0" Style="{StaticResource FluentButtonStyle}" Tag="script" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="把想法扩成短剧剧本、角色和对白">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="剧本" FontWeight="SemiBold" />
+                                                <TextBlock Text="剧情对白" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Tag="storyboard" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="把剧本拆成可生成的分镜表">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="分镜" FontWeight="SemiBold" />
+                                                <TextBlock Text="镜头表" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="2" Grid.Column="0" Style="{StaticResource FluentButtonStyle}" Tag="turnaround" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="生成角色资产卡和正侧背三视图提示词">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="三视图" FontWeight="SemiBold" />
+                                                <TextBlock Text="角色资产" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Tag="shot" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="生成 5-10 秒短剧镜头和大师级运镜">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="运镜" FontWeight="SemiBold" />
+                                                <TextBlock Text="5-10 秒" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="3" Grid.Column="0" Style="{StaticResource FluentButtonStyle}" Tag="next" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="承接上一段成果继续下一段">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="下一段" FontWeight="SemiBold" />
+                                                <TextBlock Text="连续剧情" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="3" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Tag="qa" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="检查剧本、分镜、三视图和运镜问题并给修正版">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="质检返工" FontWeight="SemiBold" />
+                                                <TextBlock Text="查漏修正" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource FluentButtonStyle}" Tag="package" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="整理剧本、分镜、三视图和镜头提示词交付包">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="交付包" FontWeight="SemiBold" />
+                                                <TextBlock Text="复制整理" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock x:Name="ShortDramaWorkflowHintText" Text="当前输出会作为连续性状态。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <TextBox x:Name="TemplateSearchBox" Header="搜索" PlaceholderText="搜索提示词组、分类或内容" TextChanged="TemplateSearchBox_TextChanged" />
                                 <Grid x:Name="TemplateBrowserGrid" ColumnSpacing="10" MinHeight="220">
@@ -1417,58 +1496,6 @@
                                     <ComboBoxItem Content="火眼金睛 OCR（默认，失败时使用 Windows Media OCR 兜底）" Tag="fire_eye_ocr" />
                                     <ComboBoxItem Content="自动兜底（火眼金睛 -> Windows Media OCR）" Tag="auto_ocr" />
                                 </ComboBox>
-                                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4" />
-                                <TextBlock Text="OneDrive 文件夹同步" Style="{StaticResource SectionTitleStyle}" />
-                                <CheckBox x:Name="OneDriveEnabledBox" Content="启用 OneDrive 文件夹同步" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <CheckBox x:Name="OneDriveHistoryEnabledBox" Content="同步历史记录（端到端加密）" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <CheckBox x:Name="OneDriveRememberVaultBox" Content="在本机 Windows Credential Manager 记住同步密钥" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <Grid ColumnSpacing="12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="OneDriveFolderPathBox" Header="同步文件夹" PlaceholderText="例如：C:\Users\用户名\OneDrive\啊拼" IsReadOnly="True" TextChanged="OneDriveFolderPathBox_TextChanged" LostFocus="SettingsControl_LostFocus" />
-                                    <PasswordBox Grid.Column="1" x:Name="OneDrivePassphraseBox" Header="同步口令" PlaceholderText="用于解锁端到端加密 vault，不会保存" />
-                                </Grid>
-                                <TextBlock Text="主数据库仍保存在本机默认数据目录。这里仅把历史记录导出为端到端加密 JSON 快照；跨设备上传下载由你已登录的 OneDrive 客户端完成。勾选开关不会自动写入文件，只有手动同步时才会创建或更新同步目录。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Button x:Name="OneDriveDetectFolderButton" Style="{StaticResource FluentButtonStyle}" Content="自动检测路径" Click="OneDriveDetectFolderButton_Click" />
-                                    <Button x:Name="OneDriveChooseFolderButton" Style="{StaticResource FluentButtonStyle}" Content="选择文件夹" Click="OneDriveChooseFolderButton_Click" />
-                                    <Button x:Name="OneDrivePushButton" Style="{StaticResource PrimaryActionButtonStyle}" Content="同步历史" Click="OneDrivePushButton_Click" />
-                                    <Button x:Name="OneDrivePullButton" Style="{StaticResource FluentButtonStyle}" Content="导入同步快照" Click="OneDrivePullButton_Click" />
-                                    <Button x:Name="OneDriveDisableButton" Style="{StaticResource FluentButtonStyle}" Content="关闭同步" Click="OneDriveDisableButton_Click" />
-                                </StackPanel>
-                                <TextBlock x:Name="OneDriveSyncStatusText" Text="OneDrive 文件夹同步未启用。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
-                                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4" />
-                                <TextBlock Text="WebDAV 同步" Style="{StaticResource SectionTitleStyle}" />
-                                <CheckBox x:Name="WebDavEnabledBox" Content="启用 WebDAV 同步（坚果云 / Nextcloud 等）" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <CheckBox x:Name="WebDavHistoryEnabledBox" Content="同步历史记录（端到端加密）" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <CheckBox x:Name="WebDavRememberVaultBox" Content="在本机 Windows Credential Manager 记住同步密钥" Checked="SettingsControl_Changed" Unchecked="SettingsControl_Changed" />
-                                <Grid ColumnSpacing="12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="240" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="WebDavServerUrlBox" Header="WebDAV 服务器地址" PlaceholderText="例如：https://dav.jianguoyun.com/dav/" TextChanged="WebDavSettingsBox_TextChanged" LostFocus="SettingsControl_LostFocus" />
-                                    <TextBox Grid.Column="1" x:Name="WebDavRemoteRootBox" Header="远端目录" PlaceholderText="啊拼" TextChanged="WebDavSettingsBox_TextChanged" LostFocus="SettingsControl_LostFocus" />
-                                </Grid>
-                                <Grid ColumnSpacing="12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="WebDavUsernameBox" Header="用户名" PlaceholderText="坚果云账号 / WebDAV 用户名" TextChanged="WebDavSettingsBox_TextChanged" LostFocus="SettingsControl_LostFocus" />
-                                    <PasswordBox Grid.Column="1" x:Name="WebDavPasswordBox" Header="应用密码" PlaceholderText="第三方应用密码，不会明文保存" />
-                                </Grid>
-                                <PasswordBox x:Name="WebDavPassphraseBox" Header="同步口令" PlaceholderText="用于解锁端到端加密 vault，不会保存" />
-                                <TextBlock Text="WebDAV 远端只保存端到端加密历史快照。坚果云请使用第三方应用密码；不会自动后台上传，只有点击同步按钮才会写入远端。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Button x:Name="WebDavTestButton" Style="{StaticResource FluentButtonStyle}" Content="测试连接" Click="WebDavTestButton_Click" />
-                                    <Button x:Name="WebDavPushButton" Style="{StaticResource PrimaryActionButtonStyle}" Content="同步历史" Click="WebDavPushButton_Click" />
-                                    <Button x:Name="WebDavPullButton" Style="{StaticResource FluentButtonStyle}" Content="导入同步快照" Click="WebDavPullButton_Click" />
-                                    <Button x:Name="WebDavDisableButton" Style="{StaticResource FluentButtonStyle}" Content="关闭 WebDAV" Click="WebDavDisableButton_Click" />
-                                </StackPanel>
-                                <TextBlock x:Name="WebDavSyncStatusText" Text="WebDAV 同步未启用。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="恢复默认设置" Click="RestoreDefaultSettingsButton_Click" />
                                     <Button Style="{StaticResource FluentButtonStyle}" Content="清除历史" Click="ClearHistoryButton_Click" />

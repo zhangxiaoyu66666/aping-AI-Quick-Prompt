@@ -7,8 +7,6 @@ public sealed class AppSettings
     public PrivacySettings Privacy { get; set; } = new();
     public HotkeySettings Hotkey { get; set; } = new();
     public UiSettings Ui { get; set; } = new();
-    public OneDriveFolderSyncSettings OneDriveSync { get; set; } = new();
-    public WebDavSyncSettings WebDavSync { get; set; } = new();
 }
 
 public sealed class ModelSettings
@@ -60,29 +58,4 @@ public sealed class UiSettings
     public bool SceneVideo { get; set; }
     public bool DeepThinking { get; set; }
     public string CustomScene { get; set; } = string.Empty;
-}
-
-public sealed class OneDriveFolderSyncSettings
-{
-    public bool OneDriveEnabled { get; set; }
-    public bool HistorySyncEnabled { get; set; } = true;
-    public bool RememberVaultOnThisDevice { get; set; }
-    public string LocalFolderPath { get; set; } = string.Empty;
-    public string DeviceId { get; set; } = string.Empty;
-    public string VaultKeyId { get; set; } = string.Empty;
-    public DateTimeOffset? LastSyncAt { get; set; }
-}
-
-public sealed class WebDavSyncSettings
-{
-    public bool WebDavEnabled { get; set; }
-    public bool HistorySyncEnabled { get; set; } = true;
-    public bool RememberVaultOnThisDevice { get; set; }
-    public string ServerUrl { get; set; } = string.Empty;
-    public string RemoteRootPath { get; set; } = "啊拼";
-    public string Username { get; set; } = string.Empty;
-    public string CredentialTargetName { get; set; } = "PromptInputMethod/WebDavPassword";
-    public string DeviceId { get; set; } = string.Empty;
-    public string VaultKeyId { get; set; } = string.Empty;
-    public DateTimeOffset? LastSyncAt { get; set; }
 }

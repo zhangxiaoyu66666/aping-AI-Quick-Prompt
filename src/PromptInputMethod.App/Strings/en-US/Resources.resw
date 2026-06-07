@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -2840,17 +2840,9 @@
     <value>Next</value>
     <comment>下一页</comment>
   </data>
-  <data name="S_05492fdd2446c076" xml:space="preserve">
-    <value>WebDAV Sync</value>
-    <comment>WebDAV 同步</comment>
-  </data>
   <data name="S_0a98a48eaaac4175" xml:space="preserve">
     <value>Test connection</value>
     <comment>测试连接</comment>
-  </data>
-  <data name="S_0b992c467d5265d6" xml:space="preserve">
-    <value>Enable WebDAV sync (Jianguoyun / Nextcloud, etc.)</value>
-    <comment>启用 WebDAV 同步（坚果云 / Nextcloud 等）</comment>
   </data>
   <data name="S_0d6fad8138e77630" xml:space="preserve">
     <value>Choose folder</value>
@@ -2863,14 +2855,6 @@
   <data name="S_2317b8ee5099a68e" xml:space="preserve">
     <value>Changes are saved automatically. The title bar shows Provider + model name. Model generation waits for the server response; availability checks probe the endpoint and error code separately.</value>
     <comment>修改后自动保存，标题栏会显示 Provider + 模型名称。模型生成会等待服务端返回；可用性检测会单独检查 endpoint 和错误码。</comment>
-  </data>
-  <data name="S_250610589cc2a2c3" xml:space="preserve">
-    <value>Import sync snapshot</value>
-    <comment>导入同步快照</comment>
-  </data>
-  <data name="S_2ab3d5051fa04da2" xml:space="preserve">
-    <value>OneDrive folder sync is not enabled.</value>
-    <comment>OneDrive 文件夹同步未启用。</comment>
   </data>
   <data name="S_2ec4ab035625608e" xml:space="preserve">
     <value>Copy the current target's constraint fields</value>
@@ -2892,10 +2876,6 @@
     <value>Example: https://dav.jianguoyun.com/dav/</value>
     <comment>例如：https://dav.jianguoyun.com/dav/</comment>
   </data>
-  <data name="S_4cfb0b29c8086de8" xml:space="preserve">
-    <value>Example: C:\Users\YourName\OneDrive\AIPIN</value>
-    <comment>例如：C:\Users\用户名\OneDrive\啊拼</comment>
-  </data>
   <data name="S_5461c4da99d42df9" xml:space="preserve">
     <value>App password</value>
     <comment>应用密码</comment>
@@ -2908,10 +2888,6 @@
     <value>Select a model target by category.</value>
     <comment>按类别选择模型目标。</comment>
   </data>
-  <data name="S_6ecb847eb4fe199d" xml:space="preserve">
-    <value>Sync history</value>
-    <comment>同步历史</comment>
-  </data>
   <data name="S_7a8e5186a3e9e3f7" xml:space="preserve">
     <value>Copy the current target's primary fields</value>
     <comment>复制当前目标的核心字段</comment>
@@ -2920,25 +2896,9 @@
     <value>Select target</value>
     <comment>选择目标</comment>
   </data>
-  <data name="S_83a5c97f03782d3f" xml:space="preserve">
-    <value>Enable OneDrive folder sync</value>
-    <comment>启用 OneDrive 文件夹同步</comment>
-  </data>
   <data name="S_9634fb0832be624f" xml:space="preserve">
     <value>Parameters</value>
     <comment>参数</comment>
-  </data>
-  <data name="S_978752e3f5ff9909" xml:space="preserve">
-    <value>Sync folder</value>
-    <comment>同步文件夹</comment>
-  </data>
-  <data name="S_9aa99f9f2d9dccb9" xml:space="preserve">
-    <value>WebDAV server URL</value>
-    <comment>WebDAV 服务器地址</comment>
-  </data>
-  <data name="S_a3cc883b432ac56c" xml:space="preserve">
-    <value>Used to unlock the end-to-end encrypted vault. It is not saved.</value>
-    <comment>用于解锁端到端加密 vault，不会保存</comment>
   </data>
   <data name="S_a8246588df7f5bd1" xml:space="preserve">
     <value>Remote folder</value>
@@ -2948,21 +2908,9 @@
     <value>Select category</value>
     <comment>选择大类</comment>
   </data>
-  <data name="S_b0236493f8734f05" xml:space="preserve">
-    <value>Remember the sync key in Windows Credential Manager on this PC</value>
-    <comment>在本机 Windows Credential Manager 记住同步密钥</comment>
-  </data>
   <data name="S_b243f727764d8240" xml:space="preserve">
     <value>Detect path automatically</value>
     <comment>自动检测路径</comment>
-  </data>
-  <data name="S_b65f167bfc8738e2" xml:space="preserve">
-    <value>Sync passphrase</value>
-    <comment>同步口令</comment>
-  </data>
-  <data name="S_b7b4c907eb003ca2" xml:space="preserve">
-    <value>The main database stays in the default local data folder. This only exports history as an end-to-end encrypted JSON snapshot; cross-device upload and download are handled by your signed-in OneDrive client. Enabling the toggle does not write files automatically. The sync folder is created or updated only when you sync manually.</value>
-    <comment>主数据库仍保存在本机默认数据目录。这里仅把历史记录导出为端到端加密 JSON 快照；跨设备上传下载由你已登录的 OneDrive 客户端完成。勾选开关不会自动写入文件，只有手动同步时才会创建或更新同步目录。</comment>
   </data>
   <data name="S_b7bfdca57d136baa" xml:space="preserve">
     <value>Category</value>
@@ -2983,30 +2931,6 @@
   <data name="S_dc0158797445f3e1" xml:space="preserve">
     <value>Enable interface animations</value>
     <comment>启用界面动画</comment>
-  </data>
-  <data name="S_e38b02890f44e103" xml:space="preserve">
-    <value>OneDrive Folder Sync</value>
-    <comment>OneDrive 文件夹同步</comment>
-  </data>
-  <data name="S_e4e517cfff59e9be" xml:space="preserve">
-    <value>Sync history (end-to-end encrypted)</value>
-    <comment>同步历史记录（端到端加密）</comment>
-  </data>
-  <data name="S_e5ddd471296b972b" xml:space="preserve">
-    <value>The WebDAV remote stores only end-to-end encrypted history snapshots. For Jianguoyun, use a third-party app password. It will not upload in the background automatically; the remote is written only when you click a sync button.</value>
-    <comment>WebDAV 远端只保存端到端加密历史快照。坚果云请使用第三方应用密码；不会自动后台上传，只有点击同步按钮才会写入远端。</comment>
-  </data>
-  <data name="S_e922f11a36345322" xml:space="preserve">
-    <value>WebDAV sync is not enabled.</value>
-    <comment>WebDAV 同步未启用。</comment>
-  </data>
-  <data name="S_ed56e147544bf3ae" xml:space="preserve">
-    <value>Jianguoyun account / WebDAV username</value>
-    <comment>坚果云账号 / WebDAV 用户名</comment>
-  </data>
-  <data name="S_eddc25b25251eb69" xml:space="preserve">
-    <value>Disable WebDAV</value>
-    <comment>关闭 WebDAV</comment>
   </data>
   <data name="S_34d63c1c0c12c586" xml:space="preserve">
     <value>AIPIN has been minimized to the system tray. Use the hotkey or tray icon to bring it back.</value>
@@ -3044,10 +2968,6 @@
     <value>No model send records yet</value>
     <comment>还没有模型发送记录</comment>
   </data>
-  <data name="S_2c1d884c03b9fdeb" xml:space="preserve">
-    <value>OneDrive sync snapshot update detected</value>
-    <comment>检测到 OneDrive 同步快照更新</comment>
-  </data>
   <data name="S_209779ae21f37dac" xml:space="preserve">
     <value>Possible missing information: </value>
     <comment>可能缺失：</comment>
@@ -3067,14 +2987,6 @@
   <data name="S_633d457bf4697822" xml:space="preserve">
     <value>Capability tags: </value>
     <comment>能力标签：</comment>
-  </data>
-  <data name="S_cac233e53c72d5f7" xml:space="preserve">
-    <value>Please detect or choose a local OneDrive sync folder first.</value>
-    <comment>请先检测或选择 OneDrive 本地同步文件夹。</comment>
-  </data>
-  <data name="S_4e62df3dde01bb2c" xml:space="preserve">
-    <value>Please enter the WebDAV server URL and username first.</value>
-    <comment>请先填写 WebDAV 服务器地址和用户名。</comment>
   </data>
   <data name="S_2b5a88b7a99fbbbd" xml:space="preserve">
     <value>Please choose a send record</value>
@@ -3111,14 +3023,6 @@
   <data name="S_9d2ca261281a158a" xml:space="preserve">
     <value>Later</value>
     <comment>稍后</comment>
-  </data>
-  <data name="S_af588707aaa5b4de" xml:space="preserve">
-    <value>Sync folder: </value>
-    <comment>同步目录：</comment>
-  </data>
-  <data name="S_d11d4f417f5636fa" xml:space="preserve">
-    <value>The sync folder has a newer encrypted history snapshot: </value>
-    <comment>同步目录有较新的加密历史快照：</comment>
   </data>
   <data name="S_b32b3ae977583bcf" xml:space="preserve">
     <value>SKILL.md was not found. Choose the Skill root folder.</value>
@@ -3212,10 +3116,6 @@
     <value>The Chinese prompt is empty and cannot be referenced</value>
     <comment>中文提示词为空，无法引用</comment>
   </data>
-  <data name="S_ae007488c4937281" xml:space="preserve">
-    <value>OneDrive folder sync is not enabled. The default local data folder is being used.</value>
-    <comment>OneDrive 文件夹同步未启用，当前使用本机默认数据目录。</comment>
-  </data>
   <data name="S_20bc4f6eb9fdc7e3" xml:space="preserve">
     <value>SKILL.md is empty. The Skill package cannot be imported.</value>
     <comment>SKILL.md 为空，无法导入 Skill 包</comment>
@@ -3223,10 +3123,6 @@
   <data name="S_0f91dd2063004248" xml:space="preserve">
     <value>SKILL.md is empty and cannot be mounted.</value>
     <comment>SKILL.md 为空，无法挂载</comment>
-  </data>
-  <data name="S_ba17bde3656f72d1" xml:space="preserve">
-    <value>WebDAV sync is not enabled. The default local data folder is being used.</value>
-    <comment>WebDAV 同步未启用，当前使用本机默认数据目录。</comment>
   </data>
   <data name="S_86344fd28ab4ea2d" xml:space="preserve">
     <value>Status: </value>
@@ -3404,14 +3300,6 @@
     <value>constraint field</value>
     <comment>约束字段</comment>
   </data>
-  <data name="S_479bb2b9fad2a1aa" xml:space="preserve">
-    <value>. The OneDrive client handles cross-device sync.</value>
-    <comment>。OneDrive 客户端负责跨设备同步。</comment>
-  </data>
-  <data name="S_0bdb1860e376b2d0" xml:space="preserve">
-    <value>. The WebDAV remote stores end-to-end encrypted snapshots.</value>
-    <comment>。WebDAV 远端保存端到端加密快照。</comment>
-  </data>
   <data name="S_a1be527c56bc79d8" xml:space="preserve">
     <value>Generate a prompt from the current request</value>
     <comment>使用当前需求生成提示词</comment>
@@ -3451,10 +3339,6 @@
   <data name="S_053461ce86d26572" xml:space="preserve">
     <value>Success</value>
     <comment>成功</comment>
-  </data>
-  <data name="S_f15a734f99547b3b" xml:space="preserve">
-    <value>Open Settings, enter the sync passphrase, then click "Import sync snapshot".</value>
-    <comment>打开设置后输入同步口令，再点击“导入同步快照”。</comment>
   </data>
   <data name="S_ef39d1972a2a8f8c" xml:space="preserve">
     <value>Mount, import, edit, and delete Skills</value>

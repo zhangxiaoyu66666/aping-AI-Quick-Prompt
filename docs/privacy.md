@@ -57,24 +57,8 @@ When sent, images are encoded as OpenAI-compatible `image_url` data URLs. The cu
 ## Favorites
 
 - Prompt favorites are stored locally in `%APPDATA%\PromptInputMethod\aipin.db`.
-- Favorites are not synced and are not uploaded automatically.
+- Favorites are not uploaded automatically.
 - Favorite contents may contain user business information, so users should review them before sharing logs or release bundles.
-
-## OneDrive Sync
-
-OneDrive folder sync is not enabled by default. In the Microsoft Store branch, users may explicitly enable it, confirm a local OneDrive folder such as `%USERPROFILE%\OneDrive\啊拼`, and run manual sync actions. The app does not sign in to Microsoft Graph, does not ask for a Microsoft Entra client id, and does not upload data through an app-hosted server.
-
-The main SQLite database remains in the local app data directory. The OneDrive folder only receives exported sync snapshots: encrypted `vault.json`, encrypted history JSON documents, `manifest.json`, and automatic backups of files that are replaced during sync. Upload and cross-device transfer are handled by the user's already-installed and logged-in OneDrive desktop client.
-
-History snapshots are end-to-end encrypted before being written to the sync folder. API keys, model send audit records, OCR diagnostics, screenshots, temporary files, and plaintext prompt history remain local and are not written to OneDrive by the sync feature.
-
-## WebDAV Sync
-
-WebDAV sync is not enabled by default. Users may explicitly enable it for services such as Nutstore / Jianguoyun, Nextcloud, or other WebDAV-compatible storage, then run manual sync actions from Settings. The app does not run hidden WebDAV startup probes and does not sync through an app-hosted server.
-
-The WebDAV remote receives the same exported sync snapshot format used by folder sync: encrypted `vault.json`, encrypted history JSON documents, `manifest.json`, and automatic backups of remote files replaced during sync. The main SQLite database remains local.
-
-The WebDAV app password is stored in Windows Credential Manager under `PromptInputMethod/WebDavPassword` when the user provides it. The separate end-to-end encryption sync passphrase is not saved; if the user chooses to remember the sync key, only the derived vault key is stored locally in Windows Credential Manager and scoped to the configured remote.
 
 ## External Services
 

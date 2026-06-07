@@ -76,8 +76,6 @@ public sealed class AppSettingsService
         settings.Privacy ??= new PrivacySettings();
         settings.Hotkey ??= new HotkeySettings();
         settings.Ui ??= new UiSettings();
-        settings.OneDriveSync ??= new OneDriveFolderSyncSettings();
-        settings.WebDavSync ??= new WebDavSyncSettings();
         if (string.IsNullOrWhiteSpace(settings.Ocr.PreferredProvider))
         {
             settings.Ocr.PreferredProvider = OcrProviderIds.FireEye;
@@ -121,29 +119,6 @@ public sealed class AppSettingsService
         if (string.IsNullOrWhiteSpace(settings.Ui.LanguageCode))
         {
             settings.Ui.LanguageCode = "auto";
-        }
-
-        settings.OneDriveSync.LocalFolderPath ??= string.Empty;
-        settings.OneDriveSync.VaultKeyId ??= string.Empty;
-        if (string.IsNullOrWhiteSpace(settings.OneDriveSync.DeviceId))
-        {
-            settings.OneDriveSync.DeviceId = Guid.NewGuid().ToString("N");
-        }
-
-        settings.WebDavSync.ServerUrl ??= string.Empty;
-        settings.WebDavSync.RemoteRootPath = string.IsNullOrWhiteSpace(settings.WebDavSync.RemoteRootPath)
-            ? "啊拼"
-            : settings.WebDavSync.RemoteRootPath.Trim();
-        settings.WebDavSync.Username ??= string.Empty;
-        settings.WebDavSync.VaultKeyId ??= string.Empty;
-        if (string.IsNullOrWhiteSpace(settings.WebDavSync.CredentialTargetName))
-        {
-            settings.WebDavSync.CredentialTargetName = "PromptInputMethod/WebDavPassword";
-        }
-
-        if (string.IsNullOrWhiteSpace(settings.WebDavSync.DeviceId))
-        {
-            settings.WebDavSync.DeviceId = Guid.NewGuid().ToString("N");
         }
 
         return settings;
