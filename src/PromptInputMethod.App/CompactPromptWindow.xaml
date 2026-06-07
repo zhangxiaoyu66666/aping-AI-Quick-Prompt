@@ -154,8 +154,8 @@
             </Button>
             <Image Grid.Column="1" Width="34" Height="34" Source="Assets/logo.png" Stretch="Uniform" VerticalAlignment="Center" />
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="0">
-                <TextBlock Text="啊拼" FontSize="17" FontWeight="SemiBold" />
-                <TextBlock Text="AI Quick Prompt" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="TopBrandTitleText" Text="啊拼" FontSize="17" FontWeight="SemiBold" />
+                <TextBlock x:Name="TopBrandSubtitleText" Text="AI Quick Prompt" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
             <Button Grid.Column="3" Style="{StaticResource IconButtonStyle}" Click="CommandPaletteButton_Click" ToolTipService.ToolTip="命令面板" AutomationProperties.Name="命令面板" AccessKey="F">
                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE721;" FontSize="16" />
@@ -232,7 +232,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="42" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="54" />
+                                        <ColumnDefinition Width="0" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="34" Height="34" CornerRadius="17" Background="{ThemeResource ControlFillColorSecondaryBrush}">
                                         <Image Source="Assets/logo.png" Width="28" Height="28" Stretch="Uniform" />
@@ -240,7 +240,6 @@
                                     <Border Grid.Column="1" CornerRadius="12" Padding="12,9" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                                         <TextBlock Text="好的，把你想优化的需求发给我；我会边聊天边整理成下面的当前提示词和优化后提示词。" TextWrapping="Wrap" />
                                     </Border>
-                                    <TextBlock Grid.Column="2" Text="10:18" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" FontSize="12" />
                                 </Grid>
                             </StackPanel>
                         </ScrollViewer>
@@ -295,6 +294,7 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Button Style="{StaticResource FluentButtonStyle}" ToolTipService.ToolTip="上传图片">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -322,7 +322,10 @@
                                     </Button>
                                     <ToggleButton x:Name="CompactDeepThinkingToggle" Grid.Column="2" Style="{StaticResource SceneChipStyle}" Content="深度思考" Checked="DeepThinkingToggle_Changed" Unchecked="DeepThinkingToggle_Changed" ToolTipService.ToolTip="按当前内置 Provider / 模型标签启用原生深度思考；不支持时显示提示词式思考摘要。" />
                                     <TextBlock Grid.Column="3" x:Name="CompactChatStatusText" Text="可连续补充需求；点“新会话”切换优化目标。" FontSize="12" TextTrimming="CharacterEllipsis" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
-                                    <Button Grid.Column="4" Style="{StaticResource PrimaryActionButtonStyle}" Click="ChatSendButton_Click">
+                                    <Button x:Name="CompactRollbackTurnButton" Grid.Column="4" Style="{StaticResource IconButtonStyle}" Click="RollbackLastTurnButton_Click" IsEnabled="False" ToolTipService.ToolTip="退回上一轮成果，并把上一轮用户需求放回输入框修改" AutomationProperties.Name="退回上一轮">
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7A7;" FontSize="16" />
+                                    </Button>
+                                    <Button Grid.Column="5" Style="{StaticResource PrimaryActionButtonStyle}" Click="ChatSendButton_Click">
                                         <StackPanel Orientation="Horizontal" Spacing="9">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE724;" FontSize="18" />
                                             <TextBlock Text="发送" />
@@ -442,27 +445,30 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                        <Grid ColumnSpacing="8">
+                        <Grid ColumnSpacing="8" RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="英语提示词" Style="{StaticResource SectionTitleStyle}" />
-                            <Button x:Name="CompactFieldCopyPrimaryButton" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段">
-                                <TextBlock x:Name="CompactFieldCopyPrimaryText" Text="正向" />
-                            </Button>
-                            <Button x:Name="CompactFieldCopyConstraintButton" Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyNegativeButton_Click" ToolTipService.ToolTip="复制当前目标的约束字段">
-                                <TextBlock x:Name="CompactFieldCopyConstraintText" Text="反向" />
-                            </Button>
-                            <Button x:Name="CompactFieldCopyParameterButton" Grid.Column="3" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段">
-                                <TextBlock x:Name="CompactFieldCopyParameterText" Text="参数" />
-                            </Button>
-                            <Button Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
-                            <Button Grid.Column="5" Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
+                            <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
+                            <Button Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
+                            <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                <Button x:Name="CompactFieldCopyPrimaryButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段">
+                                    <TextBlock x:Name="CompactFieldCopyPrimaryText" Text="正向" />
+                                </Button>
+                                <Button x:Name="CompactFieldCopyConstraintButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyNegativeButton_Click" ToolTipService.ToolTip="复制当前目标的约束字段">
+                                    <TextBlock x:Name="CompactFieldCopyConstraintText" Text="反向" />
+                                </Button>
+                                <Button x:Name="CompactFieldCopyParameterButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段">
+                                    <TextBlock x:Name="CompactFieldCopyParameterText" Text="参数" />
+                                </Button>
+                            </StackPanel>
                         </Grid>
                         <Border Grid.Row="1" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="12">
                             <Grid>
@@ -504,7 +510,7 @@
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8A5;" FontSize="22" />
                             <StackPanel Grid.Column="1" Spacing="2">
                                 <TextBlock Text="常用提示词" Style="{StaticResource PageTitleStyle}" />
-                                <TextBlock Text="左键复制，选中后可插入或按此改写。" Style="{StaticResource MutedTextStyle}" />
+                                <TextBlock Text="左键复制，右键编辑或删除。" Style="{StaticResource MutedTextStyle}" />
                             </StackPanel>
                             <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" Click="ExpandButton_Click" ToolTipService.ToolTip="展开工作台">
                                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE740;" FontSize="16" />
@@ -518,7 +524,7 @@
                             </Grid.ColumnDefinitions>
                             <ComboBox x:Name="CompactCommonPromptCategoryFilterBox" Header="分类筛选" SelectionChanged="CompactCommonPromptCategoryFilterBox_SelectionChanged" />
                             <TextBox x:Name="CompactCommonPromptSearchBox" Grid.Column="1" Header="搜索" PlaceholderText="标题、分类或内容" TextChanged="CommonPromptSearchBox_TextChanged" />
-                            <TextBlock Grid.Column="2" Text="点击条目复制完整提示词；选中后可插入或按此改写。" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Bottom" />
+                            <TextBlock Grid.Column="2" Text="点击条目复制完整提示词；需要改内容时右键打开菜单。" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Bottom" />
                         </Grid>
                         <ListView x:Name="CompactCommonPromptList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="CompactCommonPromptList_ItemClick" RightTapped="CompactCommonPromptList_RightTapped" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListView.ItemTemplate>
@@ -547,22 +553,20 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="新建常用提示词" Click="SaveCommonPromptButton_Click" />
                             <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="插入到用户需求" Click="CompactInsertCommonPromptButton_Click" />
-                            <Button Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="按此改写" Click="CompactRewriteWithCommonPromptButton_Click" ToolTipService.ToolTip="用选中的收藏提示词改写当前输入或输出" />
-                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <TextBlock x:Name="CompactCommonPromptStatusText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
                                 <Button x:Name="CompactCommonPromptPreviousPageButton" Style="{StaticResource FluentButtonStyle}" Content="上一页" Click="CompactCommonPromptPreviousPageButton_Click" />
                                 <TextBlock x:Name="CompactCommonPromptPagerText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
                                 <Button x:Name="CompactCommonPromptNextPageButton" Style="{StaticResource FluentButtonStyle}" Content="下一页" Click="CompactCommonPromptNextPageButton_Click" />
                             </StackPanel>
-                            <Button Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Content="导入 JSON" Click="ImportCommonPromptsJsonButton_Click" />
-                            <Button Grid.Column="5" Style="{StaticResource FluentButtonStyle}" Content="导出 JSON" Click="ExportCommonPromptsJsonButton_Click" />
+                            <Button Grid.Column="3" Style="{StaticResource FluentButtonStyle}" Content="导入 JSON" Click="ImportCommonPromptsJsonButton_Click" />
+                            <Button Grid.Column="4" Style="{StaticResource FluentButtonStyle}" Content="导出 JSON" Click="ExportCommonPromptsJsonButton_Click" />
                         </Grid>
                     </Grid>
                 </Border>
@@ -662,7 +666,7 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="42" />
                                                 <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="54" />
+                                                <ColumnDefinition Width="0" />
                                             </Grid.ColumnDefinitions>
                                             <Border Width="34" Height="34" CornerRadius="17" Background="{ThemeResource ControlFillColorSecondaryBrush}">
                                                 <Image Source="Assets/logo.png" Width="28" Height="28" Stretch="Uniform" />
@@ -670,7 +674,6 @@
                                             <Border Grid.Column="1" CornerRadius="12" Padding="12,9" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                                                 <TextBlock Text="好的，把你想优化的需求发给我；我会边聊天边整理成下面的当前提示词和优化后提示词。" TextWrapping="Wrap" />
                                             </Border>
-                                            <TextBlock Grid.Column="2" Text="10:18" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" FontSize="12" />
                                         </Grid>
                                     </StackPanel>
                                 </ScrollViewer>
@@ -723,6 +726,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <Button Style="{StaticResource FluentButtonStyle}" ToolTipService.ToolTip="上传图片">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -750,7 +754,10 @@
                                             </Button>
                                             <ToggleButton x:Name="DeepThinkingToggle" Grid.Column="2" Style="{StaticResource SceneChipStyle}" Content="深度思考" Checked="DeepThinkingToggle_Changed" Unchecked="DeepThinkingToggle_Changed" ToolTipService.ToolTip="按当前内置 Provider / 模型标签启用原生深度思考；不支持时显示提示词式思考摘要。" />
                                             <TextBlock x:Name="ExpandedStatusText" Grid.Column="3" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" />
-                                            <Button Grid.Column="4" Style="{StaticResource PrimaryActionButtonStyle}" Click="ChatSendButton_Click">
+                                            <Button x:Name="RollbackTurnButton" Grid.Column="4" Style="{StaticResource IconButtonStyle}" Click="RollbackLastTurnButton_Click" IsEnabled="False" ToolTipService.ToolTip="退回上一轮成果，并把上一轮用户需求放回输入框修改" AutomationProperties.Name="退回上一轮">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7A7;" FontSize="16" />
+                                            </Button>
+                                            <Button Grid.Column="5" Style="{StaticResource PrimaryActionButtonStyle}" Click="ChatSendButton_Click">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE724;" FontSize="16" />
                                                     <TextBlock Text="发送" />
@@ -838,6 +845,7 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
                                     <TextBlock Text="英语提示词" Style="{StaticResource SectionTitleStyle}" VerticalAlignment="Center" />
@@ -845,6 +853,10 @@
                                         <Button Style="{StaticResource IconButtonStyle}" Click="ExpandEnglishOutputButton_Click" ToolTipService.ToolTip="放大">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE740;" FontSize="15" />
                                         </Button>
+                                        <Button Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
+                                        <Button Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
                                         <Button x:Name="ExpandedFieldCopyPrimaryButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyPositiveButton_Click" ToolTipService.ToolTip="复制当前目标的核心字段">
                                             <TextBlock x:Name="ExpandedFieldCopyPrimaryText" Text="正向" />
                                         </Button>
@@ -854,10 +866,8 @@
                                         <Button x:Name="ExpandedFieldCopyParameterButton" Style="{StaticResource FluentButtonStyle}" Click="CopyComfyParametersButton_Click" ToolTipService.ToolTip="复制当前目标的参数字段">
                                             <TextBlock x:Name="ExpandedFieldCopyParameterText" Text="参数" />
                                         </Button>
-                                        <Button Style="{StaticResource FluentButtonStyle}" Content="复制" Click="CopyEnglishButton_Click" />
-                                        <Button Style="{StaticResource FluentButtonStyle}" Content="收藏" Click="FavoriteEnglishPromptButton_Click" />
                                     </StackPanel>
-                                    <Border Grid.Row="2" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="10">
+                                    <Border Grid.Row="3" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="10">
                                         <Grid>
                                             <TextBox
                                                 x:Name="EnglishOutputBox"
@@ -972,6 +982,77 @@
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
+                                </StackPanel>
+                                <StackPanel x:Name="ShortDramaWorkflowPanel" Visibility="Collapsed" Spacing="8">
+                                    <TextBlock Text="AI带做漫剧/短剧" Style="{StaticResource SectionTitleStyle}" />
+                                    <Grid RowSpacing="8" ColumnSpacing="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Row="0" Grid.Column="0" Style="{StaticResource FluentButtonStyle}" Tag="guide" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="AI 手把手判断当前阶段并给出下一步">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="AI带做" FontWeight="SemiBold" />
+                                                <TextBlock Text="下一步" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Tag="starter" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="从一个题材开始，AI 按步骤带你完成漫剧/短剧">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="新手开做" FontWeight="SemiBold" />
+                                                <TextBlock Text="从0到镜头" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="1" Grid.Column="0" Style="{StaticResource FluentButtonStyle}" Tag="script" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="把想法扩成短剧剧本、角色和对白">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="剧本" FontWeight="SemiBold" />
+                                                <TextBlock Text="剧情对白" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Tag="storyboard" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="把剧本拆成可生成的分镜表">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="分镜" FontWeight="SemiBold" />
+                                                <TextBlock Text="镜头表" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="2" Grid.Column="0" Style="{StaticResource FluentButtonStyle}" Tag="turnaround" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="生成角色资产卡和正侧背三视图提示词">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="三视图" FontWeight="SemiBold" />
+                                                <TextBlock Text="角色资产" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Tag="shot" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="生成 5-10 秒短剧镜头和大师级运镜">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="运镜" FontWeight="SemiBold" />
+                                                <TextBlock Text="5-10 秒" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="3" Grid.Column="0" Style="{StaticResource FluentButtonStyle}" Tag="next" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="承接上一段成果继续下一段">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="下一段" FontWeight="SemiBold" />
+                                                <TextBlock Text="连续剧情" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="3" Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Tag="qa" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="检查剧本、分镜、三视图和运镜问题并给修正版">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="质检返工" FontWeight="SemiBold" />
+                                                <TextBlock Text="查漏修正" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource FluentButtonStyle}" Tag="package" Click="ShortDramaWorkflowButton_Click" ToolTipService.ToolTip="整理剧本、分镜、三视图和镜头提示词交付包">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="交付包" FontWeight="SemiBold" />
+                                                <TextBlock Text="复制整理" Style="{StaticResource MutedTextStyle}" FontSize="12" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock x:Name="ShortDramaWorkflowHintText" Text="当前输出会作为连续性状态。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <TextBox x:Name="TemplateSearchBox" Header="搜索" PlaceholderText="搜索提示词组、分类或内容" TextChanged="TemplateSearchBox_TextChanged" />
                                 <Grid x:Name="TemplateBrowserGrid" ColumnSpacing="10" MinHeight="220">
@@ -1283,7 +1364,7 @@
                                 <ComboBox x:Name="CommonPromptCategoryFilterBox" Header="分类筛选" SelectionChanged="CommonPromptCategoryFilterBox_SelectionChanged" />
                                 <StackPanel Grid.Column="1" Spacing="4">
                                     <TextBox x:Name="CommonPromptSearchBox" Header="搜索" PlaceholderText="搜索标题、分类或内容" TextChanged="CommonPromptSearchBox_TextChanged" />
-                                    <TextBlock Text="点击条目会快速复制完整提示词；选中后可插入到用户需求，或用它改写当前输入 / 输出。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
+                                    <TextBlock Text="点击“新建常用提示词”打开小窗口。列表只显示摘要，点击条目会快速复制完整提示词。" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                             <ListView x:Name="CommonPromptList" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="CommonPromptList_ItemClick" RightTapped="CommonPromptList_RightTapped" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -1313,13 +1394,11 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Button Style="{StaticResource PrimaryActionButtonStyle}" Content="新建常用提示词" Click="SaveCommonPromptButton_Click" />
                                 <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}" Content="插入到用户需求" Click="InsertCommonPromptButton_Click" />
-                                <Button Grid.Column="2" Style="{StaticResource FluentButtonStyle}" Content="按此改写" Click="RewriteWithCommonPromptButton_Click" ToolTipService.ToolTip="用选中的收藏提示词改写当前输入或输出" />
-                                <Grid Grid.Column="3" ColumnSpacing="10">
+                                <Grid Grid.Column="2" ColumnSpacing="10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -1432,7 +1511,7 @@
                     <Border Style="{StaticResource CardBorderStyle}">
                         <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="560">
                             <Image Width="112" Height="112" Source="Assets/logo.png" Stretch="Uniform" />
-                            <TextBlock Text="啊拼" Style="{StaticResource PageTitleStyle}" HorizontalAlignment="Center" />
+                            <TextBlock x:Name="AboutBrandTitleText" Text="啊拼" Style="{StaticResource PageTitleStyle}" HorizontalAlignment="Center" />
                             <TextBlock x:Name="VersionTextBlock" Text="版本号：" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Center" />
                             <TextBlock Text="© 夏语工作室 版权所有" FontWeight="SemiBold" HorizontalAlignment="Center" />
                             <TextBlock Text="该工具的诞生离不开 ChatGPT-Shortcut、SD-Anima-Prompt-Studio、prompts.chat、Female Portrait Prompt Director Skill 开源项目以及其他开源软件。" Style="{StaticResource MutedTextStyle}" TextAlignment="Center" />

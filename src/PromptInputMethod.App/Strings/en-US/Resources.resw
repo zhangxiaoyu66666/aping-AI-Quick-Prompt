@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -2831,5 +2831,557 @@
   <data name="S_796d682478fd83a6" xml:space="preserve">
     <value>Template Library</value>
     <comment>模板库</comment>
+  </data>
+  <data name="S_c9b9ae7a61444ab7" xml:space="preserve">
+    <value>Previous</value>
+    <comment>上一页</comment>
+  </data>
+  <data name="S_8a8542f6964852dc" xml:space="preserve">
+    <value>Next</value>
+    <comment>下一页</comment>
+  </data>
+  <data name="S_0a98a48eaaac4175" xml:space="preserve">
+    <value>Test connection</value>
+    <comment>测试连接</comment>
+  </data>
+  <data name="S_0d6fad8138e77630" xml:space="preserve">
+    <value>Choose folder</value>
+    <comment>选择文件夹</comment>
+  </data>
+  <data name="S_1a3f0617d6de8e52" xml:space="preserve">
+    <value>Username</value>
+    <comment>用户名</comment>
+  </data>
+  <data name="S_2317b8ee5099a68e" xml:space="preserve">
+    <value>Changes are saved automatically. The title bar shows Provider + model name. Model generation waits for the server response; availability checks probe the endpoint and error code separately.</value>
+    <comment>修改后自动保存，标题栏会显示 Provider + 模型名称。模型生成会等待服务端返回；可用性检测会单独检查 endpoint 和错误码。</comment>
+  </data>
+  <data name="S_2ec4ab035625608e" xml:space="preserve">
+    <value>Copy the current target's constraint fields</value>
+    <comment>复制当前目标的约束字段</comment>
+  </data>
+  <data name="S_324b1e7d08213814" xml:space="preserve">
+    <value>Copy the current target's parameter fields</value>
+    <comment>复制当前目标的参数字段</comment>
+  </data>
+  <data name="S_3677053dcd11b0d8" xml:space="preserve">
+    <value>Negative</value>
+    <comment>反向</comment>
+  </data>
+  <data name="S_3ecc3c7311089aea" xml:space="preserve">
+    <value>Third-party app password, not saved as plain text</value>
+    <comment>第三方应用密码，不会明文保存</comment>
+  </data>
+  <data name="S_455729414075c71d" xml:space="preserve">
+    <value>Example: https://dav.jianguoyun.com/dav/</value>
+    <comment>例如：https://dav.jianguoyun.com/dav/</comment>
+  </data>
+  <data name="S_5461c4da99d42df9" xml:space="preserve">
+    <value>App password</value>
+    <comment>应用密码</comment>
+  </data>
+  <data name="S_57060c88a36bf3d0" xml:space="preserve">
+    <value>Target</value>
+    <comment>目标</comment>
+  </data>
+  <data name="S_6897472e7ce88b70" xml:space="preserve">
+    <value>Select a model target by category.</value>
+    <comment>按类别选择模型目标。</comment>
+  </data>
+  <data name="S_7a8e5186a3e9e3f7" xml:space="preserve">
+    <value>Copy the current target's primary fields</value>
+    <comment>复制当前目标的核心字段</comment>
+  </data>
+  <data name="S_7c9084ab5be1c910" xml:space="preserve">
+    <value>Select target</value>
+    <comment>选择目标</comment>
+  </data>
+  <data name="S_9634fb0832be624f" xml:space="preserve">
+    <value>Parameters</value>
+    <comment>参数</comment>
+  </data>
+  <data name="S_a8246588df7f5bd1" xml:space="preserve">
+    <value>Remote folder</value>
+    <comment>远端目录</comment>
+  </data>
+  <data name="S_a8b0822fb9a4d0a2" xml:space="preserve">
+    <value>Select category</value>
+    <comment>选择大类</comment>
+  </data>
+  <data name="S_b243f727764d8240" xml:space="preserve">
+    <value>Detect path automatically</value>
+    <comment>自动检测路径</comment>
+  </data>
+  <data name="S_b7bfdca57d136baa" xml:space="preserve">
+    <value>Category</value>
+    <comment>大类</comment>
+  </data>
+  <data name="S_bf4e1825e9e8fe20" xml:space="preserve">
+    <value>Positive</value>
+    <comment>正向</comment>
+  </data>
+  <data name="S_c1490d9ff91c1af3" xml:space="preserve">
+    <value>Disable sync</value>
+    <comment>关闭同步</comment>
+  </data>
+  <data name="S_d0b2c523fcca7cf4" xml:space="preserve">
+    <value>When disabled, page transitions, chat bubbles, and prompt output show the final content directly.</value>
+    <comment>关闭后页面切换、聊天气泡和提示词输出会直接显示最终内容。</comment>
+  </data>
+  <data name="S_dc0158797445f3e1" xml:space="preserve">
+    <value>Enable interface animations</value>
+    <comment>启用界面动画</comment>
+  </data>
+  <data name="S_34d63c1c0c12c586" xml:space="preserve">
+    <value>AIPIN has been minimized to the system tray. Use the hotkey or tray icon to bring it back.</value>
+    <comment>啊拼已最小化到系统托盘，可用快捷键或托盘图标呼出。</comment>
+  </data>
+  <data name="S_c89c45dd36725ae2" xml:space="preserve">
+    <value>AIPIN is thinking...</value>
+    <comment>啊拼正在思考...</comment>
+  </data>
+  <data name="S_00d9e8485347c56e" xml:space="preserve">
+    <value>Failed to save history: </value>
+    <comment>保存历史失败：</comment>
+  </data>
+  <data name="S_1e1cf129977bb77b" xml:space="preserve">
+    <value>Processing method: generated the final prompt according to the current target, mounted Skill, and model protocol, then removed the Markdown wrapper.</value>
+    <comment>处理方式：按当前优化目标、挂载 Skill 和模型协议生成最终提示词，并移除 Markdown 外壳。</comment>
+  </data>
+  <data name="S_37aa6ad6a36d46fa" xml:space="preserve">
+    <value>Open settings</value>
+    <comment>打开设置</comment>
+  </data>
+  <data name="S_75d0e09b2b2d08be" xml:space="preserve">
+    <value>Current tags: </value>
+    <comment>当前标签：</comment>
+  </data>
+  <data name="S_22e1a1a869e86cad" xml:space="preserve">
+    <value>The current prompt is empty</value>
+    <comment>当前提示词为空</comment>
+  </data>
+  <data name="S_f1e26484ec288ddf" xml:space="preserve">
+    <value>Waiting for the model to start returning content.</value>
+    <comment>等待模型开始返回内容。</comment>
+  </data>
+  <data name="S_f34307d2a95dcac1" xml:space="preserve">
+    <value>No model send records yet</value>
+    <comment>还没有模型发送记录</comment>
+  </data>
+  <data name="S_209779ae21f37dac" xml:space="preserve">
+    <value>Possible missing information: </value>
+    <comment>可能缺失：</comment>
+  </data>
+  <data name="S_0c64e30317a45672" xml:space="preserve">
+    <value>The model is unavailable. The current result was supplemented locally.</value>
+    <comment>模型不可用，已用当前结果本地补充需求</comment>
+  </data>
+  <data name="S_bdc38bcde1410f3d" xml:space="preserve">
+    <value>The model did not return visible native reasoning text. The following is a client-side summary based on the visible result.</value>
+    <comment>模型未返回可见原生思考正文，以下为客户端基于可见结果整理的处理摘要。</comment>
+  </data>
+  <data name="S_ee2af386783a8798" xml:space="preserve">
+    <value>Built-in Skills cannot be deleted</value>
+    <comment>内置 Skill 不能删除</comment>
+  </data>
+  <data name="S_633d457bf4697822" xml:space="preserve">
+    <value>Capability tags: </value>
+    <comment>能力标签：</comment>
+  </data>
+  <data name="S_2b5a88b7a99fbbbd" xml:space="preserve">
+    <value>Please choose a send record</value>
+    <comment>请选择发送记录</comment>
+  </data>
+  <data name="S_61830ea9b92720e6" xml:space="preserve">
+    <value>Please choose a Skill to edit</value>
+    <comment>请选择要编辑的 Skill</comment>
+  </data>
+  <data name="S_7e74b7ebbbc433e0" xml:space="preserve">
+    <value>Please choose a Skill to insert</value>
+    <comment>请选择要插入的 Skill</comment>
+  </data>
+  <data name="S_813f67cdb1d1482b" xml:space="preserve">
+    <value>Please choose a history record to continue editing</value>
+    <comment>请选择要继续编辑的历史记录</comment>
+  </data>
+  <data name="S_80e7c889dd32d657" xml:space="preserve">
+    <value>Please choose a Skill to delete</value>
+    <comment>请选择要删除的 Skill</comment>
+  </data>
+  <data name="S_4f786fccf9192480" xml:space="preserve">
+    <value>Please choose a command to run</value>
+    <comment>请选择要执行的命令</comment>
+  </data>
+  <data name="S_277c9dfe57fbcbfd" xml:space="preserve">
+    <value>Failed to delete Skill</value>
+    <comment>删除 Skill 失败</comment>
+  </data>
+  <data name="S_439e864e8324379f" xml:space="preserve">
+    <value>Not synced yet</value>
+    <comment>尚未同步</comment>
+  </data>
+  <data name="S_9d2ca261281a158a" xml:space="preserve">
+    <value>Later</value>
+    <comment>稍后</comment>
+  </data>
+  <data name="S_b32b3ae977583bcf" xml:space="preserve">
+    <value>SKILL.md was not found. Choose the Skill root folder.</value>
+    <comment>未找到 SKILL.md，请选择 Skill 根目录</comment>
+  </data>
+  <data name="S_578cc4fff490a35f" xml:space="preserve">
+    <value>SKILL.md was not found. The Skill package cannot be imported.</value>
+    <comment>未找到 SKILL.md，无法导入 Skill 包</comment>
+  </data>
+  <data name="S_c6772bfaab052560" xml:space="preserve">
+    <value>Next follow-up: </value>
+    <comment>下一步追问：</comment>
+  </data>
+  <data name="S_fea2c9c66f32b8bd" xml:space="preserve">
+    <value>Enter the request you want to modify first</value>
+    <comment>先输入要修改的需求</comment>
+  </data>
+  <data name="S_785bd9676bc218a1" xml:space="preserve">
+    <value>Request summary: </value>
+    <comment>需求摘要：</comment>
+  </data>
+  <data name="S_36eccc29247b5d10" xml:space="preserve">
+    <value>Suggested target based on the request</value>
+    <comment>已根据需求建议优化目标</comment>
+  </data>
+  <data name="S_15e1c1650e1a50ae" xml:space="preserve">
+    <value>New session started</value>
+    <comment>已开始新会话</comment>
+  </data>
+  <data name="S_ef4cbc27eefa671c" xml:space="preserve">
+    <value>Send audit records cleared</value>
+    <comment>已清空发送审计记录</comment>
+  </data>
+  <data name="S_2eaa988841290254" xml:space="preserve">
+    <value>Skill package import canceled</value>
+    <comment>已取消导入 Skill 包</comment>
+  </data>
+  <data name="S_aaf5da76c8422af3" xml:space="preserve">
+    <value>Skill mounting canceled</value>
+    <comment>已取消挂载 Skill</comment>
+  </data>
+  <data name="S_2599e9cb34398c64" xml:space="preserve">
+    <value>Skill deleted</value>
+    <comment>已删除 Skill</comment>
+  </data>
+  <data name="S_356e173b724970ac" xml:space="preserve">
+    <value>Thought for </value>
+    <comment>已思考</comment>
+  </data>
+  <data name="S_aa5587eef8d546ed" xml:space="preserve">
+    <value>Thought for 0 seconds</value>
+    <comment>已思考0秒</comment>
+  </data>
+  <data name="S_fdcdc065df26e5a1" xml:space="preserve">
+    <value>Current prompt replaced</value>
+    <comment>已替换当前提示词</comment>
+  </data>
+  <data name="S_b7a2e1ba797ac327" xml:space="preserve">
+    <value>Attachment removed</value>
+    <comment>已移除附件</comment>
+  </data>
+  <data name="S_85f6e18dade0e043" xml:space="preserve">
+    <value>Chinese prompt referenced. You can continue adding modification notes.</value>
+    <comment>已引用中文提示词，可继续补充修改意见</comment>
+  </data>
+  <data name="S_ce8c03a828321dba" xml:space="preserve">
+    <value>The optimized prompt is empty and cannot replace the current prompt</value>
+    <comment>优化后提示词为空，无法替换</comment>
+  </data>
+  <data name="S_c2929ac672af52db" xml:space="preserve">
+    <value>Remote folder: </value>
+    <comment>远端目录：</comment>
+  </data>
+  <data name="S_d1507999ed65b666" xml:space="preserve">
+    <value>Loading prompts.chat templates...</value>
+    <comment>正在加载 prompts.chat 模板...</comment>
+  </data>
+  <data name="S_377dd8f140f882e4" xml:space="preserve">
+    <value>Receiving model output</value>
+    <comment>正在接收模型输出</comment>
+  </data>
+  <data name="S_a1e51762ef1d80fd" xml:space="preserve">
+    <value>Generating. Please wait.</value>
+    <comment>正在生成中，请稍等</comment>
+  </data>
+  <data name="S_24b3f40433ed1c9e" xml:space="preserve">
+    <value>Thinking</value>
+    <comment>正在思考</comment>
+  </data>
+  <data name="S_bffa1bb5c8721746" xml:space="preserve">
+    <value>The Chinese prompt is empty and cannot be referenced</value>
+    <comment>中文提示词为空，无法引用</comment>
+  </data>
+  <data name="S_20bc4f6eb9fdc7e3" xml:space="preserve">
+    <value>SKILL.md is empty. The Skill package cannot be imported.</value>
+    <comment>SKILL.md 为空，无法导入 Skill 包</comment>
+  </data>
+  <data name="S_0f91dd2063004248" xml:space="preserve">
+    <value>SKILL.md is empty and cannot be mounted.</value>
+    <comment>SKILL.md 为空，无法挂载</comment>
+  </data>
+  <data name="S_86344fd28ab4ea2d" xml:space="preserve">
+    <value>Status: </value>
+    <comment>状态：</comment>
+  </data>
+  <data name="S_2a845bd8e225c004" xml:space="preserve">
+    <value>Model: </value>
+    <comment>模型：</comment>
+  </data>
+  <data name="S_d6aad262da29ba03" xml:space="preserve">
+    <value>Redacted: </value>
+    <comment>脱敏：</comment>
+  </data>
+  <data name="S_481026384de154c5" xml:space="preserve">
+    <value>Images: </value>
+    <comment>附图：</comment>
+  </data>
+  <data name="S_6d89eb074a8ec969" xml:space="preserve">
+    <value>Attachment names: </value>
+    <comment>附件名：</comment>
+  </data>
+  <data name="S_2227758ede179f35" xml:space="preserve">
+    <value>Error: </value>
+    <comment>错误：</comment>
+  </data>
+  <data name="S_0ace4f149be19117" xml:space="preserve">
+    <value>Text sent: </value>
+    <comment>发送文本：</comment>
+  </data>
+  <data name="S_2cd478a84a8fbb91" xml:space="preserve">
+    <value>Template: </value>
+    <comment>模板：</comment>
+  </data>
+  <data name="S_86bb645187935d04" xml:space="preserve">
+    <value>Common prompt: </value>
+    <comment>常用提示词：</comment>
+  </data>
+  <data name="S_4fb5e43d04a60853" xml:space="preserve">
+    <value>History: </value>
+    <comment>历史：</comment>
+  </data>
+  <data name="S_7632435b14f11103" xml:space="preserve">
+    <value>Capability tags: Chinese input, English sync, positive/negative/parameter copy; fits ComfyUI / SD WebUI. Workflow API is not connected.</value>
+    <comment>能力标签：中文输入、英文同步、正向/反向/参数复制、适合 ComfyUI / SD WebUI；未接入 workflow API。</comment>
+  </data>
+  <data name="S_9008c286ac628d12" xml:space="preserve">
+    <value>Capability tags: English director prompt, shot/constraint/duration copy; fits Veo. Does not submit to the video platform automatically.</value>
+    <comment>能力标签：英文导演提示词、镜头/约束/时长复制、适合 Veo；未自动提交到视频平台。</comment>
+  </data>
+  <data name="S_e11db1e1acb3db8b" xml:space="preserve">
+    <value>Capability tags: Chinese short-video structure, storyboard/constraint/parameter copy; fits Jimeng / Seedance. Does not upload to the platform automatically.</value>
+    <comment>能力标签：中文短视频结构、分镜/约束/参数复制、适合即梦 / Seedance；未自动上传平台。</comment>
+  </data>
+  <data name="S_9941e811a9015cc6" xml:space="preserve">
+    <value>Capability tags: task/constraint/verification copy; fits Codex / Claude Code / Cursor. Does not read repository context automatically.</value>
+    <comment>能力标签：任务/约束/验证复制、适合 Codex / Claude Code / Cursor；不自动读取仓库上下文。</comment>
+  </data>
+  <data name="S_27d765eac4b581bf" xml:space="preserve">
+    <value>Capability tags: Chinese academic naturalization, banned-phrase/output-rule copy. Does not import Word / PDF automatically.</value>
+    <comment>能力标签：中文论文自然化、禁用词/输出规则复制；不自动导入 Word / PDF。</comment>
+  </data>
+  <data name="S_e5abee4172e201d4" xml:space="preserve">
+    <value>Capability tags: Chinese structuring, English sync, negative constraints. Prefer ComfyUI / Stable Diffusion for specific platforms.</value>
+    <comment>能力标签：中文结构化、英文同步、负面约束；建议具体平台优先选择 ComfyUI / Stable Diffusion。</comment>
+  </data>
+  <data name="S_e6e86c8095527ad6" xml:space="preserve">
+    <value>Capability tags: Chinese primary output, English sync, chat follow-up, common prompt favorites.</value>
+    <comment>能力标签：中文主输出、英文同步、聊天式补充、常用提示词收藏。</comment>
+  </data>
+  <data name="S_bec5dd6e9068921a" xml:space="preserve">
+    <value>Shot</value>
+    <comment>镜头</comment>
+  </data>
+  <data name="S_ba0934c9778f2bdd" xml:space="preserve">
+    <value>Constraints</value>
+    <comment>约束</comment>
+  </data>
+  <data name="S_04a95e0654d3cec7" xml:space="preserve">
+    <value>Duration</value>
+    <comment>时长</comment>
+  </data>
+  <data name="S_c6b1d5264c01a261" xml:space="preserve">
+    <value>Storyboard</value>
+    <comment>分镜</comment>
+  </data>
+  <data name="S_5253040db8643c85" xml:space="preserve">
+    <value>Task</value>
+    <comment>任务</comment>
+  </data>
+  <data name="S_154723a1aa0a09a4" xml:space="preserve">
+    <value>Verify</value>
+    <comment>验证</comment>
+  </data>
+  <data name="S_354b28c853334568" xml:space="preserve">
+    <value>Source</value>
+    <comment>原文</comment>
+  </data>
+  <data name="S_7df5c456c765e4c3" xml:space="preserve">
+    <value>Banned</value>
+    <comment>禁用</comment>
+  </data>
+  <data name="S_1123245d1bed08b2" xml:space="preserve">
+    <value>Rules</value>
+    <comment>规则</comment>
+  </data>
+  <data name="S_c3b187c6f34bb62c" xml:space="preserve">
+    <value>Key Points</value>
+    <comment>要点</comment>
+  </data>
+  <data name="S_b169d275166cfab5" xml:space="preserve">
+    <value>positive prompt field</value>
+    <comment>正向提示词字段</comment>
+  </data>
+  <data name="S_bbf98cecf3934ba0" xml:space="preserve">
+    <value>negative prompt field</value>
+    <comment>反向提示词字段</comment>
+  </data>
+  <data name="S_22e11e0d407b7487" xml:space="preserve">
+    <value>parameter field</value>
+    <comment>参数字段</comment>
+  </data>
+  <data name="S_85281521c0848337" xml:space="preserve">
+    <value>shot field</value>
+    <comment>镜头字段</comment>
+  </data>
+  <data name="S_b643f9fc7fe859c9" xml:space="preserve">
+    <value>continuity and constraint field</value>
+    <comment>连续性与约束字段</comment>
+  </data>
+  <data name="S_0f74e6c6198f554c" xml:space="preserve">
+    <value>duration and aspect ratio field</value>
+    <comment>时长与比例字段</comment>
+  </data>
+  <data name="S_3a6efbdbd7a54afd" xml:space="preserve">
+    <value>timeline/storyboard field</value>
+    <comment>时间轴 / 分镜字段</comment>
+  </data>
+  <data name="S_77a4e36411fbf46b" xml:space="preserve">
+    <value>negative constraint field</value>
+    <comment>负面约束字段</comment>
+  </data>
+  <data name="S_289056c81b9a1409" xml:space="preserve">
+    <value>platform parameter field</value>
+    <comment>平台参数字段</comment>
+  </data>
+  <data name="S_7462227dd8752467" xml:space="preserve">
+    <value>task field</value>
+    <comment>任务字段</comment>
+  </data>
+  <data name="S_a40be27aaae89def" xml:space="preserve">
+    <value>execution constraint field</value>
+    <comment>执行约束字段</comment>
+  </data>
+  <data name="S_e3f1b18985b07ab5" xml:space="preserve">
+    <value>verification field</value>
+    <comment>验证字段</comment>
+  </data>
+  <data name="S_49b4c83f24f2dd52" xml:space="preserve">
+    <value>source text field</value>
+    <comment>待处理文本字段</comment>
+  </data>
+  <data name="S_544436504b85cd27" xml:space="preserve">
+    <value>banned-constraint field</value>
+    <comment>禁用约束字段</comment>
+  </data>
+  <data name="S_1fc3659be5a4e19f" xml:space="preserve">
+    <value>output rules field</value>
+    <comment>输出规则字段</comment>
+  </data>
+  <data name="S_d002b82719d10d17" xml:space="preserve">
+    <value>key points field</value>
+    <comment>核心要点字段</comment>
+  </data>
+  <data name="S_756dc85c74409d05" xml:space="preserve">
+    <value>constraint field</value>
+    <comment>约束字段</comment>
+  </data>
+  <data name="S_a1be527c56bc79d8" xml:space="preserve">
+    <value>Generate a prompt from the current request</value>
+    <comment>使用当前需求生成提示词</comment>
+  </data>
+  <data name="S_3939f76b3bd5f858" xml:space="preserve">
+    <value>Switch to main workbench</value>
+    <comment>切换到主工作台</comment>
+  </data>
+  <data name="S_0c70665b6eb65f1a" xml:space="preserve">
+    <value>No</value>
+    <comment>否</comment>
+  </data>
+  <data name="S_28384d7afd2e4fa6" xml:space="preserve">
+    <value>Failed</value>
+    <comment>失败</comment>
+  </data>
+  <data name="S_c55038b272b109b8" xml:space="preserve">
+    <value>chars</value>
+    <comment>字</comment>
+  </data>
+  <data name="S_48be61c63942856a" xml:space="preserve">
+    <value>Client-visible processing summary</value>
+    <comment>客户端可见处理摘要</comment>
+  </data>
+  <data name="S_bb07da848ff35fcb" xml:space="preserve">
+    <value>Import a package containing SKILL.md and optional manifest/examples</value>
+    <comment>导入包含 SKILL.md 和可选清单/示例的包</comment>
+  </data>
+  <data name="S_8cf0105d35ee8db8" xml:space="preserve">
+    <value>Thinking</value>
+    <comment>思考</comment>
+  </data>
+  <data name="S_75a1dd4bccbfd4c8" xml:space="preserve">
+    <value>Resume a history session and continue editing</value>
+    <comment>恢复历史会话并继续编辑</comment>
+  </data>
+  <data name="S_053461ce86d26572" xml:space="preserve">
+    <value>Success</value>
+    <comment>成功</comment>
+  </data>
+  <data name="S_ef39d1972a2a8f8c" xml:space="preserve">
+    <value>Mount, import, edit, and delete Skills</value>
+    <comment>挂载、导入、编辑和删除 Skill</comment>
+  </data>
+  <data name="S_b5141d3d19e9a048" xml:space="preserve">
+    <value>Yes</value>
+    <comment>是</comment>
+  </data>
+  <data name="S_ab94dfe3f3a6cf77" xml:space="preserve">
+    <value>View recent text and attachments sent to the model</value>
+    <comment>查看最近发给模型的文本和附件记录</comment>
+  </data>
+  <data name="S_d661c3d96d53ebc0" xml:space="preserve">
+    <value>Body</value>
+    <comment>正文</comment>
+  </data>
+  <data name="S_ca226cbd93620c1a" xml:space="preserve">
+    <value>Clear current session and outputs</value>
+    <comment>清空当前会话和输出</comment>
+  </data>
+  <data name="S_9dcdc2b289b9d233" xml:space="preserve">
+    <value>sec</value>
+    <comment>秒</comment>
+  </data>
+  <data name="S_c6f11708048fb819" xml:space="preserve">
+    <value>Manage common prompts</value>
+    <comment>管理常用提示词</comment>
+  </data>
+  <data name="S_b9608178dae87bd4" xml:space="preserve">
+    <value>Manage user templates</value>
+    <comment>管理用户模板</comment>
+  </data>
+  <data name="S_69c120d28e0fdb16" xml:space="preserve">
+    <value>Choose a folder containing SKILL.md</value>
+    <comment>选择包含 SKILL.md 的目录</comment>
+  </data>
+  <data name="S_431628f299fec1ec" xml:space="preserve">
+    <value>Configure model provider</value>
+    <comment>配置模型 Provider</comment>
+  </data>
+  <data name="S_ac3a897f0de5444d" xml:space="preserve">
+    <value>; last sync: </value>
+    <comment>；最后同步：</comment>
   </data>
 </root>

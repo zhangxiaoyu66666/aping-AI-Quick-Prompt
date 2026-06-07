@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Windows.ApplicationModel.Resources;
+using Windows.Globalization;
 
 namespace PromptInputMethod.App.Services;
 
@@ -11,15 +12,18 @@ public sealed class LocalizationService
     private const string AutoLanguageCode = "auto";
     private const string BuiltInLocalizationPriFileName = "localization.pri";
     private const string ResourceSubtree = "Resources";
+    private readonly Lazy<IReadOnlyDictionary<string, string>> _sourceTextByLocalizedText = new(LoadBuiltInSourceTextMap);
 
     public LocalizationPack Load(string? languageCode, string? mountedLanguagePackPath)
     {
         var resolvedCode = ResolveLanguageCode(languageCode);
+        ApplyRuntimeLanguageOverride(resolvedCode);
         var mountedSource = LoadMountedSource(mountedLanguagePackPath, resolvedCode);
+        var builtInReswSource = LoadBuiltInReswSource(resolvedCode);
         var appSource = MrtLocalizationSource.CreateForApp(resolvedCode);
         var displayName = mountedSource?.DisplayName ?? GetDisplayName(resolvedCode);
         var sourcePath = mountedSource?.SourcePath ?? string.Empty;
-        return new LocalizationPack(resolvedCode, displayName, sourcePath, mountedSource, appSource);
+        return new LocalizationPack(resolvedCode, displayName, sourcePath, mountedSource, builtInReswSource, appSource);
     }
 
     public LocalizationPack? Mount(string sourcePath)
@@ -91,6 +95,18 @@ public sealed class LocalizationService
         return $"S_{Convert.ToHexString(bytes.AsSpan(0, 8)).ToLowerInvariant()}";
     }
 
+    public string GetSourceText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        return _sourceTextByLocalizedText.Value.TryGetValue(text, out var sourceText)
+            ? sourceText
+            : text;
+    }
+
     private static ILocalizationSource? LoadMountedSource(string? path, string? fallbackLanguageCode)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
@@ -105,6 +121,37 @@ public sealed class LocalizationService
             ".pri" => MrtLocalizationSource.CreateForPri(path, fallbackLanguageCode),
             _ => null
         };
+    }
+
+    private static ILocalizationSource? LoadBuiltInReswSource(string languageCode)
+    {
+        foreach (var path in EnumerateBuiltInReswFiles())
+        {
+            var directoryName = Path.GetFileName(Path.GetDirectoryName(path) ?? string.Empty);
+            if (string.Equals(directoryName, languageCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return LoadReswSource(path, languageCode);
+            }
+        }
+
+        return null;
+    }
+
+    private static void ApplyRuntimeLanguageOverride(string languageCode)
+    {
+        if (!TryNormalizeCulture(languageCode, out var normalized))
+        {
+            return;
+        }
+
+        try
+        {
+            ApplicationLanguages.PrimaryLanguageOverride = normalized;
+        }
+        catch
+        {
+            // Dictionary-backed localization below still supports live language switching.
+        }
     }
 
     private static DictionaryLocalizationSource? LoadReswSource(string path, string? fallbackLanguageCode)
@@ -122,10 +169,21 @@ public sealed class LocalizationService
                 .Select(data => new
                 {
                     Name = data.Attribute("name")?.Value,
-                    Value = data.Element("value")?.Value
+                    Value = data.Element("value")?.Value,
+                    Comment = data.Element("comment")?.Value
                 })
                 .Where(item => !string.IsNullOrWhiteSpace(item.Name) && item.Value is not null)
                 .ToDictionary(item => item.Name!, item => item.Value!, StringComparer.OrdinalIgnoreCase);
+            foreach (var item in document.Descendants("data")
+                .Select(data => new
+                {
+                    Value = data.Element("value")?.Value,
+                    Comment = data.Element("comment")?.Value
+                })
+                .Where(item => !string.IsNullOrWhiteSpace(item.Comment) && item.Value is not null))
+            {
+                values.TryAdd(item.Comment!, item.Value!);
+            }
 
             if (values.Count == 0)
             {
@@ -228,6 +286,67 @@ public sealed class LocalizationService
         var chars = value.Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray();
         var sanitized = new string(chars).Trim();
         return string.IsNullOrWhiteSpace(sanitized) ? "custom-language" : sanitized;
+    }
+
+    private static IReadOnlyDictionary<string, string> LoadBuiltInSourceTextMap()
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var path in EnumerateBuiltInReswFiles())
+        {
+            try
+            {
+                var document = XDocument.Load(path, LoadOptions.PreserveWhitespace);
+                foreach (var data in document.Descendants("data"))
+                {
+                    var value = data.Element("value")?.Value;
+                    var source = data.Element("comment")?.Value;
+                    if (string.IsNullOrWhiteSpace(value) || string.IsNullOrWhiteSpace(source))
+                    {
+                        continue;
+                    }
+
+                    if (ContainsCjk(source))
+                    {
+                        result.TryAdd(source, source);
+                        result.TryAdd(value, source);
+                    }
+                }
+            }
+            catch
+            {
+                // Reverse lookup is a best-effort aid for live language switching.
+            }
+        }
+
+        return result;
+    }
+
+    private static IEnumerable<string> EnumerateBuiltInReswFiles()
+    {
+        var roots = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "Strings"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "Strings")
+        };
+
+        foreach (var root in roots)
+        {
+            var fullRoot = Path.GetFullPath(root);
+            if (!Directory.Exists(fullRoot))
+            {
+                continue;
+            }
+
+            foreach (var file in Directory.EnumerateFiles(fullRoot, "Resources.resw", SearchOption.AllDirectories))
+            {
+                yield return file;
+            }
+        }
+    }
+
+    private static bool ContainsCjk(string value)
+    {
+        return value.Any(ch => ch is >= '\u4e00' and <= '\u9fff');
     }
 
     public interface ILocalizationSource
@@ -341,9 +460,11 @@ public sealed class LocalizationPack(
     string displayName,
     string sourcePath,
     LocalizationService.ILocalizationSource? mountedSource,
+    LocalizationService.ILocalizationSource? builtInReswSource,
     LocalizationService.ILocalizationSource? appSource)
 {
     private readonly LocalizationService.ILocalizationSource? _mountedSource = mountedSource;
+    private readonly LocalizationService.ILocalizationSource? _builtInReswSource = builtInReswSource;
     private readonly LocalizationService.ILocalizationSource? _appSource = appSource;
 
     public string Code { get; } = code;
@@ -352,7 +473,7 @@ public sealed class LocalizationPack(
 
     public string SourcePath { get; } = sourcePath;
 
-    public static LocalizationPack English { get; } = new("en-US", "English", string.Empty, null, null);
+    public static LocalizationPack English { get; } = new("en-US", "English", string.Empty, null, null, null);
 
     public string Translate(string text)
     {
@@ -362,6 +483,7 @@ public sealed class LocalizationPack(
         }
 
         string? translated = _mountedSource?.Translate(text);
+        translated ??= _builtInReswSource?.Translate(text);
         translated ??= _appSource?.Translate(text);
         return string.IsNullOrEmpty(translated) ? text : translated;
     }

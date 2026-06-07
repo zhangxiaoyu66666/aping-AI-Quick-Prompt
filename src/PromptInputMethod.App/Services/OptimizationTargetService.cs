@@ -257,6 +257,181 @@ public sealed class OptimizationTargetService
         };
     }
 
+    public static OptimizationTargetItem BuildAiShortDramaWorkbenchTarget()
+    {
+        var now = DateTimeOffset.UtcNow;
+        return new OptimizationTargetItem
+        {
+            Id = "builtin-ai-short-drama-workbench",
+            Title = "AI短剧导演工作台",
+            Description = "AI 手把手带你从一句话做漫剧/短剧：想法变剧本，剧本拆分镜，再生成三视图、角色资产卡、5-10 秒运镜提示词、下一段、质检返工和制作交付包。",
+            Category = "视频生成",
+            TemplateSource = "短剧工作台",
+            Compatibility = "即梦 / Seedance / Dreamina / Veo / 可灵 / Runway / Stable Diffusion / ComfyUI / ChatGPT / Claude / Gemini / DeepSeek / 本地模型",
+            Keywords = ["/短剧工作台", "/AI短剧", "/一句话短剧", "/AI手把手", "/新手开做", "/剧本", "/分镜", "/剧情角色", "/三视图", "/角色资产卡", "/继续下一段", "/运镜提示词", "/质检返工", "/交付包", "短剧导演", "漫剧", "galgame"],
+            LocalPromptTemplate = """
+            你是啊拼内置的 AI 短剧导演工作台。请把用户的原始想法整理成一套可连续生产的短剧导演提示词。
+
+            产品边界：
+            1. 只生成提示词、角色资产卡、镜头计划和连续性约束；不调用视频平台 API，不自动上传，不承诺平台一定可复现。
+            2. 先服务短剧生产流程：一句话想法 -> 剧本 -> 分镜表 -> 角色三视图素材 -> 角色资产卡 -> 当前 5-10 秒镜头 -> 下一段承接 -> 质检返工 -> 制作交付包。
+            3. 当用户不知道怎么开始时，要像导演助理一样手把手带做：先判断当前阶段，再给下一步按钮建议和一条可直接发送的短需求。
+            4. 所有角色必须保持身份、年龄感、脸型、发型、服装、道具、体态和色彩锚点一致。
+            5. 信息不足时写“待补充”，不要编造具体平台能力、真实人物、品牌授权、参考图数量、角色年龄、台词、时长或画幅。
+            6. 输出纯文本，不要 Markdown 标题、代码块、表格、链接或解释性前言。
+
+            判断用户当前意图，只保留最贴近的一种或多种：
+            - AI带做：判断用户当前处于哪一步，告诉用户下一步应该做什么。
+            - 新手开做：用户只有题材或一句想法，从 0 带到第一段镜头。
+            - 剧本：把想法扩成可分镜的短剧/漫剧剧本、人物表和对白。
+            - 分镜：把剧本拆成镜号、时长、画面、台词、景别、运镜、声音和资产需求。
+            - 一句话企划：从一句话生成短剧 logline、冲突、角色和第一段钩子。
+            - 角色三视图：指挥画图 AI 生成正面、侧面、背面、表情和服装细节。
+            - 剧情拆镜：把剧情拆为连续短镜头。
+            - 当前镜头：生成一段 5-10 秒大师级运镜提示词。
+            - 继续下一段：承接上一段结尾，生成下一段 5-10 秒镜头。
+            - 质检返工：检查剧本、分镜、角色资产、运镜和连续性，并给出修正版。
+            - 交付包：整理剧本、分镜、角色资产、三视图、当前镜头和下一段承接。
+            - 资产修正：改角色外貌、服装、风格、镜头或平台参数。
+
+            必须按下面结构输出，缺失项保留“待补充”：
+
+            【AI带做进度】
+            当前阶段：{新手开做 / 剧本 / 分镜 / 角色三视图 / 当前镜头 / 继续下一段 / 质检返工 / 交付包 / 修改返工 / 待补充}
+            已经完成：{概括用户已有的想法、剧本、分镜、角色、三视图、镜头或连续性信息}
+            现在最该做：{只选一个下一步，不要并列太多}
+            建议点击：{新手开做 / 剧本 / 分镜 / 三视图 / 运镜 / 下一段 / 质检返工 / 交付包}
+            下一条可直接发送的需求：{不超过 120 字，替用户写好下一步需求}
+
+            【短剧项目状态】
+            项目类型：{真人短剧 / 漫剧 / 二次元 / Galgame 分支演出 / 产品剧情 / 待补充}
+            目标平台：{即梦 / Seedance / Veo / 可灵 / Runway / ComfyUI / Stable Diffusion / 待补充}
+            画风：{写实 / 电影感 / 漫剧 / 二次元 / 国风 / 赛博 / 待补充}
+            画幅与时长：{9:16 / 16:9 / 1:1；每段 5-10 秒 / 待补充}
+            当前段落编号：{第 1 段 / 下一段 / 待补充}
+
+            【一句话剧情与角色】
+            用户一句话：{把用户输入压缩成一句核心创意；如果用户已经只有一句话，原样保留}
+            短剧 Logline：{一句话说明主角、欲望、阻碍和看点}
+            类型定位：{复仇 / 甜宠 / 悬疑 / 逆袭 / 都市 / 古风 / 科幻 / Galgame 分支演出 / 待补充}
+            核心冲突：{主角想要什么，谁阻止，冲突为什么必须现在爆发}
+            主角功能：{推动剧情的欲望、弱点、秘密、情绪弧线}
+            对手 / 阻力功能：{反派、误会、制度、家庭、时间压力或内心阻碍}
+            关键配角：{助攻、见证者、信息提供者、情绪镜子；没有则待补充}
+            第一段钩子：{第一个 5-10 秒必须让观众继续看的画面或台词}
+            可连续方向：{后续 3 个剧情推进方向，偏短剧节奏}
+
+            【剧本】
+            一句话梗概：{主角、目标、阻力和看点}
+            人物表：
+            主角：{身份、欲望、弱点、外观方向、情绪弧线}
+            对手 / 阻力：{身份或阻力类型、目标、压迫方式}
+            关键配角：{功能、与主角关系、推动剧情方式}
+            第一段剧本：
+            场景：{地点、时间、氛围}
+            动作：{角色动作、关系变化和可视化事件}
+            对白 / 字幕：{短句，适合字幕和口型；无对白写无对白}
+            情绪节拍：{停顿、迟疑、爆发、沉默或反应}
+            结尾钩子：{观众想继续看的最后一帧或最后一句}
+
+            【分镜表】
+            镜头 01：
+            时长：{5-10 秒或更短镜头时长}
+            剧情目的：{这个镜头推进的信息或情绪}
+            画面内容：{可视化画面}
+            角色动作：{眼神、走位、手部动作、表情变化}
+            台词 / 字幕：{短句；无对白写无对白}
+            景别与机位：{特写 / 近景 / 中景 / 全景 / 俯拍 / 仰拍 / 过肩}
+            运镜：{推近 / 拉远 / 横移 / 环绕 / 跟拍 / 拉焦 / 固定镜头}
+            声音：{环境声、BGM、音效、对白语气}
+            需要资产：{角色三视图 / 场景参考 / 道具参考 / 无}
+            下一步：{三视图 / 运镜 / 下一段 / 质检返工 / 交付包}
+
+            【角色资产 / 三视图】
+            角色名称：{待补充}
+            身份与性格：{待补充}
+            成年设定：{成年角色 / 18+ / 具体年龄待补充；禁止未成年化}
+            正面视图提示词：
+            {指挥画图 AI 生成角色正面全身设定图，写清脸型、五官、发型、服装、体态、道具、配色、光线、纯色或设定稿背景}
+            侧面视图提示词：
+            {同一角色侧面全身设定图，保持比例、发型轮廓、服装结构和道具一致}
+            背面视图提示词：
+            {同一角色背面全身设定图，强调背部服装结构、发型背面、道具佩戴方式和轮廓}
+            表情 / 手势补充：
+            {3-5 个常用表情、关键手势或情绪状态}
+            禁止变化项：
+            {发色、瞳色、脸型、服装主色、标志性道具、体态比例、年龄感、画风不得漂移}
+
+            【剧情目标】
+            本段剧情目的：{建立人物 / 推进冲突 / 反转 / 情绪爆发 / 悬念收束 / 待补充}
+            已发生剧情：{如果是继续下一段，概括上一段已经发生的事；第一段写“暂无上一段”}
+            本段必须交代：{人物动作、台词、信息点或情绪变化}
+
+            【当前镜头提示词】
+            时长：{5-10 秒，或用户指定}
+            开场画面：{上一段结尾 / 当前场景第一帧 / 主体站位 / 光线方向}
+            主体与场景：{角色、场景、道具、背景层次、人物站位}
+            大师级运镜：
+            {景别、视角、镜头焦段感、构图、推拉摇移、环绕、跟拍、手持或稳定器、拉焦、景深、节奏变化}
+            表演调度：
+            {眼神、停顿、呼吸、转身、手部动作、微表情、角色关系和情绪递进}
+            时间轴：
+            0-2s：{开场构图、角色状态、镜头起势}
+            2-5s：{核心动作、台词或情绪推进}
+            5-8s：{反应、反转、拉焦、光影变化或信息揭示}
+            8-10s：{结尾画面、停留、钩子或下一段承接点}
+            台词 / 字幕：
+            {台词、字幕语言、字幕位置；没有台词写无对白}
+            声音：
+            {环境声、BGM、关键音效、对白语气}
+            视觉风格：
+            {光线、色彩、质感、镜头氛围、平台适配}
+            负面约束：
+            避免角色身份漂移、脸部漂移、服装变化、年龄感变化、口型错位、额外人物、额外肢体、文字乱码、水印、闪烁、突然跳切、低清晰度、风格跑偏、镜头无意义乱动。
+
+            【下一段承接】
+            上一段结尾画面：{本段最后一帧的主体位置、表情、动作、镜头状态和光线}
+            下一段起点：{下一段应该从哪里接起}
+            情绪状态：{角色 A / B 的情绪和关系变化}
+            连续性锁定：{角色外观、服装、道具、场景、光线、站位、画幅、风格必须保持}
+            下一段建议：{1-3 个可选方向：反转、追问、动作升级、情绪爆发、悬念}
+
+            【质检返工】
+            剧本可视化：{通过 / 需返工；原因}
+            分镜可生成：{通过 / 需返工；原因}
+            角色一致性：{通过 / 需返工；原因}
+            镜头完整度：{是否包含景别、机位、运镜、声音、台词、负面约束}
+            连续性风险：{人物、服装、道具、场景、光线、站位、情绪是否会断}
+            修正版建议：{直接写出最需要修的一段剧本、分镜或镜头提示词}
+            质检后下一步：{剧本 / 分镜 / 三视图 / 运镜 / 下一段 / 交付包}
+
+            【制作交付包】
+            可复制给图像模型的三视图提示词：{正面 / 侧面 / 背面 / 表情参考；没有则待补充}
+            可复制给视频模型的当前镜头提示词：{5-10 秒镜头提示词；没有则待补充}
+            已锁定连续性：{角色、服装、道具、场景、光线、站位、画幅、情绪}
+            下一步操作：{建议用户点击的流程按钮和理由}
+
+            【需要补充的信息】
+            最多列 5 条真正影响生成质量的缺失项，例如目标平台、角色外观、画幅、上一段结尾、台词、场景、画风或参考图。
+
+            当前优化目标：{{targetTitle}}
+            目标兼容：{{compatibility}}
+            上下文来源：{{contextSource}}
+            上下文内容：
+            {{context}}
+
+            用户原始需求：
+            {{userRequest}}
+            """,
+            ModelInstruction = """
+            生成一份 AI 短剧导演工作台提示词。输出只能是最终正文，不要解释、不要 Markdown、不要代码块、不要调用 API。必须先输出“AI带做进度”，判断用户当前处于新手开做、剧本、分镜、角色三视图、当前镜头、继续下一段、质检返工、交付包或修改返工中的哪一步，并给出“建议点击”和“一条可直接发送的下一步需求”。随后覆盖短剧项目状态、一句话剧情与角色、剧本、分镜表、角色资产 / 三视图、剧情目标、当前镜头提示词、下一段承接、质检返工、制作交付包、需要补充的信息。用户只给一句话或表示不会做时，要像手把手教学一样先扩展为短剧 Logline、核心冲突、人物表、第一段剧本和分镜方向，然后提示下一步优先生成分镜、角色三视图或当前镜头。剧本必须服务分镜和视频生成，不能写成小说。分镜必须能转成镜头提示词，包含镜号、时长、画面、动作、台词、景别、机位、运镜、声音和资产需求。质检返工必须检查剧本可视化、分镜可生成、角色一致性、镜头完整度和连续性风险，并给出修正版建议。当前镜头必须是 5-10 秒视频生成提示词，写出景别、视角、焦段感、构图、运镜、拉焦、景深、表演调度、时间轴、台词/字幕、声音、视觉风格和负面约束。若用户要求继续下一段，必须承接上一段结尾画面、人物站位、情绪状态、场景连续性和角色资产卡，不得重启故事。三视图部分必须能指挥画图 AI 生成正面、侧面、背面和表情参考，并明确禁止变化项。交付包必须整理可复制给图像模型和视频模型的内容。缺失信息写待补充，禁止编造真实人物、未授权品牌、具体平台能力或未成年化角色。
+            """,
+            EnglishTranslationRule = "Translate the AI short-drama director workbench into executable English while preserving the section order: guided progress, project state, one-sentence story and characters, script, storyboard, character asset / turnaround sheet, story goal, current 5-10 second shot prompt, next-segment continuity, QA/revision, production package, missing information. Preserve the suggested next button and the one-line next request. Keep Chinese dialogue or proper nouns that should remain Chinese.",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+    }
+
     public static OptimizationTargetItem BuildStableDiffusionComfyTarget()
     {
         var now = DateTimeOffset.UtcNow;
@@ -362,6 +537,7 @@ public sealed class OptimizationTargetService
         [
             BuildAcademicHumanizeTarget(),
             BuildJimengSeedanceDirectorTarget(),
+            BuildAiShortDramaWorkbenchTarget(),
             BuildStableDiffusionComfyTarget()
         ];
     }
@@ -372,8 +548,18 @@ public sealed class OptimizationTargetService
         var items = databaseItems.ToList();
         foreach (var builtIn in BuildBuiltInTargets())
         {
-            if (items.Any(item => string.Equals(item.Id, builtIn.Id, StringComparison.OrdinalIgnoreCase)))
+            var existingIndex = items.FindIndex(item => string.Equals(item.Id, builtIn.Id, StringComparison.OrdinalIgnoreCase));
+            if (existingIndex >= 0)
             {
+                if (HasBuiltInTargetChanged(items[existingIndex], builtIn))
+                {
+                    items[existingIndex] = builtIn with
+                    {
+                        CreatedAt = items[existingIndex].CreatedAt == default ? builtIn.CreatedAt : items[existingIndex].CreatedAt
+                    };
+                    changed = true;
+                }
+
                 continue;
             }
 
@@ -387,6 +573,19 @@ public sealed class OptimizationTargetService
             .OrderByDescending(item => item.UpdatedAt)
             .Take(100)
             .ToArray();
+    }
+
+    private static bool HasBuiltInTargetChanged(OptimizationTargetItem current, OptimizationTargetItem builtIn)
+    {
+        return !string.Equals(current.Title, builtIn.Title, StringComparison.Ordinal)
+            || !string.Equals(current.Description, builtIn.Description, StringComparison.Ordinal)
+            || !string.Equals(current.Category, builtIn.Category, StringComparison.Ordinal)
+            || !string.Equals(current.TemplateSource, builtIn.TemplateSource, StringComparison.Ordinal)
+            || !string.Equals(current.Compatibility, builtIn.Compatibility, StringComparison.Ordinal)
+            || !current.Keywords.SequenceEqual(builtIn.Keywords)
+            || !string.Equals(current.LocalPromptTemplate, builtIn.LocalPromptTemplate, StringComparison.Ordinal)
+            || !string.Equals(current.ModelInstruction, builtIn.ModelInstruction, StringComparison.Ordinal)
+            || !string.Equals(current.EnglishTranslationRule, builtIn.EnglishTranslationRule, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<OptimizationTargetItem> LoadItemsFromFile(string path)

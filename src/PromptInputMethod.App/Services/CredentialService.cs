@@ -76,6 +76,16 @@ public sealed class CredentialService
         }
     }
 
+    public bool DeleteSecret(string targetName)
+    {
+        if (string.IsNullOrWhiteSpace(targetName))
+        {
+            return false;
+        }
+
+        return CredDelete(targetName, CredTypeGeneric, 0);
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct CREDENTIAL
     {
@@ -98,6 +108,9 @@ public sealed class CredentialService
 
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern bool CredWrite(ref CREDENTIAL credential, int flags);
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool CredDelete(string target, int type, int flags);
 
     [DllImport("advapi32.dll", SetLastError = true)]
     private static extern void CredFree(nint buffer);

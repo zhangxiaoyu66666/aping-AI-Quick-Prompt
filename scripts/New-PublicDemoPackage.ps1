@@ -1,7 +1,6 @@
 param(
     [string]$Configuration = "Release",
     [string]$Platform = "x64",
-    [string]$Version = "1.0.5",
     [string]$OutputRoot = "artifacts\public-demo",
     [switch]$SkipNativeBuild
 )
@@ -23,9 +22,6 @@ Push-Location $repoRoot
 try {
     if (-not $SkipNativeBuild) {
         cargo build -p fire-eye-ocr-worker --manifest-path native\Cargo.toml --release
-        if ($LASTEXITCODE -ne 0) {
-            throw "Native OCR worker build failed with exit code $LASTEXITCODE."
-        }
     }
 
     & $msbuild src\PromptInputMethod.App\PromptInputMethod.App.csproj /t:Restore,Build /p:Configuration=$Configuration /p:Platform=$Platform /m /v:minimal
@@ -40,8 +36,7 @@ try {
     }
 
     $packageRoot = Join-Path $repoRoot $OutputRoot
-    $versionLabel = $Version.TrimStart("v")
-    $staging = Join-Path $packageRoot "AI-Quick-Prompt-$versionLabel-$Platform"
+    $staging = Join-Path $packageRoot "AI-Quick-Prompt-1.0.6-$Platform"
     if (Test-Path $staging) {
         Remove-Item -LiteralPath $staging -Recurse -Force
     }
@@ -81,16 +76,13 @@ try {
         }
     }
 
-    $mnnRoot = Join-Path $repoRoot "native\ocr-rs-patched\3rd_party\MNN"
-    if (Test-Path $mnnRoot) {
-        Get-ChildItem -Path $mnnRoot -Recurse -File -Include "LICENSE", "LICENSE.txt", "license.txt" |
-            ForEach-Object {
-                $relative = $_.FullName.Substring($repoRoot.Path.Length + 1)
-                $destination = Join-Path $licenseRoot $relative
-                New-Item -ItemType Directory -Force -Path (Split-Path $destination) | Out-Null
-                Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
-            }
-    }
+    Get-ChildItem -Path (Join-Path $repoRoot "native\ocr-rs-patched\3rd_party\MNN") -Recurse -File -Include "LICENSE", "LICENSE.txt", "license.txt" |
+        ForEach-Object {
+            $relative = $_.FullName.Substring($repoRoot.Path.Length + 1)
+            $destination = Join-Path $licenseRoot $relative
+            New-Item -ItemType Directory -Force -Path (Split-Path $destination) | Out-Null
+            Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
+        }
 
     $worker = Join-Path $staging "fire-eye-ocr-worker.exe"
     if (-not (Test-Path $worker)) {

@@ -59,6 +59,7 @@ public sealed class PromptHistoryService
             throw new InvalidOperationException("没有可保存的历史记录。");
         }
 
+        var savedAt = DateTimeOffset.UtcNow;
         var item = new PromptHistoryItem(
             string.IsNullOrWhiteSpace(existingId) ? Guid.NewGuid().ToString("N") : existingId.Trim(),
             BuildTitle(userRequest, chinesePrompt),
@@ -67,8 +68,9 @@ public sealed class PromptHistoryService
             englishPrompt.Trim(),
             scene,
             mode,
-            DateTimeOffset.UtcNow,
-            NormalizeMessages(messages));
+            savedAt,
+            NormalizeMessages(messages),
+            savedAt);
 
         _database.SaveHistory(item);
         UpdateRecentCache(item);
@@ -185,8 +187,11 @@ public sealed record PromptHistoryItem(
     string Scene,
     string Mode,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<PromptConversationMessage>? Messages = null)
+    IReadOnlyList<PromptConversationMessage>? Messages = null,
+    DateTimeOffset UpdatedAt = default)
 {
+    public DateTimeOffset EffectiveUpdatedAt => UpdatedAt == default ? CreatedAt : UpdatedAt;
+
     public override string ToString()
     {
         return Title;

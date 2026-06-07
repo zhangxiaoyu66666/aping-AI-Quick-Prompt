@@ -57,14 +57,8 @@ When sent, images are encoded as OpenAI-compatible `image_url` data URLs. The cu
 ## Favorites
 
 - Prompt favorites are stored locally in `%APPDATA%\PromptInputMethod\aipin.db`.
-- Favorites are not synced and are not uploaded automatically.
+- Favorites are not uploaded automatically.
 - Favorite contents may contain user business information, so users should review them before sharing logs or release bundles.
-
-## Cloud Sync
-
-The GitHub community edition does not include a OneDrive, WebDAV, or hosted cloud sync entry. It stores settings, history, templates, favorites, and OCR diagnostics locally.
-
-Cloud sync research and Microsoft Store branch architecture notes live in [docs/cloud-sync-architecture.md](cloud-sync-architecture.md). That document describes the intended store-only implementation boundary; it is not a statement that the GitHub community build ships cloud sync.
 
 ## External Services
 

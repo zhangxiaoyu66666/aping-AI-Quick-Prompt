@@ -2,7 +2,7 @@
 
 This guide is for the `microsoft-store` branch of 啊拼 / AI Quick Prompt.
 
-The public GitHub branch stays GPL and local-first. The Microsoft Store branch may keep Store-only or cloud-service features, but those features must be testable, documented, and kept out of the public GitHub branch unless intentionally released.
+The public GitHub branch stays GPL and local-first. Any Store-only feature must be testable, documented, and kept out of the public GitHub branch unless intentionally released.
 
 ## Official Submission Facts
 
@@ -28,17 +28,7 @@ After reserving the app name in Partner Center, copy these exact values into the
 | Package/Identity/Name | `-PackageName` | Must match the reserved app package identity. |
 | Package/Identity/Publisher | `-Publisher` | Must match Partner Center exactly, for example `CN=...`. |
 | Publisher display name | `-PublisherDisplayName` | Use the verified developer or studio name. |
-| Store listing product name | `-DisplayName` | Use the reserved Partner Center product name `啊拼` for the Store package manifest. |
-
-Current reserved identity:
-
-```text
-Package/Identity/Name: 60227Zhangxiaoyu.58211199A469F
-Package/Identity/Publisher: CN=803DAEAD-9088-4EBE-9053-F30D1343DB20
-PublisherDisplayName: 语过天秦研究所
-Store product name: 啊拼
-Store ID: 9P0334NDRKVF
-```
+| Store listing product name | `-DisplayName` | Use `AI Quick Prompt` for the package manifest. Use Partner Center Store listing localization for `啊拼`. |
 
 Do not submit a package built with the placeholder identity unless Partner Center generated the same identity for your account.
 
@@ -48,11 +38,11 @@ Run from the repository root on the `microsoft-store` branch:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\New-StoreMsixUpload.ps1 `
-  -PackageName "60227Zhangxiaoyu.58211199A469F" `
-  -Publisher "CN=803DAEAD-9088-4EBE-9053-F30D1343DB20" `
-  -PublisherDisplayName "语过天秦研究所" `
-  -DisplayName "啊拼" `
-  -Version "1.0.5.0"
+  -PackageName "<Partner Center Package/Identity/Name>" `
+  -Publisher "<Partner Center Package/Identity/Publisher>" `
+  -PublisherDisplayName "<Partner Center publisher display name>" `
+  -DisplayName "AI Quick Prompt" `
+  -Version "1.0.0.0"
 ```
 
 If you need a smoke test before reserving the Partner Center identity:
@@ -79,7 +69,7 @@ or:
 -PfxPath "<path-to-pfx>" -PfxPassword "<password>"
 ```
 
-Do not commit certificates, PFX files, passwords, Partner Center secrets, cloud credentials, or private package IDs that you do not want public.
+Do not commit certificates, PFX files, passwords, Partner Center secrets, service credentials, or private package IDs that you do not want public.
 
 ## Store Listing Checklist
 
@@ -94,7 +84,7 @@ Recommended Partner Center fields:
 | Field | Suggested value |
 | --- | --- |
 | Category | Productivity |
-| Pricing | Free for first Store submission, unless Store-only paid/cloud features are already implemented and testable. |
+| Pricing | Free for first Store submission, unless Store-only paid features are already implemented and testable. |
 | Markets | Start with China and English-speaking markets, then expand after first certification pass. |
 | Age rating | Complete IARC honestly. Current app has no game content, no gambling, no user-generated public sharing, no built-in adult content. |
 | Privacy policy URL | `https://github.com/zhangxiaoyu66666/aping-AI-Quick-Prompt/blob/main/docs/privacy.md` or a dedicated website privacy page. |
@@ -118,7 +108,7 @@ Avoid showing:
 - API keys or endpoint secrets.
 - Private prompt history.
 - Third-party copyrighted screenshots.
-- Unreleased Store-only cloud features unless they ship in the submitted package and are testable.
+- Unreleased Store-only features unless they ship in the submitted package and are testable.
 
 ## Certification Notes
 
@@ -131,7 +121,7 @@ No account is required for basic use. The app can run without an API key using l
 
 The app declares runFullTrust because it provides desktop workflows: tray entry, global hotkey, local OCR worker process, clipboard integration, screenshot/region OCR, and foreground-window context capture. OCR is local by default. Images and prompt text are sent to a model provider only when the user explicitly sends a request and model egress is enabled.
 
-If Store-only cloud features are enabled in this branch, provide a demo account or test instructions here.
+If Store-only online features are enabled in this branch, provide a demo account or test instructions here.
 ```
 
 ## Final Pre-Submission Checks
@@ -148,11 +138,11 @@ powershell -ExecutionPolicy Bypass -File scripts\Invoke-UiScreenshotChecks.ps1
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\New-StoreMsixUpload.ps1 `
-  -PackageName "60227Zhangxiaoyu.58211199A469F" `
-  -Publisher "CN=803DAEAD-9088-4EBE-9053-F30D1343DB20" `
-  -PublisherDisplayName "语过天秦研究所" `
-  -DisplayName "啊拼" `
-  -Version "1.0.5.0"
+  -PackageName "<Partner Center Package/Identity/Name>" `
+  -Publisher "<Partner Center Package/Identity/Publisher>" `
+  -PublisherDisplayName "<Partner Center publisher display name>" `
+  -DisplayName "AI Quick Prompt" `
+  -Version "1.0.0.0"
 ```
 
 If Partner Center validation reports package identity or publisher errors, fix the packaging command values first. Do not edit random manifest fields by hand.

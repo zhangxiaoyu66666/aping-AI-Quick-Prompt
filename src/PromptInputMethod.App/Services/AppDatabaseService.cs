@@ -42,7 +42,7 @@ public sealed class AppDatabaseService
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT id, title, user_request, chinese_prompt, english_prompt, scene, mode, created_at, messages
+            SELECT id, title, user_request, chinese_prompt, english_prompt, scene, mode, created_at, messages, updated_at
             FROM history_items
             ORDER BY created_at DESC
             LIMIT $limit;
@@ -62,7 +62,8 @@ public sealed class AppDatabaseService
                 reader.GetString(5),
                 reader.GetString(6),
                 ParseDateTimeOffset(reader.GetString(7)),
-                DeserializePayload<PromptConversationMessage[]>(reader.GetString(8)) ?? []));
+                DeserializePayload<PromptConversationMessage[]>(reader.GetString(8)) ?? [],
+                ParseHistoryUpdatedAt(reader.GetString(9), reader.GetString(7))));
         }
 
         return items;
@@ -200,7 +201,6 @@ public sealed class AppDatabaseService
         using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
         UpsertHistory(connection, transaction, item);
-        PruneHistory(connection, transaction, 200);
         transaction.Commit();
     }
 
@@ -311,7 +311,8 @@ public sealed class AppDatabaseService
                 scene TEXT NOT NULL,
                 mode TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-                messages TEXT NOT NULL DEFAULT '[]'
+                messages TEXT NOT NULL DEFAULT '[]',
+                updated_at TEXT NOT NULL DEFAULT ''
             );
 
             CREATE INDEX IF NOT EXISTS idx_history_items_created_at
@@ -365,6 +366,7 @@ public sealed class AppDatabaseService
             """;
         command.ExecuteNonQuery();
         EnsureColumn(connection, "history_items", "messages", "TEXT NOT NULL DEFAULT '[]'");
+        EnsureColumn(connection, "history_items", "updated_at", "TEXT NOT NULL DEFAULT ''");
     }
 
     private SqliteConnection OpenConnection()
@@ -379,8 +381,8 @@ public sealed class AppDatabaseService
         using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
-            INSERT INTO history_items (id, title, user_request, chinese_prompt, english_prompt, scene, mode, created_at, messages)
-            VALUES ($id, $title, $userRequest, $chinesePrompt, $englishPrompt, $scene, $mode, $createdAt, $messages)
+            INSERT INTO history_items (id, title, user_request, chinese_prompt, english_prompt, scene, mode, created_at, messages, updated_at)
+            VALUES ($id, $title, $userRequest, $chinesePrompt, $englishPrompt, $scene, $mode, $createdAt, $messages, $updatedAt)
             ON CONFLICT(id) DO UPDATE SET
                 title = excluded.title,
                 user_request = excluded.user_request,
@@ -389,7 +391,8 @@ public sealed class AppDatabaseService
                 scene = excluded.scene,
                 mode = excluded.mode,
                 created_at = excluded.created_at,
-                messages = excluded.messages;
+                messages = excluded.messages,
+                updated_at = excluded.updated_at;
             """;
         command.Parameters.AddWithValue("$id", item.Id);
         command.Parameters.AddWithValue("$title", item.Title);
@@ -400,6 +403,7 @@ public sealed class AppDatabaseService
         command.Parameters.AddWithValue("$mode", item.Mode);
         command.Parameters.AddWithValue("$createdAt", ToStoreDate(item.CreatedAt));
         command.Parameters.AddWithValue("$messages", JsonSerializer.Serialize(item.Messages ?? [], JsonOptions));
+        command.Parameters.AddWithValue("$updatedAt", ToStoreDate(item.EffectiveUpdatedAt));
         command.ExecuteNonQuery();
 
         UpsertSearchItem(connection, transaction, CreateHistorySearchItem(item));
@@ -680,7 +684,7 @@ public sealed class AppDatabaseService
             item.Scene,
             string.Join(Environment.NewLine, item.UserRequest, item.ChinesePrompt, item.EnglishPrompt, string.Join(Environment.NewLine, item.Messages?.Select(message => message.Text) ?? [])),
             JsonSerializer.Serialize(item, JsonOptions),
-            item.CreatedAt);
+            item.EffectiveUpdatedAt);
     }
 
     private static SearchIndexItem CreateCommonPromptSearchItem(CommonPromptItem item)
@@ -814,6 +818,16 @@ public sealed class AppDatabaseService
     private static DateTimeOffset ParseDateTimeOffset(string value)
     {
         return DateTimeOffset.TryParse(value, out var parsed) ? parsed : DateTimeOffset.UtcNow;
+    }
+
+    private static DateTimeOffset ParseHistoryUpdatedAt(string updatedAt, string createdAt)
+    {
+        if (DateTimeOffset.TryParse(updatedAt, out var parsed))
+        {
+            return parsed;
+        }
+
+        return ParseDateTimeOffset(createdAt);
     }
 }
 
