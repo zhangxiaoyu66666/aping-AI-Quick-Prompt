@@ -18,24 +18,62 @@ if (-not (Test-Path $msbuild)) {
     $msbuild = $msbuildCommand.Source
 }
 
+function Copy-WinUiBuildResources {
+    param(
+        [Parameter(Mandatory)][string]$Configuration,
+        [Parameter(Mandatory)][string]$Platform,
+        [Parameter(Mandatory)][string]$RuntimeId,
+        [Parameter(Mandatory)][string]$PublishRoot
+    )
+
+    $targetFramework = "net8.0-windows10.0.19041.0"
+    $buildOutput = Join-Path $repoRoot "src\PromptInputMethod.App\bin\$Platform\$Configuration\$targetFramework\$RuntimeId"
+    if (-not (Test-Path $buildOutput)) {
+        throw "WinUI build output was not found: $buildOutput"
+    }
+
+    foreach ($required in @("App.xbf", "PromptInputMethod.App.pri", "localization.pri")) {
+        $requiredPath = Join-Path $buildOutput $required
+        if (-not (Test-Path $requiredPath)) {
+            throw "Required WinUI resource was not found: $requiredPath"
+        }
+    }
+
+    foreach ($pattern in @("*.xbf", "*.pri")) {
+        Get-ChildItem -LiteralPath $buildOutput -Filter $pattern -File |
+            Where-Object { $_.Name -ne "resources.pri" } |
+            ForEach-Object {
+                Copy-Item -LiteralPath $_.FullName -Destination $PublishRoot -Force
+            }
+    }
+}
+
 Push-Location $repoRoot
 try {
     if (-not $SkipNativeBuild) {
         cargo build -p fire-eye-ocr-worker --manifest-path native\Cargo.toml --release
     }
 
-    & $msbuild src\PromptInputMethod.App\PromptInputMethod.App.csproj /t:Restore,Build /p:Configuration=$Configuration /p:Platform=$Platform /m /v:minimal
+    $runtimeId = if ($Platform -eq "Win32") { "win-x86" } else { "win-x64" }
+    $packageRoot = Join-Path $repoRoot $OutputRoot
+    $publishRoot = Join-Path $packageRoot "publish-$Platform"
+    if (Test-Path $publishRoot) {
+        Remove-Item -LiteralPath $publishRoot -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Force -Path $publishRoot | Out-Null
+
+    & $msbuild src\PromptInputMethod.App\PromptInputMethod.App.csproj /t:Restore,Publish /p:Configuration=$Configuration /p:Platform=$Platform /p:RuntimeIdentifier=$runtimeId /p:SelfContained=true /p:PublishSelfContained=true /p:PublishDir="$publishRoot" /m /v:minimal
     if ($LASTEXITCODE -ne 0) {
         throw "MSBuild failed with exit code $LASTEXITCODE."
     }
+    Copy-WinUiBuildResources -Configuration $Configuration -Platform $Platform -RuntimeId $runtimeId -PublishRoot $publishRoot
 
-    $runtimeId = if ($Platform -eq "Win32") { "win-x86" } else { "win-x64" }
-    $targetDir = Join-Path $repoRoot "src\PromptInputMethod.App\bin\$Platform\$Configuration\net8.0-windows10.0.19041.0\$runtimeId"
+    $targetDir = $publishRoot
     if (-not (Test-Path $targetDir)) {
         throw "Build output was not found: $targetDir"
     }
 
-    $packageRoot = Join-Path $repoRoot $OutputRoot
     $staging = Join-Path $packageRoot "AI-Quick-Prompt-1.0.6-$Platform"
     if (Test-Path $staging) {
         Remove-Item -LiteralPath $staging -Recurse -Force

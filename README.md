@@ -41,7 +41,7 @@ Download: [GitHub Releases](https://github.com/zhangxiaoyu66666/aping-AI-Quick-P
 - Model calls: OpenAI-compatible chat-completions protocol with configurable providers, model refresh, endpoint validation, streaming output, and deep-thinking display.
 - OCR: optional Rust native worker under `native/`, with Fire Eye OCR / PP-OCR related assets reviewed separately.
 - Secrets: Windows Credential Manager for API keys and provider credentials.
-- Packaging: public demo zip, sideload MSIX, and Microsoft Store `.msixupload` helper scripts.
+- Packaging: self-contained public zip, self-contained sideload MSIX, and Microsoft Store `.msixupload` helper scripts.
 - Release checks: lightweight .NET release checks for prompt routing, template import/export, Skill matching, provider validation, UI coverage, packaging policy, and GitHub cloud-sync exclusion.
 
 Related docs:
@@ -111,7 +111,7 @@ Run release checks:
 dotnet run --project tests\PromptInputMethod.ReleaseChecks\PromptInputMethod.ReleaseChecks.csproj --configuration Release
 ```
 
-Create a public demo package:
+Create a self-contained public release package:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\New-PublicDemoPackage.ps1

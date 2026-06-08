@@ -41,7 +41,7 @@
 - 模型调用：OpenAI-compatible Chat Completions 协议，支持 Provider 配置、模型刷新、端点验证、流式输出和深度思考展示。
 - OCR：`native/` 下的可选 Rust 原生 OCR worker，Fire Eye OCR / PP-OCR 相关资产单独做许可证审查。
 - 密钥存储：API Key 和 Provider 凭据进入 Windows Credential Manager，不写入仓库文件。
-- 打包发布：公开 zip 包、MSIX 旁加载包、Microsoft Store `.msixupload` 辅助脚本。
+- 打包发布：自包含公开 zip 包、自包含 MSIX 旁加载包、Microsoft Store `.msixupload` 辅助脚本。
 - 发布检查：轻量 .NET ReleaseChecks 覆盖提示词路由、模板导入导出、Skill 匹配、Provider 验证、UI 覆盖、打包策略和 GitHub 云同步排除边界。
 
 相关文档：
@@ -111,7 +111,7 @@ cargo build -p fire-eye-ocr-worker --manifest-path native\Cargo.toml --release
 dotnet run --project tests\PromptInputMethod.ReleaseChecks\PromptInputMethod.ReleaseChecks.csproj --configuration Release
 ```
 
-创建公开 zip 包：
+创建自包含公开发布 zip 包：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\New-PublicDemoPackage.ps1
